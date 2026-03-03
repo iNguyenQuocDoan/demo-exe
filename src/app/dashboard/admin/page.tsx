@@ -27,7 +27,7 @@ import { getAllTutorApplications } from "@/api/tutorApplicationApi";
 import { getDepositRequests, getWithdrawRequests } from "@/api/walletApi";
 import { getUserNameMap } from "@/api/referenceApi";
 import { getDashboardStats, type DashboardStats } from "@/api/statsApi";
-import { DashboardPieChart } from "@/components/admin/DashboardCharts";
+import { DashboardPieChart, DashboardBarChart } from "@/components/admin/DashboardCharts";
 import {
   DashboardFilter,
   type TimeFilter,
@@ -162,21 +162,26 @@ export default function AdminDashboardPage() {
       };
     }
 
-    const userRoleData = [
+    const revenueData = [
       {
-        name: "Phụ huynh",
-        value: stats.users.byRole.parent || 0,
+        name: "Doanh thu",
+        value: stats.system?.platformRevenue ?? 0,
         color: "#2563eb",
       },
       {
-        name: "Gia sư",
-        value: stats.users.byRole.tutor || 0,
+        name: "Đang giữ",
+        value: stats.system?.activeHoldAmount ?? 0,
         color: "#10b981",
       },
       {
-        name: "Admin",
-        value: stats.users.byRole.admin || 0,
+        name: "Chờ nạp",
+        value: stats.system?.pendingDepositAmount ?? 0,
         color: "#f59e0b",
+      },
+      {
+        name: "Chờ rút",
+        value: stats.system?.pendingWithdrawalAmount ?? 0,
+        color: "#ef4444",
       },
     ];
 
@@ -222,7 +227,7 @@ export default function AdminDashboardPage() {
     ].filter((item) => item.value > 0);
 
     return {
-      userRoleData,
+      revenueData,
       bookingStatusData,
       applicationStatusData,
     };
@@ -405,10 +410,11 @@ export default function AdminDashboardPage() {
             </div>
 
             <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              <DashboardPieChart
-                title="Người dùng theo vai trò"
-                data={chartData.userRoleData}
+              <DashboardBarChart
+                title="Tài chính (VNĐ)"
+                data={chartData.revenueData}
                 loading={loading}
+                formatValue={(v) => `${v.toLocaleString("vi-VN")} VNĐ`}
               />
               <DashboardPieChart
                 title="Trạng thái booking"
