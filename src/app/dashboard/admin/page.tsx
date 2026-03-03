@@ -405,66 +405,24 @@ export default function AdminDashboardPage() {
 
           <section className="space-y-3">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">
-                Phân tích thống kê
-              </h2>
-              <DashboardFilter
-                selectedFilter={timeFilter}
-                onFilterChange={setTimeFilter}
-              />
+              <h2 className="text-lg font-bold text-foreground">Phân tích tài chính</h2>
+              <div className="flex items-center gap-2">
+                <DashboardFilter selectedFilter={timeFilter} onFilterChange={setTimeFilter} />
+                <Button variant="ghost" size="sm" asChild className="gap-1 text-xs">
+                  <Link href="/admin/payments">
+                    Thanh toán
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </Button>
+              </div>
             </div>
 
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              <DashboardBarChart
-                title="Tài chính (VNĐ)"
-                data={chartData.revenueData}
-                loading={loading}
-                formatValue={(v) => `${v.toLocaleString("vi-VN")} VNĐ`}
-              />
-              <DashboardPieChart
-                title="Trạng thái booking"
-                data={chartData.bookingStatusData}
-                loading={loading}
-              />
-              <DashboardPieChart
-                title="Phân bổ quỹ"
-                data={chartData.fundAllocationData}
-                loading={loading}
-              />
-            </div>
-          </section>
-
-          <section className="space-y-3">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-foreground">Tài chính hệ thống</h2>
-              <Button variant="ghost" size="sm" asChild className="gap-1 text-xs">
-                <Link href="/admin/payments">
-                  Đi tới thanh toán
-                  <ArrowRight className="h-3.5 w-3.5" />
-                </Link>
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+            {/* Finance number cards */}
+            <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
               {[
-                {
-                  key: "platformRevenue",
-                  label: "Doanh thu nền tảng",
-                  value: stats?.system?.platformRevenue ?? 0,
-                  tone: "text-primary",
-                },
-                {
-                  key: "activeHoldAmount",
-                  label: "Đang giữ (booking)",
-                  value: stats?.system?.activeHoldAmount ?? 0,
-                  tone: "text-foreground",
-                },
-                {
-                  key: "totalWalletBalance",
-                  label: "Tổng số dư ví",
-                  value: stats?.system?.totalWalletBalance ?? 0,
-                  tone: "text-foreground",
-                },
+                { key: "platformRevenue", label: "Doanh thu nền tảng", value: stats?.system?.platformRevenue ?? 0, tone: "text-primary" },
+                { key: "activeHoldAmount", label: "Đang giữ (booking)", value: stats?.system?.activeHoldAmount ?? 0, tone: "text-foreground" },
+                { key: "totalWalletBalance", label: "Tổng số dư ví", value: stats?.system?.totalWalletBalance ?? 0, tone: "text-foreground" },
                 {
                   key: "pendingFlow",
                   label: "Chờ nạp / chờ rút",
@@ -472,13 +430,33 @@ export default function AdminDashboardPage() {
                   tone: "text-warning",
                 },
               ].map((item) => (
-                <article key={item.key} className="surface-card p-4">
+                <article key={item.key} className="surface-card p-3">
                   <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
-                  <p className={`mt-2 text-xl font-bold ${item.tone}`}>
+                  <p className={`mt-1.5 text-lg font-bold ${item.tone}`}>
                     {typeof item.value === "number" ? `${item.value.toLocaleString("vi-VN")} VNĐ` : item.value}
                   </p>
                 </article>
               ))}
+            </div>
+
+            {/* Charts: Trạng thái booking | Tài chính bar | Phân bổ quỹ */}
+            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+              <DashboardPieChart
+                title="Trạng thái booking"
+                data={chartData.bookingStatusData}
+                loading={loading}
+              />
+              <DashboardBarChart
+                title="Tài chính (VNĐ)"
+                data={chartData.revenueData}
+                loading={loading}
+                formatValue={(v) => `${v.toLocaleString("vi-VN")} VNĐ`}
+              />
+              <DashboardPieChart
+                title="Phân bổ quỹ"
+                data={chartData.fundAllocationData}
+                loading={loading}
+              />
             </div>
           </section>
 
