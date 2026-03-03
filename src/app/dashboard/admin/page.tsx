@@ -156,7 +156,7 @@ export default function AdminDashboardPage() {
   const chartData = useMemo(() => {
     if (!stats) {
       return {
-        userRoleData: [],
+        revenueData: [],
         bookingStatusData: [],
         applicationStatusData: [],
       };
