@@ -158,7 +158,7 @@ export default function AdminDashboardPage() {
       return {
         revenueData: [],
         bookingStatusData: [],
-        applicationStatusData: [],
+        fundAllocationData: [],
       };
     }
 
@@ -208,28 +208,33 @@ export default function AdminDashboardPage() {
       },
     ].filter((item) => item.value > 0);
 
-    const applicationStatusData = [
+    const fundAllocationData = [
       {
-        name: "Chờ duyệt",
-        value: stats.applications.byStatus.Submitted || 0,
-        color: "#f59e0b",
+        name: "Doanh thu",
+        value: stats.system?.platformRevenue ?? 0,
+        color: "#2563eb",
       },
       {
-        name: "Đã duyệt",
-        value: stats.applications.byStatus.Approved || 0,
+        name: "Đang giữ",
+        value: stats.system?.activeHoldAmount ?? 0,
         color: "#10b981",
       },
       {
-        name: "Từ chối",
-        value: stats.applications.byStatus.Rejected || 0,
+        name: "Chờ rút",
+        value: stats.system?.pendingWithdrawalAmount ?? 0,
         color: "#ef4444",
+      },
+      {
+        name: "Chờ nạp",
+        value: stats.system?.pendingDepositAmount ?? 0,
+        color: "#f59e0b",
       },
     ].filter((item) => item.value > 0);
 
     return {
       revenueData,
       bookingStatusData,
-      applicationStatusData,
+      fundAllocationData,
     };
   }, [stats]);
 
@@ -422,8 +427,8 @@ export default function AdminDashboardPage() {
                 loading={loading}
               />
               <DashboardPieChart
-                title="Đơn ứng tuyển"
-                data={chartData.applicationStatusData}
+                title="Phân bổ quỹ"
+                data={chartData.fundAllocationData}
                 loading={loading}
               />
             </div>
