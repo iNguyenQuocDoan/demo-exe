@@ -135,7 +135,9 @@ export function AvailabilityCalendar({ tutorId, onSelectSlot, selectedSlot, busy
                   <>
                     {daySlots.map((slot) => {
                       const past = isPast(day, slot.startTime);
+                      const isBusy = dayBusy.has(slot.startTime);
                       const isSelected =
+                        !isBusy &&
                         selectedSlot?.date === slot.date &&
                         selectedSlot.startTime === slot.startTime;
 
@@ -143,15 +145,18 @@ export function AvailabilityCalendar({ tutorId, onSelectSlot, selectedSlot, busy
                         <button
                           type="button"
                           key={`free-${slot.date}-${slot.startTime}`}
-                          onClick={() => !past && onSelectSlot?.(slot)}
-                          disabled={past}
+                          onClick={() => !past && !isBusy && onSelectSlot?.(slot)}
+                          disabled={past || isBusy}
+                          title={isBusy ? "Đã có người đặt" : undefined}
                           className={cn(
                             "w-full rounded-lg py-1.5 text-xs font-medium transition-all",
                             past
-                              ? "bg-[hsl(210_40%_94%)] text-[hsl(215_16%_70%)] cursor-not-allowed line-through"
+                              ? "cursor-not-allowed bg-[hsl(210_40%_94%)] text-[hsl(215_16%_70%)] line-through"
+                              : isBusy
+                              ? "cursor-not-allowed bg-red-100 text-red-500 line-through"
                               : isSelected
                               ? "bg-[hsl(221_83%_53%)] text-white shadow-sm"
-                              : "bg-[hsl(221_83%_95%)] text-[hsl(221_83%_40%)] hover:bg-[hsl(221_83%_85%)] cursor-pointer"
+                              : "cursor-pointer bg-[hsl(221_83%_95%)] text-[hsl(221_83%_40%)] hover:bg-[hsl(221_83%_85%)]"
                           )}
                         >
                           {slot.startTime}
@@ -164,7 +169,7 @@ export function AvailabilityCalendar({ tutorId, onSelectSlot, selectedSlot, busy
                         key={`busy-${dateStr}-${time}`}
                         disabled
                         title="Đã có người đặt"
-                        className="w-full rounded-lg py-1.5 text-xs font-medium bg-red-100 text-red-500 cursor-not-allowed line-through"
+                        className="w-full cursor-not-allowed rounded-lg bg-red-100 py-1.5 text-xs font-medium text-red-500 line-through"
                       >
                         {time}
                       </button>
