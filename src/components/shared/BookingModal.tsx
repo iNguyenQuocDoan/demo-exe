@@ -458,12 +458,6 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
                   <span className="text-muted-foreground">Học phí</span>
                   <span>{formatCurrency(fee.baseAmount)}</span>
                 </div>
-                {user?.role !== "parent" && (
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground text-xs">Phí dịch vụ (gia sư chịu)</span>
-                    <span className="text-xs text-muted-foreground">{formatCurrency(fee.platformFee)}</span>
-                  </div>
-                )}
                 <div className="h-px bg-border" />
                 <div className="flex justify-between font-semibold">
                   <span>Bạn thanh toán</span>

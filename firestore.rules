@@ -1,0 +1,22 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Chat conversations and messages
+    // Auth is handled by the REST backend (JWT). Firestore is used only
+    // for real-time message relay — conversation IDs are non-guessable
+    // "{parentId}_{tutorId}" pairs known only to authenticated users.
+    match /conversations/{convId} {
+      allow read, write: if true;
+    }
+    match /conversations/{convId}/messages/{msgId} {
+      allow read, write: if true;
+    }
+
+    // Deny all other collections
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

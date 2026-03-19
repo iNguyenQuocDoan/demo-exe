@@ -1,0 +1,202 @@
+[
+  {
+    "id": "b1_enhanced",
+    "type": "NORMAL",
+    "parentId": "p1",
+    "tutorId": "tu1",
+    "startAt": "2026-03-15T14:00:00Z",
+    "endAt": "2026-03-15T16:00:00Z",
+    "baseAmount": 270000,
+    "platformFee": 27000,
+    "totalAmount": 297000,
+    "status": "PlanSent",
+    "subject": "Toán",
+    "grade": "Lớp 10",
+    "studentName": "Nguyễn Minh Anh",
+    "teachingMode": "OFFLINE",
+    "isConfirmedByTutor": true,
+    "confirmedAt": "2026-03-10T10:00:00Z",
+    "planSentAt": "2026-03-11T15:30:00Z",
+    "learningPreferences": {
+      "teachingMode": "OFFLINE",
+      "sessionType": "ONE_ON_ONE",
+      "studentLevel": "INTERMEDIATE",
+      "goals": ["IMPROVE_GRADES", "EXAM_PREP"],
+      "preferredSchedule": {
+        "daysOfWeek": [2, 4, 6],
+        "timeSlots": ["afternoon", "evening"]
+      },
+      "frequency": "2x/week",
+      "notes": "Con đang gặp khó khăn với phần hình học, cần tập trung vào chứng minh hình học và các dạng bài tập nâng cao"
+    },
+    "contactPreferences": [
+      {
+        "method": "IN_APP_CHAT",
+        "priority": 1,
+        "isVisible": true
+      },
+      {
+        "method": "PHONE",
+        "priority": 2,
+        "value": "0901234567",
+        "isVisible": true
+      },
+      {
+        "method": "ZALO",
+        "priority": 3,
+        "value": "0901234567",
+        "isVisible": true
+      }
+    ],
+    "locationInfo": {
+      "district": "Quận 1",
+      "city": "TP. Hồ Chí Minh",
+      "fullAddress": "123 Nguyễn Huệ, Phường Bến Nghé, Quận 1, TP. Hồ Chí Minh",
+      "landmark": "Gần Coffee Highlands",
+      "travelTimeEstimate": 25
+    },
+    "studyPlanId": "sp1",
+    "currentContactOwner": {
+      "userId": "tu1",
+      "name": "Nguyễn Văn An",
+      "role": "TUTOR",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu1",
+      "assignedAt": "2026-03-10T10:00:00Z"
+    },
+    "contactOwnerHistory": [
+      {
+        "id": "coh1",
+        "bookingId": "b1_enhanced",
+        "from": null,
+        "to": {
+          "userId": "tu1",
+          "name": "Nguyễn Văn An",
+          "role": "TUTOR",
+          "assignedAt": "2026-03-10T10:00:00Z"
+        },
+        "reason": "Initial assignment after booking confirmation",
+        "changedAt": "2026-03-10T10:00:00Z",
+        "changedBy": "system"
+      }
+    ]
+  },
+  {
+    "id": "b2_enhanced",
+    "type": "NORMAL",
+    "parentId": "p1",
+    "tutorId": "tu2",
+    "startAt": "2026-03-20T09:00:00Z",
+    "endAt": "2026-03-20T11:00:00Z",
+    "baseAmount": 330000,
+    "platformFee": 33000,
+    "totalAmount": 363000,
+    "status": "Confirmed",
+    "subject": "Tiếng Anh",
+    "grade": "Lớp 9",
+    "studentName": "Nguyễn Minh Anh",
+    "teachingMode": "OFFLINE",
+    "isConfirmedByTutor": true,
+    "confirmedAt": "2026-03-12T08:30:00Z",
+    "learningPreferences": {
+      "teachingMode": "OFFLINE",
+      "sessionType": "ONE_ON_ONE",
+      "studentLevel": "BEGINNER",
+      "goals": ["IMPROVE_GRADES", "CATCH_UP"],
+      "preferredSchedule": {
+        "daysOfWeek": [1, 3, 5],
+        "timeSlots": ["morning"]
+      },
+      "frequency": "3x/week",
+      "notes": "Con mới bắt đầu học lại từ đầu, trước khi chuyển sang chuẩn bị thi vào lớp 10"
+    },
+    "contactPreferences": [
+      {
+        "method": "IN_APP_CHAT",
+        "priority": 1,
+        "isVisible": true
+      },
+      {
+        "method": "EMAIL",
+        "priority": 2,
+        "value": "parent@example.com",
+        "isVisible": true
+      }
+    ],
+    "locationInfo": {
+      "district": "Quận 1",
+      "city": "TP. Hồ Chí Minh",
+      "fullAddress": "45 Lê Lợi, Phường Bến Thành, Quận 1, TP. Hồ Chí Minh"
+    },
+    "currentContactOwner": {
+      "userId": "tu2",
+      "name": "Trần Thị Bình",
+      "role": "TUTOR",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu2",
+      "assignedAt": "2026-03-12T08:30:00Z"
+    },
+    "contactOwnerHistory": [
+      {
+        "id": "coh2",
+        "bookingId": "b2_enhanced",
+        "from": null,
+        "to": {
+          "userId": "tu2",
+          "name": "Trần Thị Bình",
+          "role": "TUTOR",
+          "assignedAt": "2026-03-12T08:30:00Z"
+        },
+        "reason": "Initial assignment after booking confirmation",
+        "changedAt": "2026-03-12T08:30:00Z",
+        "changedBy": "system"
+      }
+    ]
+  },
+  {
+    "id": "b3_enhanced",
+    "type": "NORMAL",
+    "parentId": "p1",
+    "tutorId": "tu3",
+    "startAt": "2026-03-25T16:00:00Z",
+    "endAt": "2026-03-25T18:00:00Z",
+    "baseAmount": 400000,
+    "platformFee": 40000,
+    "totalAmount": 440000,
+    "status": "Pending",
+    "subject": "Vật lý",
+    "grade": "Lớp 11",
+    "studentName": "Nguyễn Minh Anh",
+    "teachingMode": "OFFLINE",
+    "isConfirmedByTutor": false,
+    "learningPreferences": {
+      "teachingMode": "OFFLINE",
+      "sessionType": "ONE_ON_ONE",
+      "studentLevel": "ADVANCED",
+      "goals": ["COMPETITION_PREP", "ENRICHMENT"],
+      "preferredSchedule": {
+        "daysOfWeek": [6, 0],
+        "timeSlots": ["afternoon", "evening"]
+      },
+      "frequency": "1x/week",
+      "specialNeeds": "Cần tập trung vào các bài toán Olympic vật lý",
+      "notes": "Con đang chuẩn bị thi HSG Vật lý cấp thành phố"
+    },
+    "contactPreferences": [
+      {
+        "method": "PHONE",
+        "priority": 1,
+        "value": "0901234567",
+        "isVisible": false
+      },
+      {
+        "method": "IN_APP_CHAT",
+        "priority": 2,
+        "isVisible": true
+      }
+    ],
+    "locationInfo": {
+      "district": "Quận 1",
+      "city": "TP. Hồ Chí Minh"
+    },
+    "contactOwnerHistory": []
+  }
+]

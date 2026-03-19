@@ -1,0 +1,66 @@
+[
+  {
+    "tutorId": "t1",
+    "weeklySlots": [
+      { "dayOfWeek": 2, "startTime": "18:00", "endTime": "21:00" },
+      { "dayOfWeek": 6, "startTime": "08:00", "endTime": "12:00" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t2",
+    "weeklySlots": [
+      { "dayOfWeek": 3, "startTime": "19:00", "endTime": "21:00" },
+      { "dayOfWeek": 7, "startTime": "09:00", "endTime": "12:00" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t3",
+    "weeklySlots": [
+      { "dayOfWeek": 2, "startTime": "17:30", "endTime": "20:30" },
+      { "dayOfWeek": 7, "startTime": "08:00", "endTime": "11:00" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t4",
+    "weeklySlots": [
+      { "dayOfWeek": 1, "startTime": "08:00", "endTime": "12:00" },
+      { "dayOfWeek": 4, "startTime": "14:00", "endTime": "17:00" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t5",
+    "weeklySlots": [
+      { "dayOfWeek": 3, "startTime": "18:00", "endTime": "21:00" },
+      { "dayOfWeek": 6, "startTime": "14:00", "endTime": "18:00" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t6",
+    "weeklySlots": [
+      { "dayOfWeek": 1, "startTime": "18:00", "endTime": "20:30" },
+      { "dayOfWeek": 5, "startTime": "18:00", "endTime": "20:30" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t7",
+    "weeklySlots": [
+      { "dayOfWeek": 4, "startTime": "17:00", "endTime": "21:00" },
+      { "dayOfWeek": 6, "startTime": "07:30", "endTime": "11:30" }
+    ],
+    "exceptions": []
+  },
+  {
+    "tutorId": "t8",
+    "weeklySlots": [
+      { "dayOfWeek": 2, "startTime": "19:00", "endTime": "21:00" },
+      { "dayOfWeek": 6, "startTime": "08:00", "endTime": "12:00" }
+    ],
+    "exceptions": []
+  }
+]

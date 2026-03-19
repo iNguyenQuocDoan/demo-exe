@@ -1,0 +1,106 @@
+[
+  {
+    "id": "conv1",
+    "bookingId": "b1_enhanced",
+    "parentId": "p1",
+    "tutorId": "tu1",
+    "currentContactOwner": {
+      "userId": "tu1",
+      "name": "Nguyễn Văn An",
+      "role": "TUTOR",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu1",
+      "assignedAt": "2026-03-10T10:00:00Z"
+    },
+    "messages": [
+      {
+        "id": "msg1",
+        "conversationId": "conv1",
+        "senderId": "tu1",
+        "senderName": "Nguyễn Văn An",
+        "senderRole": "TUTOR",
+        "content": "Xin chào phụ huynh! Mình đã xác nhận buổi học Toán cho em Minh Anh vào ngày 15/3. Mình sẽ chuẩn bị kế hoạch học chi tiết và gửi lại cho phụ huynh trong hôm nay nhé!",
+        "createdAt": "2026-03-10T10:05:00Z",
+        "type": "USER"
+      },
+      {
+        "id": "msg2",
+        "conversationId": "conv1",
+        "senderId": "p1",
+        "senderName": "Nguyễn Thị Mai",
+        "senderRole": "PARENT",
+        "content": "Cảm ơn thầy An! Con em đang gặp khó khăn với phần hình học, nhất là chứng minh tứ giác. Mong thầy tập trung vào phần này giúp em ạ.",
+        "createdAt": "2026-03-10T11:30:00Z",
+        "type": "USER"
+      },
+      {
+        "id": "msg3",
+        "conversationId": "conv1",
+        "senderId": "tu1",
+        "senderName": "Nguyễn Văn An",
+        "senderRole": "TUTOR",
+        "content": "Dạ vâng, mình đã ghi nhận. Mình sẽ lập kế hoạch 4 tuần tập trung vào hình học, bắt đầu từ tứ giác cơ bản rồi nâng dần lên các dạng bài khó hơn. Phụ huynh xem kế hoạch chi tiết mình vừa gửi nhé!",
+        "createdAt": "2026-03-11T15:35:00Z",
+        "type": "USER"
+      },
+      {
+        "id": "msg4",
+        "conversationId": "conv1",
+        "senderId": "p1",
+        "senderName": "Nguyễn Thị Mai",
+        "senderRole": "PARENT",
+        "content": "Em xem rồi ạ, kế hoạch rất chi tiết và phù hợp với em. Cảm ơn thầy nhiều!",
+        "createdAt": "2026-03-11T16:00:00Z",
+        "type": "USER"
+      }
+    ],
+    "lastMessageAt": "2026-03-11T16:00:00Z",
+    "createdAt": "2026-03-10T10:00:00Z"
+  },
+  {
+    "id": "conv2",
+    "bookingId": "b2_enhanced",
+    "parentId": "p1",
+    "tutorId": "tu2",
+    "currentContactOwner": {
+      "userId": "tu2",
+      "name": "Trần Thị Bình",
+      "role": "TUTOR",
+      "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu2",
+      "assignedAt": "2026-03-12T08:30:00Z"
+    },
+    "messages": [
+      {
+        "id": "msg5",
+        "conversationId": "conv2",
+        "senderId": "tu2",
+        "senderName": "Trần Thị Bình",
+        "senderRole": "TUTOR",
+        "content": "Chào phụ huynh! Mình đã xác nhận buổi học Tiếng Anh cho em vào 20/3 lúc 9h sáng. Buổi học sẽ diễn ra online qua Google Meet. Link meeting: https://meet.google.com/abc-defg-hij",
+        "createdAt": "2026-03-12T08:35:00Z",
+        "type": "USER"
+      },
+      {
+        "id": "msg6",
+        "conversationId": "conv2",
+        "senderId": "p1",
+        "senderName": "Nguyễn Thị Mai",
+        "senderRole": "PARENT",
+        "content": "Cảm ơn cô! Em có cần chuẩn bị gì không ạ?",
+        "createdAt": "2026-03-12T09:00:00Z",
+        "type": "USER"
+      },
+      {
+        "id": "msg7",
+        "conversationId": "conv2",
+        "senderId": "tu2",
+        "senderName": "Trần Thị Bình",
+        "senderRole": "TUTOR",
+        "content": "Em chuẩn bị sách giáo khoa, vở ghi chép và tai nghe nhé. Mình sẽ gửi kế hoạch học chi tiết cho phụ huynh vào chiều nay ạ.",
+        "createdAt": "2026-03-12T09:15:00Z",
+        "type": "USER"
+      }
+    ],
+    "lastMessageAt": "2026-03-12T09:15:00Z",
+    "createdAt": "2026-03-12T08:30:00Z"
+  }
+]

@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Settings,
   Shield,
+  Star,
   Users,
   Wallet,
   XCircle,
@@ -344,6 +345,26 @@ export default function AdminDashboardPage() {
             </div>
           </header>
 
+          {/* Charts: Trạng thái booking | Tài chính bar | Phân bổ quỹ */}
+          <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
+            <DashboardPieChart
+              title="Trạng thái booking"
+              data={chartData.bookingStatusData}
+              loading={loading}
+            />
+            <DashboardBarChart
+              title="Tài chính (VNĐ)"
+              data={chartData.revenueData}
+              loading={loading}
+              formatValue={(v) => `${v.toLocaleString("vi-VN")} VNĐ`}
+            />
+            <DashboardPieChart
+              title="Phân bổ quỹ"
+              data={chartData.fundAllocationData}
+              loading={loading}
+            />
+          </div>
+
           <section className="grid grid-cols-2 gap-4 lg:grid-cols-4">
             {[
               {
@@ -439,25 +460,96 @@ export default function AdminDashboardPage() {
               ))}
             </div>
 
-            {/* Charts: Trạng thái booking | Tài chính bar | Phân bổ quỹ */}
-            <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
-              <DashboardPieChart
-                title="Trạng thái booking"
-                data={chartData.bookingStatusData}
-                loading={loading}
-              />
-              <DashboardBarChart
-                title="Tài chính (VNĐ)"
-                data={chartData.revenueData}
-                loading={loading}
-                formatValue={(v) => `${v.toLocaleString("vi-VN")} VNĐ`}
-              />
-              <DashboardPieChart
-                title="Phân bổ quỹ"
-                data={chartData.fundAllocationData}
-                loading={loading}
-              />
-            </div>
+          </section>
+
+          {/* Top tutors */}
+          <section className="pa-section grid gap-6 lg:grid-cols-2">
+            <article className="surface-card overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-border px-5 py-4 sm:px-6">
+                <BookOpen className="h-4 w-4 text-primary" />
+                <h2 className="text-sm font-semibold text-foreground">Gia sư được book nhiều nhất</h2>
+              </div>
+              <div className="divide-y divide-border">
+                {loading ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="flex animate-pulse items-center gap-3 px-5 py-3">
+                      <div className="h-8 w-8 rounded-full bg-muted" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-28 rounded bg-muted" />
+                        <div className="h-2.5 w-20 rounded bg-muted" />
+                      </div>
+                    </div>
+                  ))
+                ) : !stats?.topTutors?.byBookings?.length ? (
+                  <p className="px-5 py-6 text-center text-sm text-muted-foreground">Chưa có dữ liệu</p>
+                ) : (
+                  stats.topTutors.byBookings.map((t, i) => (
+                    <div key={t.tutorId} className="flex items-center gap-3 px-5 py-3">
+                      <span className="w-5 text-center text-xs font-bold text-muted-foreground">{i + 1}</span>
+                      {t.avatarUrl ? (
+                        <img src={t.avatarUrl} alt={t.name} className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-bold text-primary">
+                          {t.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          ⭐ {t.ratingAvg.toFixed(1)}
+                        </p>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">
+                        {t.bookingCount} booking
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </article>
+
+            <article className="surface-card overflow-hidden">
+              <div className="flex items-center gap-2 border-b border-border px-5 py-4 sm:px-6">
+                <Star className="h-4 w-4 text-amber-500" />
+                <h2 className="text-sm font-semibold text-foreground">Gia sư được đánh giá cao nhất</h2>
+              </div>
+              <div className="divide-y divide-border">
+                {loading ? (
+                  [1, 2, 3].map((i) => (
+                    <div key={i} className="flex animate-pulse items-center gap-3 px-5 py-3">
+                      <div className="h-8 w-8 rounded-full bg-muted" />
+                      <div className="flex-1 space-y-1.5">
+                        <div className="h-3 w-28 rounded bg-muted" />
+                        <div className="h-2.5 w-20 rounded bg-muted" />
+                      </div>
+                    </div>
+                  ))
+                ) : !stats?.topTutors?.byRating?.length ? (
+                  <p className="px-5 py-6 text-center text-sm text-muted-foreground">Chưa có dữ liệu</p>
+                ) : (
+                  stats.topTutors.byRating.map((t, i) => (
+                    <div key={t.tutorId} className="flex items-center gap-3 px-5 py-3">
+                      <span className="w-5 text-center text-xs font-bold text-muted-foreground">{i + 1}</span>
+                      {t.avatarUrl ? (
+                        <img src={t.avatarUrl} alt={t.name} className="h-8 w-8 rounded-full object-cover" />
+                      ) : (
+                        <div className="flex h-8 w-8 items-center justify-center rounded-full bg-amber-100 text-xs font-bold text-amber-700">
+                          {t.name.charAt(0)}
+                        </div>
+                      )}
+                      <div className="flex-1 min-w-0">
+                        <p className="truncate text-sm font-semibold text-foreground">{t.name}</p>
+                        <p className="text-xs text-muted-foreground">{t.reviewCount} đánh giá</p>
+                      </div>
+                      <span className="shrink-0 flex items-center gap-1 rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-amber-600">
+                        <Star className="h-3 w-3 fill-amber-400 text-amber-400" />
+                        {t.ratingAvg.toFixed(1)}
+                      </span>
+                    </div>
+                  ))
+                )}
+              </div>
+            </article>
           </section>
 
           <section className="pa-section grid gap-6 lg:grid-cols-2">

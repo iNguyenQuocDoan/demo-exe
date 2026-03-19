@@ -1,0 +1,54 @@
+[
+  {
+    "id": "p1",
+    "fullName": "Phụ Huynh Demo",
+    "email": "parent@demo.vn",
+    "password": "demo123",
+    "role": "parent",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=p1"
+  },
+  {
+    "id": "tu1",
+    "fullName": "Nguyễn Văn An",
+    "email": "tutor@demo.vn",
+    "password": "demo123",
+    "role": "tutor",
+    "tutorProfileId": "t1",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=t1"
+  },
+  {
+    "id": "tu2",
+    "fullName": "Trần Thị Bình",
+    "email": "tutor2@demo.vn",
+    "password": "demo123",
+    "role": "tutor",
+    "tutorProfileId": "t2",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu2"
+  },
+  {
+    "id": "tu3",
+    "fullName": "Lê Hoàng Minh",
+    "email": "tutor3@demo.vn",
+    "password": "demo123",
+    "role": "tutor",
+    "tutorProfileId": "t3",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=tu3"
+  },
+  {
+    "id": "a1",
+    "fullName": "Admin",
+    "email": "admin@demo.vn",
+    "password": "admin123",
+    "role": "admin",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=admin"
+  },
+  {
+    "id": "sv1",
+    "fullName": "Trần Minh Khoa",
+    "email": "student@demo.vn",
+    "password": "demo123",
+    "role": "tutorCandidate",
+    "tutorApplicationId": "app2",
+    "avatarUrl": "https://api.dicebear.com/7.x/avataaars/svg?seed=sv1"
+  }
+]
