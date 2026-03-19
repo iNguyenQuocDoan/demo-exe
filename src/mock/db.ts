@@ -354,7 +354,7 @@ const SEED_REPORTS: DisputeReport[] = [
 // ─── Singleton DB ─────────────────────────────────────────────────────────────
 class MockDB {
   tutors: TutorProfile[] = tutorsJson as TutorProfile[];
-  availability: TutorAvailability[] = availabilityJson as TutorAvailability[];
+  availability: TutorAvailability[] = availabilityJson as unknown as TutorAvailability[];
   cities: City[] = citiesJson as City[];
   districts: District[] = districtsJson as District[];
   subjects: Subject[] = subjectsJson as Subject[];
