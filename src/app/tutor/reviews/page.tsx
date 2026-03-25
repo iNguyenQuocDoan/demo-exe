@@ -7,6 +7,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getReviews } from "@/api/tutorApi";
+import { replyToReview } from "@/api/reviewApi";
 import type { Review } from "@/types";
 
 function StarRating({ rating, size = "sm" }: { rating: number; size?: "sm" | "md" }) {
@@ -68,7 +69,7 @@ function ReviewCard({
   onReply,
 }: {
   review: Review;
-  onReply: (id: string, text: string) => void;
+  onReply: (id: string, text: string) => Promise<void>;
 }) {
   const [showReplyBox, setShowReplyBox] = useState(false);
   const [replyText, setReplyText] = useState("");
@@ -77,9 +78,7 @@ function ReviewCard({
   const handleSubmit = async () => {
     if (!replyText.trim()) return;
     setSubmitting(true);
-    // Simulate API delay
-    await new Promise((r) => setTimeout(r, 400));
-    onReply(review.id, replyText.trim());
+    await onReply(review.id, replyText.trim());
     setReplyText("");
     setShowReplyBox(false);
     setSubmitting(false);
@@ -96,7 +95,7 @@ function ReviewCard({
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-sm shrink-0">
               {review.parentName.charAt(0)}
             </div>
             <div>
@@ -197,14 +196,19 @@ export default function TutorReviewsPage() {
     });
   }, [user, isLoading, tutorId]);
 
-  const handleReply = (reviewId: string, text: string) => {
-    setReviews((prev) =>
-      prev.map((r) =>
-        r.id === reviewId
-          ? { ...r, tutorReply: { text, repliedAt: new Date().toISOString() } }
-          : r
-      )
-    );
+  const handleReply = async (reviewId: string, text: string) => {
+    const result = await replyToReview(reviewId, text);
+    if (result.ok && result.review) {
+      setReviews((prev) => prev.map((r) => (r.id === reviewId ? result.review! : r)));
+    } else {
+      setReviews((prev) =>
+        prev.map((r) =>
+          r.id === reviewId
+            ? { ...r, tutorReply: { text, repliedAt: new Date().toISOString() } }
+            : r,
+        ),
+      );
+    }
   };
 
   const filtered = reviews.filter((r) => {

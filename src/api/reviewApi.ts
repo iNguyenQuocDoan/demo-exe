@@ -21,11 +21,28 @@ export async function getReviewByBookingId(bookingId: string): Promise<Review | 
   }
 }
 
+export async function replyToReview(
+  reviewId: string,
+  text: string,
+): Promise<{ ok: boolean; review?: Review; error?: string }> {
+  try {
+    const { data } = await apiClient.post<{ ok: boolean; review: Review; error?: string }>(
+      `/reviews/${reviewId}/reply`,
+      { text },
+    );
+    return data;
+  } catch (err: unknown) {
+    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
+    return { ok: false, error: msg ?? "Không thể gửi phản hồi." };
+  }
+}
+
 export async function createReview(payload: {
   bookingId: string;
   tutorId: string;
   rating: number;
   comment: string;
+
 }): Promise<{ ok: boolean; review?: Review; error?: string }> {
   try {
     const { data } = await apiClient.post<{ ok: boolean; review: Review; error?: string }>(

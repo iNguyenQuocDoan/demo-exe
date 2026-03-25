@@ -1,6 +1,6 @@
 import { db } from "../db";
 import { computeFeeBreakdown, computePlatformFee, hasTimeConflict, buildRecurringSessions } from "../rules";
-import type { Booking, BookingStatus, ScheduleSeries } from "@/types";
+import type { Booking, BookingStatus, QualityFeedback, ScheduleSeries } from "@/types";
 
 function currentUserId(): string {
   if (typeof window === "undefined") return "";
@@ -177,4 +177,14 @@ export function handleAcceptSeries(seriesId: string) {
   db.saveBookings();
   db.saveSeries();
   return { status: 200, data: { ok: true, series: s } };
+}
+
+export function handleSubmitSessionFeedback(bookingId: string, feedback: QualityFeedback) {
+  const idx = db.bookings.findIndex((b) => b.id === bookingId);
+  if (idx === -1) return { status: 404, data: { ok: false, error: "Booking not found" } };
+  if (db.bookings[idx].status !== "Completed")
+    return { status: 400, data: { ok: false, error: "Chỉ có thể gửi feedback cho buổi học đã hoàn thành." } };
+  db.bookings[idx] = { ...db.bookings[idx], sessionFeedback: feedback };
+  db.saveBookings();
+  return { status: 200, data: { ok: true } };
 }

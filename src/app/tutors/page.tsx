@@ -142,7 +142,7 @@ export default function TutorsPage() {
     : "Đang dùng bộ lọc mặc định";
 
   return (
-    <main className="min-h-dvh bg-[var(--bg-app)]">
+    <main className="min-h-dvh bg-(--bg-app)">
       <PageAnimations />
 
       <section className="pt-4 pb-8">

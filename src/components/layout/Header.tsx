@@ -14,13 +14,13 @@ import {
   Shield,
   Users,
   BookOpen,
-  UserCircle,
   UserCheck,
   CalendarDays,
   Flag,
   Wallet,
   Clock,
   ClipboardList,
+  Crown,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -74,7 +74,7 @@ export function Header() {
       case "tutorCandidate":
         return <UserCheck className="h-4 w-4" />;
       case "guest":
-        return <UserCircle className="h-4 w-4" />;
+        return <User className="h-4 w-4" />;
       default:
         return null;
     }
@@ -132,16 +132,6 @@ export function Header() {
             label: "Ví của tôi",
             icon: <Wallet className="h-5 w-5 text-primary" />,
           },
-          {
-            href: "/parent/reports",
-            label: "Báo cáo tranh chấp",
-            icon: <Flag className="h-5 w-5 text-destructive" />,
-          },
-          {
-            href: "/parent/profile",
-            label: "Thông tin cá nhân",
-            icon: <UserCircle className="h-5 w-5 text-primary" />,
-          },
         ];
       case "tutorCandidate":
         return [
@@ -163,7 +153,6 @@ export function Header() {
       label: "Tìm gia sư",
       active: pathname.startsWith("/tutors"),
     },
-    { href: "/#how-it-works", label: "Cách hoạt động", active: false },
   ];
 
   return (
@@ -263,6 +252,17 @@ export function Header() {
                         </Link>
                       )}
 
+                      {user.role === "parent" && (
+                        <Link
+                          href="/parent/subscription"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-base transition-colors bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50 text-amber-700 dark:text-amber-400 font-medium"
+                        >
+                          <Crown className="h-5 w-5 text-amber-500" />
+                          Nâng cấp Premium
+                        </Link>
+                      )}
+
                       {getRoleQuickLinks().map(({ href, label, icon }) => (
                         <Link
                           key={href}
@@ -303,6 +303,17 @@ export function Header() {
                         >
                           <User className="h-5 w-5 text-muted-foreground" />
                           Hồ sơ cá nhân
+                        </Link>
+                      )}
+
+                      {user.role === "parent" && (
+                        <Link
+                          href="/parent/reports"
+                          onClick={() => setUserMenuOpen(false)}
+                          className="flex items-center gap-2.5 rounded-lg px-3.5 py-2.5 text-base transition-colors hover:bg-muted"
+                        >
+                          <Flag className="h-5 w-5 text-destructive" />
+                          Báo cáo tranh chấp
                         </Link>
                       )}
 

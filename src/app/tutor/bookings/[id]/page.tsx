@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Flag, MessageSquare, PencilLine, ShieldCheck } from "lucide-react";
+import { ArrowLeft, Flag, MessageSquare, PencilLine, ShieldCheck, Star, MessageCircle } from "lucide-react";
 import {
   confirmBookingAndUnlock,
   confirmCompletion,
@@ -22,6 +22,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
 import {
   BookingFlowBadge,
   BookingMetaRow,
@@ -291,6 +292,9 @@ export default function TutorBookingDetailPage() {
               </Card>
 
               <BookingReportsList bookingId={booking.id} refreshKey={reportRefreshKey} />
+              {booking.status === "Completed" && (
+                <SessionFeedbackCard booking={booking} readOnly />
+              )}
             </div>
           </div>
         </div>

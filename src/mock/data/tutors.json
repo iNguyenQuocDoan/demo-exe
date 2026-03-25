@@ -29,7 +29,8 @@
     "ratingAvg": 4.9,
     "reviewCount": 45,
     "experience": "5 năm",
-    "education": "Thạc sĩ Ngôn ngữ Anh – ĐHNN TP.HCM"
+    "education": "Thạc sĩ Ngôn ngữ Anh – ĐHNN TP.HCM",
+    "isPremiumOnly": true
   },
   {
     "id": "t3",
@@ -93,7 +94,8 @@
     "ratingAvg": 4.9,
     "reviewCount": 57,
     "experience": "10 năm",
-    "education": "Thạc sĩ Ngữ văn – ĐHSP Hà Nội"
+    "education": "Thạc sĩ Ngữ văn – ĐHSP Hà Nội",
+    "isPremiumOnly": true
   },
   {
     "id": "t7",
@@ -109,7 +111,8 @@
     "ratingAvg": 4.7,
     "reviewCount": 28,
     "experience": "8 năm",
-    "education": "Cử nhân Vật lý – ĐHSP Hà Nội"
+    "education": "Cử nhân Vật lý – ĐHSP Hà Nội",
+    "isPremiumOnly": true
   },
   {
     "id": "t8",

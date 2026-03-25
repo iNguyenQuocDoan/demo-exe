@@ -30,6 +30,7 @@ import {
   handlePreviewSeries,
   handleCreateSeries,
   handleAcceptSeries,
+  handleSubmitSessionFeedback,
 } from "./handlers/bookings";
 import {
   handleGetWallet,
@@ -73,6 +74,10 @@ import {
   handleResubmitApplication,
 } from "./handlers/applications";
 import { handleGetStats } from "./handlers/stats";
+import {
+  handleGetMySubscription,
+  handleCreateSubscription,
+} from "./handlers/subscriptions";
 import {
   handleCreateReport,
   handleGetReports,
@@ -195,6 +200,13 @@ export function routeMockRequest(config: {
         body as Parameters<typeof handleCreateBooking>[0],
       );
   }
+  const bookingFeedbackMatch = url.match(/^\/bookings\/([^/]+)\/feedback$/);
+  if (bookingFeedbackMatch && method === "post")
+    return handleSubmitSessionFeedback(
+      bookingFeedbackMatch[1],
+      (body as { feedback: Parameters<typeof handleSubmitSessionFeedback>[1] }).feedback,
+    );
+
   const bookingAction = url.match(
     /^\/bookings\/([^/]+)\/(accept|cancel|start|complete)$/,
   );
@@ -305,6 +317,11 @@ export function routeMockRequest(config: {
 
   // ── Stats ────────────────────────────────────────────────────────────────────
   if (method === "get" && url === "/stats/dashboard") return handleGetStats();
+
+  // ── Subscriptions ────────────────────────────────────────────────────────────
+  if (method === "get" && url === "/subscriptions/me") return handleGetMySubscription();
+  if (method === "post" && url === "/subscriptions")
+    return handleCreateSubscription(body as Parameters<typeof handleCreateSubscription>[0]);
 
   // ── Reports / Disputes ───────────────────────────────────────────────────────
   if (url === "/reports") {

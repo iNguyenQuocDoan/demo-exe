@@ -147,6 +147,23 @@ export interface TutorProfile {
   reviewCount: number;
   experience: string;
   education: string;
+  isPremiumOnly?: boolean;
+}
+
+// ─── Subscription ─────────────────────────────────────────────────────────────
+export type SubscriptionBillingCycle = "monthly" | "quarterly";
+export type SubscriptionStatus = "active" | "cancelled" | "expired";
+
+export interface Subscription {
+  id: string;
+  userId: string;
+  billingCycle: SubscriptionBillingCycle;
+  status: SubscriptionStatus;
+  amount: number;
+  startAt: string;
+  expiresAt: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 // ─── Availability ─────────────────────────────────────────────────────────────
@@ -215,6 +232,7 @@ export interface Booking {
   parentGoal?: string;    // required text — why the parent booked
   subjectName?: string;   // snapshot of subject display name (e.g. "Toán")
   goalTags?: string[];    // optional quick-select tags
+  sessionFeedback?: QualityFeedback; // per-session quality feedback from parent
 }
 
 // ─── Series ───────────────────────────────────────────────────────────────────
@@ -275,6 +293,13 @@ export interface TutorFilter {
 }
 
 // ─── Review ───────────────────────────────────────────────────────────────────
+export interface QualityFeedback {
+  teachingMethod: number;   // Phương pháp giảng dạy
+  punctuality: number;      // Đúng giờ / nghiêm túc
+  communication: number;    // Giao tiếp với phụ huynh
+  preparation: number;      // Chuẩn bị bài
+}
+
 export interface Review {
   id: string;
   parentId: string;

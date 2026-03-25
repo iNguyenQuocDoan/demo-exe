@@ -8,6 +8,7 @@ import {
   Star,
   WifiOff,
   ShieldCheck,
+  Crown,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -36,8 +37,10 @@ export function TutorCard({ tutor, subjectMap = {}, districtMap = {} }: Props) {
     .map((id) => districtMap[id] ?? id);
 
   return (
-    <AppCard className="group min-h-[360px] overflow-hidden">
-      <div className="h-1.5 bg-gradient-to-r from-primary via-primary/80 to-accent" />
+    <AppCard className="group min-h-90 overflow-hidden">
+      <div
+        className={`h-1.5 ${tutor.isPremiumOnly ? "bg-linear-to-r from-amber-400 via-orange-400 to-yellow-300" : "bg-linear-to-r from-primary via-primary/80 to-accent"}`}
+      />
 
       <div className={CARD_TOKENS.content}>
         <div className="flex items-start gap-4">
@@ -57,9 +60,16 @@ export function TutorCard({ tutor, subjectMap = {}, districtMap = {} }: Props) {
           </div>
 
           <div className="min-w-0 flex-1">
-            <h3 className={`${CARD_TOKENS.title} truncate group-hover:text-primary`}>
-              {tutor.fullName}
-            </h3>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h3 className={`${CARD_TOKENS.title} truncate group-hover:text-primary`}>
+                {tutor.fullName}
+              </h3>
+              {tutor.isPremiumOnly && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-amber-400/15 px-2 py-0.5 text-xs font-semibold text-amber-600 dark:text-amber-400 shrink-0">
+                  <Crown className="h-3 w-3" /> Premium
+                </span>
+              )}
+            </div>
             <p className="mt-1 truncate text-sm text-muted-foreground">
               {tutor.education}
             </p>
@@ -127,12 +137,7 @@ export function TutorCard({ tutor, subjectMap = {}, districtMap = {} }: Props) {
         )}
 
         <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Button
-            asChild
-            variant="outline"
-            size="lg"
-            className={CARD_TOKENS.cta}
-          >
+          <Button asChild variant="outline" size="lg" className={CARD_TOKENS.cta}>
             <Link href={`/tutors/${tutor.id}`}>Xem hồ sơ</Link>
           </Button>
           <Button

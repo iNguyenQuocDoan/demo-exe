@@ -12,6 +12,8 @@ import {
   MessageSquare,
   Repeat2,
   Star,
+  Award,
+  BookMarked,
 } from "lucide-react";
 import { getDistrictMap, getSubjectMap } from "@/api/referenceApi";
 import { getReviews, getTutorById } from "@/api/tutorApi";
@@ -155,6 +157,31 @@ export default function TutorDetailPage() {
                     {tutor.bio}
                   </p>
                 )}
+
+                {/* Học vấn & Chứng chỉ */}
+                <div className="mt-5 border-t border-border pt-4 space-y-3">
+                  <h3 className="text-sm font-semibold text-foreground flex items-center gap-1.5">
+                    <Award className="h-4 w-4 text-primary" /> Học vấn &amp; Chứng chỉ
+                  </h3>
+                  <div className="flex items-start gap-3 rounded-xl bg-primary/5 border border-primary/15 px-4 py-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                      <GraduationCap className="h-4 w-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Bằng cấp</p>
+                      <p className="text-sm font-medium text-foreground">{tutor.education}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-3 rounded-xl bg-muted/50 border border-border px-4 py-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted">
+                      <BookMarked className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-0.5">Kinh nghiệm giảng dạy</p>
+                      <p className="text-sm font-medium text-foreground">{tutor.experience}</p>
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
 

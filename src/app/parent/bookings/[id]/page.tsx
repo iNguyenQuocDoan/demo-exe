@@ -29,6 +29,7 @@ import { BookingGoalCard } from "@/components/booking/BookingGoalCard";
 import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
 import { BookingReportsList } from "@/components/booking/BookingReportsList";
 import { ReviewCardLoader } from "@/components/booking/ReviewCard";
+import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
 
 
 export default function ParentBookingDetailPage() {
@@ -229,12 +230,15 @@ export default function ParentBookingDetailPage() {
               <BookingGoalCard booking={booking} />
               <ContactOwnerCard enhancement={enhancement} latestOwnerChange={latestOwnerChange} />
               <BookingReportsList bookingId={booking.id} refreshKey={reportRefreshKey} />
-              {booking.status === "Completed" && (
-                <ReviewCardLoader
-                  bookingId={booking.id}
-                  tutorId={booking.tutorId}
-                  tutorName={tutorName}
-                />
+              {(booking.status === "Completed" || flowStatus === "completed") && (
+                <>
+                  <ReviewCardLoader
+                    bookingId={booking.id}
+                    tutorId={booking.tutorId}
+                    tutorName={tutorName}
+                  />
+                  <SessionFeedbackCard booking={booking} />
+                </>
               )}
             </div>
           </div>

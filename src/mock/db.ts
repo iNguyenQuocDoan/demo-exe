@@ -21,6 +21,7 @@ import type {
   WithdrawRequest,
   TutorApplication,
   DisputeReport,
+  Subscription,
 } from "@/types";
 import type {
   EnhancedBooking,
@@ -372,6 +373,7 @@ class MockDB {
   applications: TutorApplication[] = [];
 
   reports: DisputeReport[] = [];
+  subscriptions: Subscription[] = [];
 
   // Enhanced features
   enhancedBookings: EnhancedBooking[] = [];
@@ -390,6 +392,7 @@ class MockDB {
     this.withdrawals = loadFromStorage("withdrawals", SEED_WITHDRAWALS);
     this.applications = loadFromStorage("applications", SEED_APPLICATIONS);
     this.reports = loadFromStorage("reports", SEED_REPORTS);
+    this.subscriptions = loadFromStorage("subscriptions", []);
     this.enhancedBookings = loadFromStorage(
       "enhancedBookings",
       enhancedBookingsJson as EnhancedBooking[],
@@ -456,6 +459,9 @@ class MockDB {
   }
   saveReports() {
     saveToStorage("reports", this.reports);
+  }
+  saveSubscriptions() {
+    saveToStorage("subscriptions", this.subscriptions);
   }
 
   resetToSeed() {

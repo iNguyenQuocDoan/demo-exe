@@ -18,11 +18,14 @@ interface ReviewCardProps {
 function StarRating({
   value,
   onChange,
+  size = "md",
 }: {
   value: number;
   onChange?: (v: number) => void;
+  size?: "sm" | "md";
 }) {
   const [hovered, setHovered] = useState(0);
+  const sz = size === "sm" ? "h-5 w-5" : "h-6 w-6";
   return (
     <div className="flex gap-0.5">
       {[1, 2, 3, 4, 5].map((star) => (
@@ -37,7 +40,7 @@ function StarRating({
           disabled={!onChange}
         >
           <Star
-            className={`h-6 w-6 transition-colors ${
+            className={`${sz} transition-colors ${
               star <= (hovered || value)
                 ? "fill-amber-400 text-amber-400"
                 : "fill-muted text-muted-foreground/40"
@@ -82,10 +85,9 @@ export function ReviewCard({
     }
   };
 
-  // Show submitted review
   if (review) {
     return (
-      <div className="surface-card p-4 space-y-2">
+      <div className="surface-card p-4 space-y-3">
         <p className="text-sm font-semibold text-foreground">Đánh giá của bạn</p>
         <StarRating value={review.rating} />
         <p className="text-sm text-muted-foreground">{review.comment}</p>
@@ -102,14 +104,11 @@ export function ReviewCard({
     );
   }
 
-  // Show review form
   return (
-    <div className="surface-card p-4 space-y-3">
-      <p className="text-sm font-semibold text-foreground">
-        Đánh giá gia sư {tutorName}
-      </p>
+    <div className="surface-card p-4 space-y-4">
+      <p className="text-sm font-semibold text-foreground">Đánh giá tổng thể · {tutorName}</p>
       <div className="space-y-1">
-        <p className="text-xs text-muted-foreground">Chọn số sao</p>
+        <p className="text-xs text-muted-foreground">Xếp hạng sao</p>
         <StarRating value={rating} onChange={setRating} />
       </div>
       <div className="space-y-1">
@@ -130,9 +129,6 @@ export function ReviewCard({
   );
 }
 
-/**
- * Async loader wrapper — fetches existing review then renders ReviewCard.
- */
 export function ReviewCardLoader({
   bookingId,
   tutorId,

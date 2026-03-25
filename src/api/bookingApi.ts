@@ -1,6 +1,7 @@
 import { apiClient } from "@/lib/apiClient";
 import type {
   Booking,
+  QualityFeedback,
   ScheduleSeries,
   PaginationParams,
   PaginationMeta,
@@ -170,5 +171,17 @@ export async function acceptSeries(
     return { ok: true };
   } catch {
     return { ok: false, error: "Không thể xác nhận lịch học" };
+  }
+}
+
+export async function submitSessionFeedback(
+  bookingId: string,
+  feedback: QualityFeedback,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await apiClient.post(`/bookings/${bookingId}/feedback`, { feedback });
+    return { ok: true };
+  } catch {
+    return { ok: false, error: "Không thể gửi feedback." };
   }
 }
