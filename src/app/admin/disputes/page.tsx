@@ -6,6 +6,7 @@ import {
   AlertTriangle,
   ArrowRight,
   CheckCircle2,
+  ExternalLink,
   Flag,
   XCircle,
 } from "lucide-react";
@@ -154,6 +155,12 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
             {(report.status === "Resolved" || report.status === "Dismissed") && (
               <span className="text-xs text-muted-foreground italic">Đã xử lý xong</span>
             )}
+            <Link href={`/admin/disputes/${report.id}`}>
+              <Button size="sm" variant="ghost" className="gap-1.5 text-muted-foreground ml-auto">
+                <ExternalLink className="h-3.5 w-3.5" />
+                Xem chi tiết
+              </Button>
+            </Link>
           </div>
         </div>
       )}

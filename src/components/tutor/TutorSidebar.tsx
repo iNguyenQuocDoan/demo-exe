@@ -3,6 +3,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
+  BarChart2,
   CalendarDays,
   Flag,
   GraduationCap,
@@ -26,6 +27,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/tutor", icon: LayoutDashboard, label: "Tổng quan" },
   { href: "/tutor/calendar", icon: CalendarDays, label: "Lịch của tôi" },
   { href: "/tutor/reports", icon: Flag, label: "Báo cáo tranh chấp" },
+  { href: "/tutor/analytics", icon: BarChart2, label: "Analytics" },
   { href: "/tutor/reviews", icon: Star, label: "Đánh giá" },
   { href: "/tutor/chats", icon: MessageSquare, label: "Tin nhắn" },
   { href: "/tutor/wallet", icon: Wallet, label: "Ví của tôi" },

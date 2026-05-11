@@ -22,6 +22,8 @@ import type {
   TutorApplication,
   DisputeReport,
   Subscription,
+  AppNotification,
+  SessionFeedback,
 } from "@/types";
 import type {
   EnhancedBooking,
@@ -352,6 +354,49 @@ const SEED_REPORTS: DisputeReport[] = [
   },
 ];
 
+const SEED_NOTIFICATIONS: AppNotification[] = [
+  {
+    id: "notif1",
+    userId: "p1",
+    type: "booking_confirmed",
+    title: "Gia sư xác nhận lịch học",
+    message: "Nguyễn Văn An đã xác nhận buổi học Toán vào ngày 10/03/2026.",
+    isRead: false,
+    link: "/parent/bookings",
+    createdAt: "2026-03-08T10:00:00Z",
+  },
+  {
+    id: "notif2",
+    userId: "p1",
+    type: "deposit_approved",
+    title: "Nạp tiền thành công",
+    message: "Yêu cầu nạp 3.000.000 VNĐ của bạn đã được duyệt.",
+    isRead: true,
+    link: "/parent/wallet",
+    createdAt: "2026-03-01T08:00:00Z",
+  },
+  {
+    id: "notif3",
+    userId: "tu1",
+    type: "new_review",
+    title: "Bạn có đánh giá mới",
+    message: "Phụ Huynh Demo đã đánh giá 5 sao cho buổi học ngày 03/03/2026.",
+    isRead: false,
+    link: "/tutor/reviews",
+    createdAt: "2026-03-04T09:00:00Z",
+  },
+  {
+    id: "notif4",
+    userId: "tu1",
+    type: "report_created",
+    title: "Có khiếu nại mới liên quan đến bạn",
+    message: "Một khiếu nại về buổi học #b1 đang chờ xem xét.",
+    isRead: false,
+    link: "/tutor/reports",
+    createdAt: "2026-03-03T21:05:00Z",
+  },
+];
+
 // ─── Singleton DB ─────────────────────────────────────────────────────────────
 class MockDB {
   tutors: TutorProfile[] = tutorsJson as TutorProfile[];
@@ -374,6 +419,8 @@ class MockDB {
 
   reports: DisputeReport[] = [];
   subscriptions: Subscription[] = [];
+  notifications: AppNotification[] = [];
+  sessionFeedbacks: SessionFeedback[] = [];
 
   // Enhanced features
   enhancedBookings: EnhancedBooking[] = [];
@@ -393,6 +440,8 @@ class MockDB {
     this.applications = loadFromStorage("applications", SEED_APPLICATIONS);
     this.reports = loadFromStorage("reports", SEED_REPORTS);
     this.subscriptions = loadFromStorage("subscriptions", []);
+    this.notifications = loadFromStorage("notifications", SEED_NOTIFICATIONS);
+    this.sessionFeedbacks = loadFromStorage("sessionFeedbacks", []);
     this.enhancedBookings = loadFromStorage(
       "enhancedBookings",
       enhancedBookingsJson as EnhancedBooking[],
@@ -462,6 +511,12 @@ class MockDB {
   }
   saveSubscriptions() {
     saveToStorage("subscriptions", this.subscriptions);
+  }
+  saveNotifications() {
+    saveToStorage("notifications", this.notifications);
+  }
+  saveSessionFeedbacks() {
+    saveToStorage("sessionFeedbacks", this.sessionFeedbacks);
   }
 
   resetToSeed() {

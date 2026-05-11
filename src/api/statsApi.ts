@@ -14,6 +14,7 @@ export interface DashboardStats {
     total: number;
     byStatus: Record<string, number>;
     pending: number;
+    stuckReviewing?: number;
   };
   /** System-level financial snapshot (computed server/mock side) */
   system?: {
@@ -22,6 +23,13 @@ export interface DashboardStats {
     totalWalletBalance: number;
     pendingDepositAmount: number;
     pendingWithdrawalAmount: number;
+    pendingDepositCount?: number;
+    pendingWithdrawCount?: number;
+  };
+  /** Open disputes snapshot */
+  disputes?: {
+    openCount: number;
+    byReason: Record<string, number>;
   };
   /** Top tutors by booking count and by rating */
   topTutors?: {

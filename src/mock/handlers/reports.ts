@@ -83,6 +83,12 @@ export function handleCreateReport(body: {
   return { status: 201, data: { ok: true, report } };
 }
 
+export function handleGetReport(id: string) {
+  const report = db.reports.find((r) => r.id === id);
+  if (!report) return { status: 404, data: { ok: false, error: "Không tìm thấy báo cáo." } };
+  return { status: 200, data: { ok: true, report } };
+}
+
 export function handleGetReports(params: Record<string, string>) {
   let list = [...db.reports];
   if (params.status) list = list.filter((r) => r.status === params.status);

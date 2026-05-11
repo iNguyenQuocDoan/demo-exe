@@ -69,6 +69,25 @@ export const DISPUTE_REASON_LABELS: Record<DisputeReason, string> = {
   OTHER: "Lý do khác",
 };
 
+export type DisputeResolution =
+  | "FULL_REFUND"
+  | "PARTIAL_REFUND"
+  | "NO_REFUND"
+  | "TUTOR_WARNED"
+  | "TUTOR_SUSPENDED"
+  | "PARENT_WARNED"
+  | "DISMISSED";
+
+export const DISPUTE_RESOLUTION_LABELS: Record<DisputeResolution, string> = {
+  FULL_REFUND: "Hoàn tiền 100% cho phụ huynh",
+  PARTIAL_REFUND: "Hoàn tiền một phần",
+  NO_REFUND: "Không hoàn tiền",
+  TUTOR_WARNED: "Cảnh cáo gia sư",
+  TUTOR_SUSPENDED: "Tạm khóa tài khoản gia sư",
+  PARENT_WARNED: "Cảnh cáo phụ huynh",
+  DISMISSED: "Bác bỏ khiếu nại",
+};
+
 export interface DisputeReport {
   id: string;
   bookingId: string;
@@ -82,11 +101,38 @@ export interface DisputeReport {
   reportedName: string;
   reason: DisputeReason;
   description: string;
+  evidenceUrls?: string[];
   status: DisputeReportStatus;
   adminNote?: string;
+  adminId?: string;
   resolvedBy?: string;
+  resolution?: DisputeResolution;
+  refundAmount?: number;
   createdAt: string;
   resolvedAt?: string;
+}
+
+export interface SessionFeedback {
+  id: string;
+  bookingId: string;
+  parentId: string;
+  tutorId: string;
+  teachingMethod: number;
+  punctuality: number;
+  communication: number;
+  lessonPreparation: number;
+  notes?: string;
+  createdAt: string;
+}
+
+export interface TutorFeedbackSummary {
+  count: number;
+  summary: {
+    teachingMethod: number;
+    punctuality: number;
+    communication: number;
+    lessonPreparation: number;
+  };
 }
 
 // ─── Pagination ───────────────────────────────────────────────────────────────
@@ -488,4 +534,32 @@ export interface CalendarEvent {
   canReject?: boolean;
   canReschedule?: boolean;
   canCancel?: boolean;
+}
+
+// ─── Notifications ────────────────────────────────────────────────────────────
+export type NotificationType =
+  | "booking_confirmed"
+  | "booking_cancelled"
+  | "booking_completed"
+  | "deposit_approved"
+  | "deposit_rejected"
+  | "withdraw_processed"
+  | "new_review"
+  | "report_created"
+  | "report_resolved"
+  | "application_approved"
+  | "application_rejected"
+  | "series_confirmed";
+
+export interface AppNotification {
+  id: string;
+  userId: string;
+  type: NotificationType;
+  title: string;
+  message: string;
+  isRead: boolean;
+  link?: string;
+  referenceId?: string;
+  referenceType?: "booking" | "dispute" | "deposit" | "withdraw" | "application" | "review";
+  createdAt: string;
 }

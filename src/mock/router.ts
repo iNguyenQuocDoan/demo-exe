@@ -74,17 +74,24 @@ import {
   handleResubmitApplication,
 } from "./handlers/applications";
 import { handleGetStats } from "./handlers/stats";
+import { handleGetTutorAnalytics } from "./handlers/analytics";
 import {
   handleGetMySubscription,
   handleCreateSubscription,
 } from "./handlers/subscriptions";
 import {
   handleCreateReport,
+  handleGetReport,
   handleGetReports,
   handleGetMyReports,
   handleGetReportsAgainstMe,
   handleUpdateReport,
 } from "./handlers/reports";
+import {
+  handleGetNotifications,
+  handleMarkRead,
+  handleMarkAllRead,
+} from "./handlers/notifications";
 import {
   handleGetEnhancedBooking,
   handleConfirmEnhancedBooking,
@@ -317,6 +324,7 @@ export function routeMockRequest(config: {
 
   // ── Stats ────────────────────────────────────────────────────────────────────
   if (method === "get" && url === "/stats/dashboard") return handleGetStats();
+  if (method === "get" && url === "/stats/tutor/analytics") return handleGetTutorAnalytics();
 
   // ── Subscriptions ────────────────────────────────────────────────────────────
   if (method === "get" && url === "/subscriptions/me") return handleGetMySubscription();
@@ -331,8 +339,16 @@ export function routeMockRequest(config: {
   if (method === "get" && url === "/reports/me") return handleGetMyReports(params);
   if (method === "get" && url === "/reports/against-me") return handleGetReportsAgainstMe(params);
   const reportMatch = url.match(/^\/reports\/([^/]+)$/);
-  if (reportMatch && method === "put")
-    return handleUpdateReport(reportMatch[1], body as Parameters<typeof handleUpdateReport>[1]);
+  if (reportMatch) {
+    if (method === "get") return handleGetReport(reportMatch[1]);
+    if (method === "put") return handleUpdateReport(reportMatch[1], body as Parameters<typeof handleUpdateReport>[1]);
+  }
+
+  // ── Notifications ────────────────────────────────────────────────────────────
+  if (method === "get" && url === "/notifications") return handleGetNotifications();
+  if (method === "put" && url === "/notifications/read-all") return handleMarkAllRead();
+  const notifReadMatch = url.match(/^\/notifications\/([^/]+)\/read$/);
+  if (notifReadMatch && method === "put") return handleMarkRead(notifReadMatch[1]);
 
   // ── Uploads ──────────────────────────────────────────────────────────────────
   if (method === "post" && url === "/uploads/image") {

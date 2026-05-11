@@ -24,6 +24,15 @@ export async function createReport(
   }
 }
 
+export async function getReport(id: string): Promise<DisputeReport | null> {
+  try {
+    const { data } = await apiClient.get<{ ok: boolean; report: DisputeReport }>(`/reports/${id}`);
+    return data.report;
+  } catch {
+    return null;
+  }
+}
+
 export async function getReports(params?: {
   status?: DisputeReportStatus;
   bookingId?: string;

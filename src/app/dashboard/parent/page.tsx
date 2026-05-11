@@ -18,6 +18,7 @@ import { getTutorNameMap } from "@/api/referenceApi";
 import { getBookingEnhancement, type BookingEnhancement } from "@/lib/bookingEnhancedMock";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { KpiCardCompact } from "@/components/shared/KpiCardCompact";
+import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -172,6 +173,9 @@ export default function ParentDashboard() {
               </Button>
             </div>
           </div>
+
+          {/* ── Subscription banner ───────────────────────────── */}
+          <SubscriptionBanner />
 
           {/* ── KPI row ────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
