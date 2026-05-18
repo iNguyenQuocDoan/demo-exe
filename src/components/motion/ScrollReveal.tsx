@@ -4,47 +4,42 @@ import { motion, type Variants, type HTMLMotionProps } from "framer-motion";
 import { type ReactNode } from "react";
 
 /* ─── Shared variants ───────────────────────────────────────────────────────
- * Used consistently across all landing sections so cards reveal with the
- * same rhythm. Each entrance is clearly visible (y: 32, scale: 0.96)
- * with a 0.6s easeOut and 0.1s stagger between siblings.
+ * Soft, transform-light reveals. Keeps fade + a small translate so the motion
+ * is felt without "thumping" — no scale (which made images bulge as they
+ * entered) and no large y offset. Cards already use Tailwind hover utilities
+ * for interactive feedback, so entrance should stay restrained.
  * ─────────────────────────────────────────────────────────────────────────── */
 
-/* NOTE: variants no longer set `opacity: 0` initial state — that was causing
- * lazy-loaded `<Image>` children inside cards to flicker on first paint
- * (image loads → card opacity 0 hides it → fade-in to 1 reveals it again).
- * Entrance now uses transform-only (y/x + scale) so images stay fully opaque
- * the entire time. */
-
 export const fadeUp: Variants = {
-  hidden: { y: 32, scale: 0.96 },
+  hidden: { y: 14, opacity: 0 },
   visible: {
     y: 0,
-    scale: 1,
-    transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] },
+    opacity: 1,
+    transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export const fadeLeft: Variants = {
-  hidden: { x: -40, scale: 0.97 },
+  hidden: { x: -18, opacity: 0 },
   visible: {
     x: 0,
-    scale: 1,
-    transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] },
+    opacity: 1,
+    transition: { duration: 0.55, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export const scaleIn: Variants = {
-  hidden: { scale: 0.9 },
+  hidden: { opacity: 0 },
   visible: {
-    scale: 1,
-    transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] },
+    opacity: 1,
+    transition: { duration: 0.45, ease: [0.22, 1, 0.36, 1] },
   },
 };
 
 export const staggerContainer: Variants = {
   hidden: {},
   visible: {
-    transition: { staggerChildren: 0.1, delayChildren: 0.08 },
+    transition: { staggerChildren: 0.07, delayChildren: 0.04 },
   },
 };
 
@@ -62,7 +57,7 @@ type StaggerGroupProps = Omit<HTMLMotionProps<"div">, "variants" | "initial" | "
 
 export function StaggerGroup({
   children,
-  amount = 0.2,
+  amount = 0.05,
   once = true,
   className,
   ...rest
@@ -71,7 +66,7 @@ export function StaggerGroup({
     <motion.div
       initial="hidden"
       whileInView="visible"
-      viewport={{ once, amount, margin: "-40px 0px" }}
+      viewport={{ once, amount, margin: "0px 0px -8% 0px" }}
       variants={staggerContainer}
       className={className}
       {...rest}
@@ -133,7 +128,7 @@ export function RevealOnView({
   children,
   variant = fadeUp,
   delay = 0,
-  amount = 0.3,
+  amount = 0.1,
   once = true,
   className,
   ...rest

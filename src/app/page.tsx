@@ -149,7 +149,7 @@ const PLATFORM_FEATURES = [
     bg: "bg-emerald-500/8",
     iconColor: "text-emerald-500",
     border: "border-emerald-400/15",
-    image: "https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=800&q=80&auto=format&fit=crop",
+    image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80&auto=format&fit=crop",
   },
 ];
 
@@ -464,17 +464,7 @@ export default function HomePage() {
           amount={0.05}
         >
           {HOW_IT_WORKS.map(({ step, title, desc, icon: Icon, color, bg, border, image }) => (
-            <RevealItem
-              key={step}
-              variant={{
-                hidden: { y: 64, scale: 0.92 },
-                visible: {
-                  y: 0,
-                  scale: 1,
-                  transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
-                },
-              }}
-            >
+            <RevealItem key={step}>
               <div
                 className={`h-full rounded-2xl border bg-card text-card-foreground shadow-sm ${border} overflow-hidden`}
               >
@@ -628,31 +618,24 @@ export default function HomePage() {
 
             {/* ── 96% card ── */}
             <RevealItem className="lg:col-span-7 relative rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-primary/3 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
-              {/* Decorative image — right side, masked + tinted */}
+              {/* Decorative image — right side, heavily masked + tinted to stay subtle */}
               <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block pointer-events-none overflow-hidden">
                 <Image
                   src="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?w=800&q=80&auto=format&fit=crop"
                   alt=""
                   fill
                   sizes="50vw"
-                  className="object-cover opacity-90 transition-transform duration-700 ease-out group-hover:scale-105"
+                  className="object-cover opacity-30 transition-transform duration-700 ease-out group-hover:scale-105 group-hover:opacity-40"
                   style={{
-                    maskImage: "linear-gradient(to right, transparent 0%, black 40%, black 100%)",
-                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 40%, black 100%)",
+                    maskImage: "linear-gradient(to right, transparent 0%, black 55%, black 90%, transparent 100%)",
+                    WebkitMaskImage: "linear-gradient(to right, transparent 0%, black 55%, black 90%, transparent 100%)",
                   }}
                 />
-                {/* Color tint */}
-                <div
-                  className="absolute inset-0 mix-blend-multiply"
-                  style={{
-                    background: "linear-gradient(to right, oklch(0.92 0.04 250 / 0.95) 0%, oklch(0.5 0.15 250 / 0.18) 100%)",
-                  }}
-                />
-                {/* Subtle outer fade — blends right edge of card */}
+                {/* Color tint — primary blue wash to bond with card */}
                 <div
                   className="absolute inset-0"
                   style={{
-                    background: "linear-gradient(to right, transparent 0%, transparent 70%, oklch(0.95 0.02 250 / 0.4) 100%)",
+                    background: "linear-gradient(to right, oklch(0.95 0.04 250 / 0.55) 0%, oklch(0.85 0.1 250 / 0.18) 60%, transparent 100%)",
                   }}
                 />
               </div>
@@ -694,21 +677,15 @@ export default function HomePage() {
 
             {/* ── 2.400+ card ── */}
             <RevealItem className="lg:col-span-5 relative rounded-2xl border border-amber-400/25 bg-linear-to-br from-amber-400/10 via-amber-400/4 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
-              {/* Decorative image — top right, masked */}
-              <div className="absolute -top-6 -right-6 w-44 h-44 hidden md:block pointer-events-none overflow-hidden rounded-full">
-                <Image
-                  src="https://images.unsplash.com/photo-1544717297-fa95b6ee9643?w=400&q=80&auto=format&fit=crop&crop=faces"
-                  alt=""
-                  fill
-                  sizes="200px"
-                  className="object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-                />
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background: "radial-gradient(circle, transparent 35%, oklch(0.95 0.04 70 / 0.85) 75%)",
-                  }}
-                />
+              {/* Decorative cluster — abstract amber glow + verified badge motif */}
+              <div className="absolute -top-10 -right-10 w-48 h-48 hidden md:block pointer-events-none">
+                <div className="absolute inset-0 rounded-full bg-amber-400/18 blur-3xl" />
+                <div className="absolute inset-6 rounded-full bg-amber-300/14 blur-2xl" />
+                <div className="absolute top-12 right-12 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-white/85 shadow-lg shadow-amber-500/15 backdrop-blur-md transition-transform duration-500 ease-out group-hover:rotate-6 group-hover:scale-105">
+                  <GraduationCap className="h-7 w-7 text-amber-500" strokeWidth={2.25} />
+                </div>
+                <span className="absolute top-9 right-7 h-1.5 w-1.5 rounded-full bg-amber-400/70 animate-pulse" />
+                <span className="absolute top-20 right-28 h-1 w-1 rounded-full bg-amber-300/80 animate-pulse" style={{ animationDelay: "0.6s" }} />
               </div>
 
               {/* Bottom decoration — abstract circles */}

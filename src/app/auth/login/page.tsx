@@ -1,5 +1,6 @@
 "use client";
 import React, { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
@@ -9,12 +10,24 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
+  CheckCircle2,
+  Shield,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { login } from "@/api/authApi";
 import { useAuthStore } from "@/store/useAuthStore";
 import { PublicRoute } from "@/components/layout/RouteGuards";
+
+const LOGIN_HERO_IMAGE =
+  "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80&auto=format&fit=crop";
+
+const LOGIN_HIGHLIGHTS = [
+  { icon: Shield, text: "Ví bảo đảm — tiền chỉ chuyển khi buổi học hoàn thành" },
+  { icon: CheckCircle2, text: "1.200+ gia sư xác thực, đánh giá thực tế" },
+  { icon: Sparkles, text: "Đặt lịch nhanh, hủy hoàn tiền tự động" },
+];
 
 function LoginForm() {
   const router = useRouter();
@@ -57,99 +70,214 @@ function LoginForm() {
   };
 
   return (
-    <main className="min-h-[calc(100vh-4rem)] flex items-center justify-center bg-linear-to-br from-primary/5 via-background to-accent/5 px-4 py-12">
-      <div className="w-full max-w-md animate-fade-in-up">
-        <div className="rounded-2xl border border-border bg-card p-8 shadow-lg shadow-primary/5">
-          <div className="text-center mb-8">
-            <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary mb-4 shadow-md shadow-primary/30">
-              <GraduationCap className="h-7 w-7 text-primary-foreground" />
+    <main className="min-h-[calc(100vh-4rem)] bg-background">
+      <div className="mx-auto grid min-h-[calc(100vh-4rem)] w-full max-w-350 grid-cols-1 lg:grid-cols-2">
+        {/* ── LEFT — Hero image with brand overlay ────────────────────────── */}
+        <aside className="relative hidden overflow-hidden lg:block">
+          <Image
+            src={LOGIN_HERO_IMAGE}
+            alt="Sinh viên đang học tập cùng nhau"
+            fill
+            sizes="(max-width: 1024px) 0px, 50vw"
+            className="object-cover"
+            priority
+          />
+          {/* Brand gradient overlay */}
+          <div
+            className="absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(135deg, oklch(0.35 0.16 250 / 0.86) 0%, oklch(0.42 0.14 250 / 0.78) 45%, oklch(0.55 0.18 70 / 0.42) 100%)",
+            }}
+          />
+          {/* Subtle grid pattern */}
+          <div
+            className="absolute inset-0 opacity-25"
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px)",
+              backgroundSize: "42px 42px",
+            }}
+          />
+          {/* Soft glow blobs */}
+          <div className="absolute -top-24 -left-16 h-72 w-72 rounded-full bg-amber-400/20 blur-3xl" />
+          <div className="absolute -bottom-32 -right-16 h-96 w-96 rounded-full bg-primary/30 blur-3xl" />
+
+          {/* Content */}
+          <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-12">
+            <Link href="/" className="inline-flex items-center gap-2 text-white">
+              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md ring-1 ring-white/20">
+                <GraduationCap className="h-5 w-5 text-white" />
+              </div>
+              <span className="text-lg font-bold tracking-tight">
+                LI<span className="text-amber-300">FLOW</span>
+              </span>
+            </Link>
+
+            <div className="space-y-7">
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/90 backdrop-blur-md">
+                  <span className="relative flex h-1.5 w-1.5">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
+                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
+                  </span>
+                  Đăng nhập
+                </span>
+                <h2
+                  className="text-3xl font-bold leading-tight text-white xl:text-4xl"
+                  style={{ letterSpacing: "-0.02em" }}
+                >
+                  Tiếp tục hành trình học tập cùng gia sư uy tín
+                </h2>
+                <p className="max-w-md text-sm leading-relaxed text-white/75 xl:text-base">
+                  Quản lý buổi học, theo dõi tiến độ và kết nối với gia sư xác
+                  thực trong một dashboard duy nhất.
+                </p>
+              </div>
+
+              <ul className="space-y-3">
+                {LOGIN_HIGHLIGHTS.map(({ icon: Icon, text }) => (
+                  <li
+                    key={text}
+                    className="flex items-start gap-3 text-sm text-white/85"
+                  >
+                    <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 backdrop-blur-sm">
+                      <Icon className="h-3.5 w-3.5 text-amber-300" />
+                    </span>
+                    <span className="leading-relaxed">{text}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
-            <h1 className="text-2xl font-bold text-foreground">Đăng nhập</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              Chào mừng bạn trở lại LIFLOW
+
+            <div className="flex items-center gap-5 text-xs text-white/60">
+              <div>
+                <div className="text-lg font-bold text-white">58.000+</div>
+                <div className="uppercase tracking-wider">Buổi học</div>
+              </div>
+              <div className="h-8 w-px bg-white/15" />
+              <div>
+                <div className="text-lg font-bold text-white">4.9/5</div>
+                <div className="uppercase tracking-wider">Đánh giá</div>
+              </div>
+              <div className="h-8 w-px bg-white/15" />
+              <div>
+                <div className="text-lg font-bold text-white">1.200+</div>
+                <div className="uppercase tracking-wider">Gia sư</div>
+              </div>
+            </div>
+          </div>
+        </aside>
+
+        {/* ── RIGHT — Form ──────────────────────────────────────────────── */}
+        <section className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-12 xl:px-16">
+          {/* Mobile-only brand bar */}
+          <Link
+            href="/"
+            className="mb-8 inline-flex items-center gap-2 self-start lg:hidden"
+          >
+            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30">
+              <GraduationCap className="h-4.5 w-4.5 text-primary-foreground" />
+            </div>
+            <span className="text-base font-bold tracking-tight">
+              LI<span className="text-primary">FLOW</span>
+            </span>
+          </Link>
+
+          <div className="mx-auto w-full max-w-md">
+            <div className="mb-7 space-y-1.5">
+              <h1
+                className="text-3xl font-bold tracking-tight text-foreground"
+                style={{ letterSpacing: "-0.02em" }}
+              >
+                Đăng nhập
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Chào mừng bạn trở lại LIFLOW
+              </p>
+            </div>
+
+            <form onSubmit={handleSubmit} className="space-y-5">
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  Email
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type="email"
+                    placeholder="your.email@example.com"
+                    className="pl-9"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    autoComplete="email"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-sm font-medium text-foreground">
+                  Mật khẩu
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    type={showPw ? "text" : "password"}
+                    placeholder="Nhập mật khẩu"
+                    className="pl-9 pr-10"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    autoComplete="current-password"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPw((v) => !v)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                    tabIndex={-1}
+                  >
+                    {showPw ? (
+                      <EyeOff className="h-4 w-4" />
+                    ) : (
+                      <Eye className="h-4 w-4" />
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {error && (
+                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                  <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="h-11 w-full text-base font-semibold"
+                loading={loading}
+              >
+                Đăng nhập
+              </Button>
+            </form>
+
+            <div className="mt-6 text-center text-sm text-muted-foreground">
+              Chưa có tài khoản?{" "}
+              <Link
+                href="/auth/register"
+                className="font-semibold text-primary hover:underline"
+              >
+                Đăng ký ngay
+              </Link>
+            </div>
+
+            <p className="mt-8 text-center text-xs text-muted-foreground">
+              <Link href="/" className="transition-colors hover:text-primary">
+                ← Quay về trang chủ
+              </Link>
             </p>
           </div>
-
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                Email
-              </label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type="email"
-                  placeholder="your.email@example.com"
-                  className="pl-9"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  autoComplete="email"
-                  required
-                />
-              </div>
-            </div>
-
-            <div className="space-y-1.5">
-              <label className="text-sm font-medium text-foreground">
-                Mật khẩu
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  type={showPw ? "text" : "password"}
-                  placeholder="Nhập mật khẩu"
-                  className="pl-9 pr-10"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                  tabIndex={-1}
-                >
-                  {showPw ? (
-                    <EyeOff className="h-4 w-4" />
-                  ) : (
-                    <Eye className="h-4 w-4" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                <AlertCircle className="h-4 w-4 shrink-0" /> {error}
-              </div>
-            )}
-
-            <Button
-              type="submit"
-              className="w-full h-11 text-base font-semibold"
-              loading={loading}
-            >
-              Đăng nhập
-            </Button>
-          </form>
-
-          <div className="mt-6 text-center text-sm text-muted-foreground">
-            Chưa có tài khoản?{" "}
-            <Link
-              href="/auth/register"
-              className="font-semibold text-primary hover:underline"
-            >
-              Đăng ký ngay
-            </Link>
-          </div>
-        </div>
-
-        <p className="mt-4 text-center text-xs text-muted-foreground">
-          <Link href="/" className="hover:text-primary transition-colors">
-            ← Quay về trang chủ
-          </Link>
-        </p>
+        </section>
       </div>
     </main>
   );

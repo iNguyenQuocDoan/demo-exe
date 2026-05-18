@@ -103,8 +103,16 @@ export default function SubjectsCarousel({
                     priority={index < Math.min(4, subjects.length)}
                     className="object-cover transition-transform duration-500 group-hover/card:scale-105 motion-reduce:transition-none motion-reduce:group-hover/card:scale-100"
                   />
+                  {/* Persistent tint — unifies tone across heterogeneous subject photos */}
                   <div
-                    className="absolute inset-0 opacity-0 mix-blend-multiply transition-opacity duration-300 group-hover/card:opacity-20 motion-reduce:transition-none"
+                    className="pointer-events-none absolute inset-0"
+                    style={{
+                      background:
+                        "linear-gradient(160deg, oklch(0.5 0.15 250 / 0.55) 0%, oklch(0.32 0.08 250 / 0.42) 55%, oklch(0.75 0.15 70 / 0.28) 100%)",
+                    }}
+                  />
+                  <div
+                    className="absolute inset-0 opacity-0 mix-blend-multiply transition-opacity duration-300 group-hover/card:opacity-25 motion-reduce:transition-none"
                     style={{
                       background:
                         "linear-gradient(135deg, rgb(29, 78, 216) 0%, transparent 100%)",
