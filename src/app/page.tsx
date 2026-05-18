@@ -13,7 +13,6 @@ import {
   Languages,
   Landmark,
   Leaf,
-  MapPin,
   Quote,
   Search,
   Shield,
@@ -27,7 +26,7 @@ import type { LucideIcon } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
+import { CardContent } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -35,13 +34,25 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { HomeAnimations } from "@/components/home/HomeAnimations";
+import Aurora from "@/components/Aurora";
+import LightRays from "@/components/LightRays";
+import Magnet from "@/components/Magnet";
+import ShinyText from "@/components/ShinyText";
+import SpotlightCard from "@/components/SpotlightCard";
+import Particles from "@/components/Particles";
+import ClickSpark from "@/components/ClickSpark";
+import AnimatedBlobs from "@/components/AnimatedBlobs";
+import TiltedCard from "@/components/TiltedCard";
+import HeroHeadline from "@/components/home/HeroHeadline";
+import SubjectsCarousel from "@/components/home/SubjectsCarousel";
+import { StaggerGroup, RevealItem, RevealOnView, fadeLeft } from "@/components/motion/ScrollReveal";
 
 /* ─── Static data ──────────────────────────────────────────────────────────── */
 const HERO_HIGHLIGHTS = [
-  "Gia sư đã xác thực",
-  "Lịch trống thời gian thực",
-  "Đặt lịch & thanh toán 1 luồng",
-  "Theo dõi tiến độ rõ ràng",
+  "Gia sư xác thực",
+  "Lịch trống thực tế",
+  "Thanh toán bảo chứng",
+  "Theo dõi tiến độ học",
 ];
 
 /* Hero decorative floating dots — animated by GSAP via .ha-floating-shape selector */
@@ -54,10 +65,10 @@ const FLOATING_SHAPES: { top: string; left: string; size: number; color: string 
 ];
 
 const STATS = [
-  { label: "Gia sư xác thực", value: "2.400+", num: "2400", icon: GraduationCap, color: "text-primary", bg: "bg-primary/10" },
-  { label: "Buổi học hoàn thành", value: "58.000+", num: "58000", icon: BookOpen, color: "text-success", bg: "bg-success/10" },
-  { label: "Phụ huynh hài lòng", value: "96%", num: "96", icon: Star, color: "text-warning", bg: "bg-warning/10" },
-  { label: "Thành phố phủ sóng", value: "15+", num: "15", icon: MapPin, color: "text-accent", bg: "bg-accent/10" },
+  { label: "buổi học hoàn thành", value: "58.000+", num: "58000", suffix: "+", format: "dot", icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
+  { label: "gia sư xác thực", value: "1.200+", num: "1200", suffix: "+", format: "dot", icon: GraduationCap, color: "text-success", bg: "bg-success/10" },
+  { label: "đánh giá trung bình", value: "4.8/5", num: "4.8", suffix: "/5", decimals: "1", icon: Star, color: "text-warning", bg: "bg-warning/10" },
+  { label: "hỗ trợ khi có vấn đề", value: "24h", num: "24", suffix: "h", icon: Shield, color: "text-accent", bg: "bg-accent/10" },
 ];
 
 const HOW_IT_WORKS = [
@@ -185,29 +196,35 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           HERO — compact, content-first, image hugs right
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="relative overflow-hidden bg-mesh-hero noise-overlay text-white py-10 sm:py-12 lg:py-14">
+      <section className="relative overflow-hidden bg-mesh-hero noise-overlay text-white">
+        <div className="absolute inset-0 pointer-events-none opacity-55">
+          <Aurora
+            colorStops={["#0EA5E9", "#F59E0B", "#60A5FA"]}
+            amplitude={1.18}
+            blend={0.5}
+            speed={0.75}
+          />
+        </div>
+        <LightRays className="opacity-90" intensity="strong" />
+
+        <Particles
+          color="oklch(0.95 0.04 70 / 0.9)"
+          size={1.8}
+          maxOpacity={0.75}
+          speed={22}
+        />
 
         <div className="hero-ambient-light" />
 
-        {/* Faint dot grid */}
         <div
           className="ha-hero-parallax absolute inset-0 pointer-events-none"
           style={{
-            backgroundImage: "radial-gradient(circle, rgba(255,255,255,0.55) 1px, transparent 1px)",
-            backgroundSize: "32px 32px",
-            opacity: 0.055,
+            backgroundImage: "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)",
+            backgroundSize: "44px 44px",
+            opacity: 0.22,
           }}
         />
 
-        {/* Diagonal gradient sweep */}
-        <div
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "linear-gradient(135deg, transparent 40%, oklch(0.6 0.14 240 / 0.12) 70%, transparent 100%)",
-          }}
-        />
-
-        {/* Floating decorative shapes — JSX so React owns lifecycle (no DOM injection) */}
         <div className="ha-floating-shapes absolute inset-0 pointer-events-none overflow-hidden hidden md:block" aria-hidden="true">
           {FLOATING_SHAPES.map((s, i) => (
             <span
@@ -225,157 +242,157 @@ export default function HomePage() {
           ))}
         </div>
 
-        <div className="site-container relative grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-10 items-center">
+        <div className="site-container relative z-10 grid max-w-[1280px] grid-cols-1 items-center gap-7 py-8 sm:py-10 lg:grid-cols-12 lg:gap-10 lg:py-12 xl:py-14">
 
           {/* ── Left: Content (col-span-7) ── */}
-          <div className="ha-hero lg:col-span-7 flex flex-col gap-4">
+          <div className="ha-hero flex flex-col gap-4 lg:col-span-7 xl:gap-5">
 
             {/* Social proof pill */}
-            <div className="inline-flex items-center gap-2 self-start rounded-full px-3.5 py-1.5 text-[11px] font-semibold text-white/85 border border-white/15 bg-white/8 backdrop-blur-sm">
-              <span className="relative flex h-1.5 w-1.5 shrink-0">
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-400" />
+            <div className="ha-hero-badge inline-flex items-center gap-2 self-start rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white/90 shadow-sm shadow-black/10 backdrop-blur-md animate-scale-in">
+              <span className="relative flex h-2 w-2 shrink-0">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
+                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-300" />
               </span>
-              <TrendingUp className="h-3 w-3 opacity-70" />
-              Đã có 58.000+ buổi học hoàn thành
+              <TrendingUp className="h-3.5 w-3.5 text-amber-300" />
+              58.000+ buổi học đã hoàn thành
             </div>
 
-            {/* Headline — 2 dòng tự nhiên, không break ép */}
-            <h1
-              className="font-bold text-white"
-              style={{
-                fontSize: "clamp(1.9rem, 2.4vw + 0.9rem, 3rem)",
-                lineHeight: 1.05,
-                letterSpacing: "-0.035em",
-              }}
-            >
-              Tìm gia sư{" "}
-              <span className="text-gradient-hero-keyword">uy tín</span>{" "}
-              cho con tại khu vực của bạn
-            </h1>
+            <HeroHeadline />
 
             {/* Descriptive */}
             <p
-              className="text-white/70 leading-relaxed"
+              className="max-w-2xl text-white/76 leading-relaxed"
               style={{
-                fontSize: "clamp(0.9rem, 0.3vw + 0.85rem, 1rem)",
-                maxWidth: "52ch",
+                fontSize: "clamp(1rem, 0.32vw + 0.94rem, 1.14rem)",
               }}
             >
-              Lọc theo khu vực, xem lịch trống thực tế, đặt buổi học và quản lý
-              lịch định kỳ — trong một luồng thống nhất.
+              Lọc theo môn học, khu vực và lịch rảnh thực tế. Xem hồ sơ đã xác minh,
+              đặt buổi học và theo dõi tiến độ trong một luồng rõ ràng.
             </p>
 
             {/* Feature pills */}
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex max-w-2xl flex-wrap gap-2">
               {HERO_HIGHLIGHTS.map((item) => (
                 <span
                   key={item}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-white/12 bg-white/7 px-2.5 py-1 text-[11px] font-medium text-white/80"
+                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-2 text-[0.92rem] font-semibold leading-none text-white/88 backdrop-blur-sm"
                 >
-                  <CheckCircle2 className="h-3 w-3 text-amber-400/80 shrink-0" />
+                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-300" />
                   {item}
                 </span>
               ))}
             </div>
 
             {/* CTA buttons */}
-            <div className="flex flex-col gap-2.5 sm:flex-row pt-1">
-              <Link
-                href="/tutors"
-                className="btn-primary-cta inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-bold text-white select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
-              >
-                <Search className="h-4 w-4 shrink-0" />
-                Tìm Gia Sư Ngay
-              </Link>
-              <Link
-                href="/apply-tutor"
-                className="btn-ghost-hero inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold text-white/90 select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
-              >
-                <GraduationCap className="h-4 w-4 shrink-0" />
-                Đăng ký làm Gia Sư
-              </Link>
+            <div className="flex flex-col gap-3 pt-1 sm:flex-row">
+              <ClickSpark sparkColor="oklch(0.85 0.18 70)" sparkCount={12}>
+                <Magnet>
+                  <Link
+                    href="/tutors"
+                    className="btn-primary-cta group inline-flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-base font-bold text-white select-none transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-300"
+                  >
+                    <Search className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:rotate-12" />
+                    Tìm gia sư ngay
+                  </Link>
+                </Magnet>
+              </ClickSpark>
+              <ClickSpark sparkColor="oklch(0.92 0.05 250)" sparkCount={10}>
+                <Magnet strength={0.12} maxOffset={8}>
+                  <Link
+                    href="/apply-tutor"
+                    className="btn-ghost-hero inline-flex min-h-[3.25rem] items-center justify-center gap-2 rounded-2xl px-6 py-3.5 text-base font-semibold text-white/92 select-none transition-all duration-300 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
+                  >
+                    <GraduationCap className="h-5 w-5 shrink-0" />
+                    Trở thành gia sư
+                  </Link>
+                </Magnet>
+              </ClickSpark>
             </div>
 
             {/* Trust signals */}
             <div
-              className="flex flex-wrap items-center gap-x-4 gap-y-1.5 pt-0.5"
-              style={{ fontSize: "0.78rem", color: "oklch(1 0 0 / 0.5)" }}
+              className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-sm text-white/58"
             >
               <span className="flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-amber-400/70" />
+                <Shield className="h-4 w-4 text-amber-300/80" />
                 Ví bảo đảm
               </span>
               <span className="inline-block w-px h-3 bg-white/15" />
               <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-amber-400/70" />
+                <CheckCircle2 className="h-4 w-4 text-amber-300/80" />
                 Gia sư xác thực
               </span>
               <span className="inline-block w-px h-3 bg-white/15" />
               <span className="flex items-center gap-1.5">
-                <Zap className="h-3.5 w-3.5 text-amber-400/70" />
+                <Zap className="h-4 w-4 text-amber-300/80" />
                 Đặt lịch nhanh
               </span>
             </div>
           </div>
 
           {/* ── Right: Hero image (col-span-5, ngang 4/3) ── */}
-          <div className="ha-hero-card lg:col-span-5 opacity-0">
-            <div className="hero-image-frame aspect-4/3">
-              {/* Image */}
-              <Image
-                src="/landing.jpg"
-                alt="Gia sư dạy học cùng học sinh"
-                fill
-                className="object-cover"
-                priority
-              />
-              {/* Blend gradient — bottom dark for card legibility */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(to top, oklch(0.22 0.1 255 / 0.72) 0%, transparent 55%)",
-                }}
-              />
-              {/* Subtle top vignette to blend with hero bg */}
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: "linear-gradient(to bottom, oklch(0.32 0.12 255 / 0.3) 0%, transparent 30%)",
-                }}
-              />
+          <div className="ha-hero-card lg:col-span-5">
+            <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto lg:mr-0">
+              <div className="absolute -inset-4 rounded-[2rem] bg-white/8 blur-2xl" />
 
-              {/* Floating stats card — bottom left */}
-              <div className="absolute bottom-4 left-4 right-4">
-                <div className="hero-stats-card px-4 py-3 flex items-center gap-3">
-                  {/* Avatar stack */}
+              {/* Frame chứa ảnh (overflow:hidden — chỉ ảnh + overlays) */}
+              <div className="hero-image-frame aspect-[3/2]">
+                <Image
+                  src="/landing.jpg"
+                  alt="Gia sư dạy học cùng học sinh"
+                  fill
+                  sizes="(max-width: 1024px) 92vw, 560px"
+                  className="object-cover"
+                  priority
+                />
+                <div className="absolute inset-0 bg-linear-to-t from-slate-950/72 via-slate-950/10 to-transparent" />
+                <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-amber-400/16" />
+              </div>
+
+              {/*
+                Floating cards — sit OUTSIDE the frame so they don't get clipped.
+                Style: white card + colored accent → pops cleanly against dark hero bg.
+                Anchored at image corners, half overlap image / half lòi ra.
+              */}
+              <div className="hero-stat-card hero-stat-card-delay absolute top-4 -right-3 z-20 sm:top-5 sm:-right-4 lg:top-6 lg:-right-5">
+                <div className="flex items-center gap-3">
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-amber-500 shadow-sm shadow-amber-500/40">
+                    <Star className="h-5 w-5 fill-white text-white" />
+                  </div>
+                  <div>
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-xl font-extrabold leading-none text-slate-900">4.9</span>
+                      <span className="text-xs font-semibold text-slate-500">/5</span>
+                    </div>
+                    <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                      4.500+ phụ huynh
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="hero-stat-card absolute -bottom-4 -left-3 z-20 sm:-bottom-5 sm:-left-5 lg:-bottom-6 lg:-left-6">
+                <div className="flex items-center gap-3">
                   <div className="flex -space-x-2 shrink-0">
-                    {["3B", "7F", "AD"].map((seed, i) => (
+                    {["AN", "MA", "HL"].map((seed, i) => (
                       <div
                         key={seed}
-                        className="h-7 w-7 rounded-full border-2 flex items-center justify-center text-[9px] font-bold text-white/70"
-                        style={{
-                          borderColor: "oklch(1 0 0 / 0.15)",
-                          background: `oklch(${0.38 + i * 0.05} 0.12 ${250 + i * 15})`,
-                        }}
+                        className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white shadow-sm"
+                        style={{ background: `oklch(${0.5 + i * 0.05} 0.16 ${245 + i * 22})` }}
                       >
                         {seed}
                       </div>
                     ))}
+                    <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-[10px] font-bold text-slate-600 shadow-sm">
+                      +
+                    </div>
                   </div>
                   <div>
-                    <div className="text-xs font-semibold text-white/90 leading-tight">
-                      +120 gia sư mới tháng này
+                    <div className="text-sm font-bold leading-tight text-slate-900">
+                      +120 gia sư mới
                     </div>
-                    <div className="text-[11px] text-white/50 leading-tight mt-0.5">
-                      đã qua kiểm duyệt
-                    </div>
-                  </div>
-                  {/* Verified badge */}
-                  <div className="ml-auto shrink-0">
-                    <div className="h-6 w-6 rounded-full flex items-center justify-center"
-                      style={{ background: "oklch(0.65 0.2 150 / 0.2)", border: "1px solid oklch(0.65 0.2 150 / 0.3)" }}>
-                      <CheckCircle2 className="h-3.5 w-3.5 text-emerald-400" />
+                    <div className="mt-0.5 text-[11px] font-medium text-slate-500">
+                      đã qua kiểm duyệt tháng này
                     </div>
                   </div>
                 </div>
@@ -389,24 +406,40 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           STATS
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="border-y border-border bg-card">
-        <div className="site-container py-10 lg:py-12">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-6">
-            {STATS.map(({ label, value, num, icon: Icon, color, bg }) => (
-              <div
-                key={label}
-                className="ha-stat opacity-0 group text-center space-y-2.5 p-4 rounded-2xl border border-transparent hover:border-border hover:bg-muted/40 transition-all duration-300 cursor-default"
-              >
-                <div className={`inline-flex h-10 w-10 items-center justify-center rounded-xl ${bg} mx-auto group-hover:scale-110 transition-transform duration-300`}>
-                  <Icon className={`h-4.5 w-4.5 ${color}`} style={{ width: "1.125rem", height: "1.125rem" }} />
-                </div>
-                <div className={`ha-stat-num text-2xl sm:text-3xl font-bold tracking-tight ${color}`} data-value={num}>
-                  {value}
-                </div>
-                <div className="text-xs text-muted-foreground font-medium leading-tight">{label}</div>
-              </div>
+      <section className="relative overflow-hidden border-y border-primary/10 bg-linear-to-b from-white to-secondary/45">
+        <AnimatedBlobs />
+        <Particles
+          color="oklch(0.5 0.15 250 / 0.55)"
+          size={1.4}
+          maxOpacity={0.45}
+          speed={14}
+        />
+        <div className="site-container relative max-w-[1280px] py-7 lg:py-8" style={{ zIndex: 1 }}>
+          <StaggerGroup className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
+            {STATS.map(({ label, value, num, suffix, format, decimals, icon: Icon, color, bg }) => (
+              <RevealItem key={label}>
+                <TiltedCard
+                  maxTilt={6}
+                  scale={1.03}
+                  className="group rounded-2xl border border-border/70 bg-card/90 p-4 text-left shadow-sm shadow-slate-950/3 hover:border-primary/30 hover:shadow-lg hover:bg-card cursor-default"
+                >
+                  <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${bg} transition-all duration-300 group-hover:scale-110 group-hover:rotate-6`}>
+                    <Icon className={`h-4.5 w-4.5 ${color} transition-transform duration-300`} style={{ width: "1.125rem", height: "1.125rem" }} />
+                  </div>
+                  <div
+                    className={`ha-stat-num text-2xl font-bold leading-none sm:text-3xl ${color}`}
+                    data-value={num}
+                    data-suffix={suffix}
+                    data-format={format}
+                    data-decimals={decimals}
+                  >
+                    {value}
+                  </div>
+                  <div className="mt-2 text-xs font-semibold uppercase leading-tight text-muted-foreground transition-colors duration-300 group-hover:text-foreground">{label}</div>
+                </TiltedCard>
+              </RevealItem>
             ))}
-          </div>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -426,27 +459,39 @@ export default function HomePage() {
             Từ tìm kiếm đến buổi học đầu tiên chỉ mất vài phút.
           </p>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6">
+        <StaggerGroup
+          className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6"
+          amount={0.05}
+        >
           {HOW_IT_WORKS.map(({ step, title, desc, icon: Icon, color, bg, border, image }) => (
-            <div key={step} className="ha-step opacity-0">
-              <Card className={`h-full card-lift border ${border} overflow-hidden p-0`}>
-                {/* Banner image — chiếm toàn bộ top, có gradient overlay xuống đáy */}
+            <RevealItem
+              key={step}
+              variant={{
+                hidden: { y: 64, scale: 0.92 },
+                visible: {
+                  y: 0,
+                  scale: 1,
+                  transition: { duration: 0.75, ease: [0.16, 1, 0.3, 1] },
+                },
+              }}
+            >
+              <div
+                className={`h-full rounded-2xl border bg-card text-card-foreground shadow-sm ${border} overflow-hidden`}
+              >
                 <div className="relative h-44 w-full overflow-hidden">
                   <Image
                     src={image}
                     alt={title}
                     fill
                     sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover"
                   />
-                  {/* Gradient overlay từ dưới lên — làm step badge dễ đọc */}
                   <div
                     className="absolute inset-0"
                     style={{
                       background: "linear-gradient(to top, oklch(0.18 0.02 250 / 0.65) 0%, transparent 50%)",
                     }}
                   />
-                  {/* Step badge floating bên trái dưới */}
                   <div className="absolute bottom-3 left-3 flex items-center gap-2">
                     <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${bg} border ${border} backdrop-blur-md bg-white/90`}>
                       <Icon className={`h-4 w-4 ${color}`} />
@@ -456,28 +501,28 @@ export default function HomePage() {
                     </span>
                   </div>
                 </div>
-                {/* Body */}
                 <CardContent className="p-5 pt-4">
                   <h3 className="text-base font-bold text-foreground mb-1.5">{title}</h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
                 </CardContent>
-              </Card>
-            </div>
+              </div>
+            </RevealItem>
           ))}
-        </div>
+        </StaggerGroup>
         <div className="text-center mt-8">
-          <Button size="default" variant="outline" className="gap-2 btn-shimmer" asChild>
+          <Button size="default" variant="outline" className="gap-2 btn-shimmer hover:border-primary/50 transition-all duration-300" asChild>
             <Link href="/tutors">
-              Bắt đầu tìm gia sư <ArrowRight className="h-4 w-4" />
+              Bắt đầu tìm gia sư <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </Button>
         </div>
       </Section>
 
       {/* ══════════════════════════════════════════════════════════════════════
-          SUBJECTS
+          SUBJECTS — infinite marquee
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-card border-y border-border section-space">
+      <section className="overflow-hidden bg-card border-y border-border section-space">
+        {/* Header inside container */}
         <div className="site-container">
           <div className="flex items-end justify-between mb-8">
             <div className="space-y-2">
@@ -488,68 +533,46 @@ export default function HomePage() {
                 Tìm gia sư theo{" "}
                 <span className="text-gradient-primary">môn học</span>
               </h2>
+              <p className="text-sm text-muted-foreground">
+                Di chuột để dừng — click để xem gia sư từng môn
+              </p>
             </div>
             <Button variant="ghost" size="sm" className="gap-1 text-primary hidden sm:flex text-sm" asChild>
               <Link href="/tutors">Xem tất cả <ArrowRight className="h-3.5 w-3.5" /></Link>
             </Button>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 xl:grid-cols-8 gap-3">
-            {SUBJECTS.map((subject) => (
-              <Link
-                key={subject.id}
-                href={`/tutors?subject=${subject.id}`}
-                className="ha-subject group opacity-0 relative rounded-2xl border border-border bg-card overflow-hidden card-lift hover:border-primary/30 transition-colors"
-              >
-                {/* Thumbnail */}
-                <div className="relative h-24 w-full overflow-hidden">
-                  <Image
-                    src={subject.image}
-                    alt={subject.label}
-                    fill
-                    sizes="(max-width: 640px) 50vw, 200px"
-                    className="object-cover transition-transform duration-500 group-hover:scale-110"
-                  />
-                  {/* Color tint overlay matching subject color */}
-                  <div
-                    className="absolute inset-0 mix-blend-multiply opacity-0 group-hover:opacity-30 transition-opacity duration-300"
-                    style={{ background: "linear-gradient(135deg, oklch(0.5 0.15 250) 0%, transparent 100%)" }}
-                  />
-                  {/* Bottom fade for icon legibility */}
-                  <div
-                    className="absolute inset-0"
-                    style={{ background: "linear-gradient(to top, oklch(0 0 0 / 0.4) 0%, transparent 50%)" }}
-                  />
-                  {/* Floating icon bottom-right */}
-                  <div className={`absolute bottom-2 right-2 h-7 w-7 rounded-lg ${subject.bg} border border-white/40 backdrop-blur-sm bg-white/90 flex items-center justify-center group-hover:scale-110 transition-transform duration-300`}>
-                    <subject.icon className={`${subject.color}`} style={{ width: "0.95rem", height: "0.95rem" }} />
-                  </div>
-                </div>
-                {/* Body */}
-                <div className="p-3 text-center space-y-0.5">
-                  <div className="font-semibold text-sm text-foreground group-hover:text-primary transition-colors leading-tight">
-                    {subject.label}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground">
-                    {subject.count} gia sư
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-5 text-center sm:hidden">
-            <Button variant="ghost" size="sm" className="gap-1 text-primary text-sm" asChild>
-              <Link href="/tutors">Xem tất cả môn <ArrowRight className="h-3.5 w-3.5" /></Link>
-            </Button>
-          </div>
+        </div>
+
+        <div className="overflow-hidden py-2">
+          <SubjectsCarousel
+            subjects={SUBJECTS.map((s) => ({
+              id: s.id,
+              label: s.label,
+              count: s.count,
+              image: s.image,
+            }))}
+          />
+        </div>
+
+        <div className="site-container mt-6 text-center sm:hidden">
+          <Button variant="ghost" size="sm" className="gap-1 text-primary text-sm" asChild>
+            <Link href="/tutors">Xem tất cả môn <ArrowRight className="h-3.5 w-3.5" /></Link>
+          </Button>
         </div>
       </section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           PLATFORM FEATURES
           ══════════════════════════════════════════════════════════════════════ */}
-      <Section>
-        <div className="space-y-10">
-          <div className="ha-fee-left opacity-0 max-w-xl space-y-3">
+      <Section className="relative overflow-hidden">
+        <AnimatedBlobs
+          blobs={[
+            { top: "10%", left: "82%", size: 420, color: "oklch(0.78 0.16 245 / 0.16)", duration: 20 },
+            { top: "60%", left: "-5%", size: 380, color: "oklch(0.82 0.14 70 / 0.14)",  duration: 24, delay: 5 },
+          ]}
+        />
+        <div className="space-y-10 relative" style={{ zIndex: 1 }}>
+          <RevealOnView variant={fadeLeft} className="max-w-xl space-y-3">
             <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
               Nền tảng đáng tin cậy
             </Badge>
@@ -563,11 +586,15 @@ export default function HomePage() {
               LIFLOW xây dựng hệ thống đặt gia sư với quy trình kiểm duyệt nghiêm
               ngặt và ví bảo đảm — tiền chỉ rời ví khi buổi học hoàn thành.
             </p>
-          </div>
+          </RevealOnView>
 
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+          <StaggerGroup className="grid grid-cols-1 gap-4 lg:grid-cols-3">
             {PLATFORM_FEATURES.map((feature) => (
-              <Card key={feature.title} className={`ha-fee-right opacity-0 border ${feature.border} card-lift group overflow-hidden p-0`}>
+              <RevealItem key={feature.title}>
+                <SpotlightCard
+                  spotlightColor="oklch(0.74 0.18 70 / 0.16)"
+                  className={`h-full rounded-2xl border bg-card text-card-foreground shadow-sm ${feature.border} card-lift group overflow-hidden p-0 transition-all duration-300 hover:shadow-xl hover:border-primary/30`}
+                >
                 {/* Image banner */}
                 <div className="relative h-40 w-full overflow-hidden">
                   <Image
@@ -575,7 +602,7 @@ export default function HomePage() {
                     alt={feature.title}
                     fill
                     sizes="(max-width: 1024px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    className="object-cover transition-transform duration-700 group-hover:scale-110"
                   />
                   {/* Tint overlay using feature accent color */}
                   <div
@@ -583,23 +610,24 @@ export default function HomePage() {
                     style={{ background: "linear-gradient(to bottom, oklch(0.18 0.02 250 / 0.25) 0%, oklch(0.18 0.02 250 / 0.55) 100%)" }}
                   />
                   {/* Floating icon top-left */}
-                  <div className={`absolute top-3 left-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${feature.bg} backdrop-blur-md bg-white/95 border ${feature.border} shadow-sm`}>
+                  <div className={`absolute top-3 left-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${feature.bg} backdrop-blur-md bg-white/95 border ${feature.border} shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>
                     <feature.icon className={`${feature.iconColor}`} style={{ width: "1.125rem", height: "1.125rem" }} />
                   </div>
                 </div>
                 <CardContent className="p-5 space-y-1.5">
-                  <h3 className="text-sm font-bold text-foreground">{feature.title}</h3>
+                  <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-300">{feature.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
                 </CardContent>
-              </Card>
+              </SpotlightCard>
+              </RevealItem>
             ))}
-          </div>
+          </StaggerGroup>
 
           {/* Bento metrics — with decorative imagery */}
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+          <StaggerGroup className="grid grid-cols-1 gap-4 lg:grid-cols-12">
 
             {/* ── 96% card ── */}
-            <div className="ha-fee-right opacity-0 lg:col-span-7 relative rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-primary/3 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
+            <RevealItem className="lg:col-span-7 relative rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-primary/3 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
               {/* Decorative image — right side, masked + tinted */}
               <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block pointer-events-none overflow-hidden">
                 <Image
@@ -662,10 +690,10 @@ export default function HomePage() {
                   <Link href="/tutors">Tìm gia sư ngay <ArrowRight className="h-3.5 w-3.5" /></Link>
                 </Button>
               </div>
-            </div>
+            </RevealItem>
 
             {/* ── 2.400+ card ── */}
-            <div className="ha-fee-right opacity-0 lg:col-span-5 relative rounded-2xl border border-amber-400/25 bg-linear-to-br from-amber-400/10 via-amber-400/4 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
+            <RevealItem className="lg:col-span-5 relative rounded-2xl border border-amber-400/25 bg-linear-to-br from-amber-400/10 via-amber-400/4 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
               {/* Decorative image — top right, masked */}
               <div className="absolute -top-6 -right-6 w-44 h-44 hidden md:block pointer-events-none overflow-hidden rounded-full">
                 <Image
@@ -724,16 +752,22 @@ export default function HomePage() {
                   <Link href="/apply-tutor">Trở thành gia sư <ArrowRight className="h-3.5 w-3.5" /></Link>
                 </Button>
               </div>
-            </div>
-          </div>
+            </RevealItem>
+          </StaggerGroup>
         </div>
       </Section>
 
       {/* ══════════════════════════════════════════════════════════════════════
           TESTIMONIALS
           ══════════════════════════════════════════════════════════════════════ */}
-      <section className="bg-muted/25 border-t border-border section-space">
-        <div className="site-container">
+      <section className="relative overflow-hidden bg-muted/25 border-t border-border section-space">
+        <AnimatedBlobs
+          blobs={[
+            { top: "-10%", left: "5%",  size: 460, color: "oklch(0.78 0.16 245 / 0.14)", duration: 22 },
+            { top: "60%",  left: "70%", size: 420, color: "oklch(0.82 0.14 70 / 0.13)",  duration: 26, delay: 6 },
+          ]}
+        />
+        <div className="site-container relative" style={{ zIndex: 1 }}>
           <div className="text-center mb-10 space-y-3">
             <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
               Đánh giá thực tế
@@ -747,49 +781,48 @@ export default function HomePage() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
+          <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
             {TESTIMONIALS.map((t) => (
-              <div
-                key={t.name}
-                className="ha-testimonial opacity-0 relative rounded-2xl border border-border bg-card p-6 card-lift group"
-              >
-                {/* Decorative quote */}
-                <Quote
-                  className="absolute top-4 right-4 h-8 w-8 text-primary/15 group-hover:text-primary/25 transition-colors"
-                  strokeWidth={2.5}
-                />
+              <RevealItem key={t.name}>
+                <TiltedCard
+                  maxTilt={7}
+                  scale={1.025}
+                  className="relative rounded-2xl border border-border bg-card p-6 group hover:shadow-xl hover:border-primary/20"
+                >
+                  <Quote
+                    className="absolute top-4 right-4 h-8 w-8 text-primary/15 group-hover:text-primary/30 transition-all duration-300 group-hover:scale-110"
+                    strokeWidth={2.5}
+                  />
 
-                {/* Stars */}
-                <div className="flex items-center gap-0.5 mb-3">
-                  {Array.from({ length: t.rating }).map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                  ))}
-                </div>
-
-                {/* Quote text */}
-                <p className="text-sm text-foreground leading-relaxed mb-5">
-                  &ldquo;{t.quote}&rdquo;
-                </p>
-
-                {/* Author */}
-                <div className="flex items-center gap-3 pt-4 border-t border-border">
-                  <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/15 shrink-0">
-                    <Image
-                      src={t.avatar}
-                      alt={t.name}
-                      fill
-                      sizes="40px"
-                      className="object-cover"
-                    />
+                  <div className="flex items-center gap-0.5 mb-3">
+                    {Array.from({ length: t.rating }).map((_, i) => (
+                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
+                    ))}
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-sm font-semibold text-foreground truncate">{t.name}</div>
-                    <div className="text-xs text-muted-foreground truncate">{t.role}</div>
+
+                  <p className="text-sm text-foreground leading-relaxed mb-5">
+                    &ldquo;{t.quote}&rdquo;
+                  </p>
+
+                  <div className="flex items-center gap-3 pt-4 border-t border-border">
+                    <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/15 shrink-0 group-hover:ring-primary/40 transition-all duration-300">
+                      <Image
+                        src={t.avatar}
+                        alt={t.name}
+                        fill
+                        sizes="40px"
+                        className="object-cover"
+                      />
+                    </div>
+                    <div className="min-w-0">
+                      <div className="text-sm font-semibold text-foreground truncate">{t.name}</div>
+                      <div className="text-xs text-muted-foreground truncate">{t.role}</div>
+                    </div>
                   </div>
-                </div>
-              </div>
+                </TiltedCard>
+              </RevealItem>
             ))}
-          </div>
+          </StaggerGroup>
 
           {/* Trust strip */}
           <div className="mt-10 pt-6 border-t border-border flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
@@ -818,8 +851,14 @@ export default function HomePage() {
       {/* ══════════════════════════════════════════════════════════════════════
           FAQ
           ══════════════════════════════════════════════════════════════════════ */}
-      <section id="faq" className="bg-card border-t border-border section-space">
-        <div className="site-container">
+      <section id="faq" className="relative overflow-hidden bg-card border-t border-border section-space">
+        <AnimatedBlobs
+          blobs={[
+            { top: "20%", left: "85%", size: 360, color: "oklch(0.72 0.18 290 / 0.1)", duration: 24 },
+            { top: "65%", left: "0%",  size: 400, color: "oklch(0.78 0.16 245 / 0.1)", duration: 28, delay: 4 },
+          ]}
+        />
+        <div className="site-container relative" style={{ zIndex: 1 }}>
           <div className="text-center mb-10 space-y-3">
             <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">FAQ</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Câu hỏi thường gặp</h2>
@@ -830,22 +869,25 @@ export default function HomePage() {
               </a>
             </p>
           </div>
-          <Accordion type="single" collapsible className="max-w-2xl mx-auto space-y-2">
+          <StaggerGroup className="max-w-2xl mx-auto" amount={0.15}>
+          <Accordion type="single" collapsible className="space-y-2">
             {FAQ.map((faq, i) => (
+              <RevealItem key={i} className="block">
               <AccordionItem
-                key={i}
                 value={`faq-${i}`}
-                className="ha-faq opacity-0 border border-border rounded-2xl px-5 overflow-hidden hover:border-primary/25 transition-colors duration-200"
+                className="border border-border rounded-2xl px-5 overflow-hidden hover:border-primary/25 transition-all duration-300 hover:shadow-md group"
               >
-                <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:text-primary hover:no-underline py-4">
+                <AccordionTrigger className="text-left text-sm font-semibold text-foreground hover:text-primary hover:no-underline py-4 transition-colors duration-300 group-hover:text-primary">
                   {faq.q}
                 </AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4">
+                <AccordionContent className="text-sm text-muted-foreground leading-relaxed pb-4 transition-colors duration-300">
                   {faq.a}
                 </AccordionContent>
               </AccordionItem>
+              </RevealItem>
             ))}
           </Accordion>
+          </StaggerGroup>
         </div>
       </section>
 
@@ -853,6 +895,21 @@ export default function HomePage() {
           FINAL CTA
           ══════════════════════════════════════════════════════════════════════ */}
       <Section className="relative overflow-hidden bg-mesh-hero noise-overlay text-white text-center">
+        <div className="absolute inset-0 pointer-events-none opacity-20">
+          <Aurora
+            colorStops={["#0EA5E9", "#F59E0B", "#1D4ED8"]}
+            amplitude={0.45}
+            blend={0.24}
+            speed={0.22}
+          />
+        </div>
+        <LightRays className="opacity-45" />
+        <Particles
+          color="oklch(0.95 0.04 70 / 0.85)"
+          size={1.6}
+          maxOpacity={0.7}
+          speed={20}
+        />
         <div
           className="absolute inset-0 pointer-events-none"
           style={{
@@ -863,41 +920,59 @@ export default function HomePage() {
         />
         <div className="hero-ambient-light" />
 
-        <div className="ha-cta relative mx-auto max-w-xl flex flex-col items-center gap-5">
-          <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl opacity-0"
+        <StaggerGroup className="relative mx-auto max-w-xl flex flex-col items-center gap-5" amount={0.25}>
+          <RevealItem className="inline-flex h-14 w-14 items-center justify-center rounded-2xl"
             style={{ background: "oklch(1 0 0 / 0.1)", border: "1px solid oklch(1 0 0 / 0.15)" }}>
             <Shield className="h-7 w-7 text-amber-400/80" />
-          </div>
-          <h2 className="text-3xl font-bold sm:text-4xl opacity-0" style={{ letterSpacing: "-0.03em" }}>
-            Bắt đầu đặt buổi học đầu tiên
-          </h2>
-          <p className="text-base text-white/65 sm:text-lg leading-relaxed max-w-[44ch] opacity-0">
-            Đặt buổi học ngay hôm nay và theo dõi tiến trình học tập rõ ràng từ dashboard.
-          </p>
-          <div className="flex flex-wrap gap-3 justify-center opacity-0">
-            <Link
-              href="/tutors"
-              className="btn-ghost-hero inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
-            >
-              <Users className="h-4 w-4 shrink-0" />
-              Tìm Gia Sư Ngay
-            </Link>
-            <Link
-              href="/apply-tutor"
-              className="btn-primary-cta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400"
-            >
-              Đăng ký làm Gia Sư
-              <ArrowRight className="h-4 w-4 shrink-0" />
-            </Link>
-          </div>
-          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 opacity-0" style={{ fontSize: "0.8rem", color: "oklch(1 0 0 / 0.45)" }}>
+          </RevealItem>
+          <RevealItem>
+            <h2 className="text-3xl font-bold sm:text-4xl text-center" style={{ letterSpacing: "-0.03em" }}>
+              <ShinyText
+                text="Bắt đầu đặt buổi học đầu tiên"
+                color="#ffffff"
+                shineColor="#fbbf24"
+                speed={4.5}
+                spread={105}
+              />
+            </h2>
+          </RevealItem>
+          <RevealItem>
+            <p className="text-base text-white/65 sm:text-lg leading-relaxed max-w-[44ch] text-center">
+              Đặt buổi học ngay hôm nay và theo dõi tiến trình học tập rõ ràng từ dashboard.
+            </p>
+          </RevealItem>
+          <RevealItem className="flex flex-wrap gap-3 justify-center">
+            <ClickSpark sparkColor="oklch(0.92 0.05 250)" sparkCount={10}>
+              <Magnet strength={0.12} maxOffset={8}>
+                <Link
+                  href="/tutors"
+                  className="btn-ghost-hero inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 transition-all duration-300 hover:bg-white/18 hover:border-white/40"
+                >
+                  <Users className="h-4 w-4 shrink-0" />
+                  Tìm Gia Sư Ngay
+                </Link>
+              </Magnet>
+            </ClickSpark>
+            <ClickSpark sparkColor="oklch(0.85 0.18 70)" sparkCount={12}>
+              <Magnet>
+                <Link
+                  href="/apply-tutor"
+                  className="btn-primary-cta inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-sm font-bold text-white select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-amber-400 transition-all duration-300"
+                >
+                  Đăng ký làm Gia Sư
+                  <ArrowRight className="h-4 w-4 shrink-0" />
+                </Link>
+              </Magnet>
+            </ClickSpark>
+          </RevealItem>
+          <RevealItem className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2" style={{ fontSize: "0.8rem", color: "oklch(1 0 0 / 0.45)" }}>
             <span className="flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5" /> Miễn phí đăng ký</span>
             <span className="inline-block w-px h-3 bg-white/15" />
             <span className="flex items-center gap-1.5"><Shield className="h-3.5 w-3.5" /> Thanh toán bảo đảm</span>
             <span className="inline-block w-px h-3 bg-white/15" />
             <span className="flex items-center gap-1.5"><Wallet className="h-3.5 w-3.5" /> Hoàn tiền 100%</span>
-          </div>
-        </div>
+          </RevealItem>
+        </StaggerGroup>
       </Section>
     </main>
   );

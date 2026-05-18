@@ -11,14 +11,15 @@ export function TutorList({
   districtMap: Record<string, string>;
 }) {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+    <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
       {tutors.map((tutor) => (
-        <TutorCard
-          key={tutor.id}
-          tutor={tutor}
-          subjectMap={subjectMap}
-          districtMap={districtMap}
-        />
+        <div key={tutor.id} className="pa-list-item min-h-full">
+          <TutorCard
+            tutor={tutor}
+            subjectMap={subjectMap}
+            districtMap={districtMap}
+          />
+        </div>
       ))}
     </div>
   );

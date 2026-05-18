@@ -23,23 +23,24 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center py-20 px-6 text-center",
+        "surface-card relative flex min-h-96 flex-col items-center justify-center overflow-hidden px-6 py-16 text-center",
         className,
       )}
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(37,99,235,0.08),transparent)]" />
       {Icon && (
-        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-2xl bg-primary/8">
-          <Icon className="h-10 w-10 text-primary" />
+        <div className="relative mb-5 flex h-18 w-18 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
+          <Icon className="h-9 w-9 text-primary" />
         </div>
       )}
-      <h3 className="mb-2 text-lg font-semibold text-foreground">{title}</h3>
+      <h3 className="relative mb-2 text-xl font-bold text-foreground">{title}</h3>
       {description && (
-        <p className="max-w-sm text-sm text-muted-foreground mb-4">
+        <p className="relative mb-5 max-w-md text-sm leading-relaxed text-muted-foreground">
           {description}
         </p>
       )}
       {action && (
-        <Button variant="outline" onClick={action.onClick}>
+        <Button className="relative" onClick={action.onClick}>
           {action.label}
         </Button>
       )}

@@ -1,7 +1,7 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { RotateCcw } from "lucide-react";
+import { ArrowUpDown, BookOpen, MapPin, Monitor, RotateCcw } from "lucide-react";
 import { getCities, getDistricts, getSubjects } from "@/api/referenceApi";
 import { Button } from "@/components/ui/button";
 import {
@@ -48,28 +48,34 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
     [cities.length, subjects.length],
   );
 
+  const wrapperClass = compact
+    ? "space-y-4"
+    : "surface-card p-5 sm:p-6";
+
   return (
-    <div className={compact ? "space-y-3" : "surface-card p-5 sm:p-6"}>
+    <div className={wrapperClass}>
       {!compact ? (
-        <h3 className="mb-4 text-sm font-semibold text-foreground">Bộ lọc tìm kiếm</h3>
+        <div className="mb-5">
+          <h3 className="text-base font-semibold text-foreground">Bộ lọc tìm kiếm</h3>
+          <p className="mt-1 text-sm text-muted-foreground">Tinh chỉnh để tìm gia sư phù hợp hơn với nhu cầu của con.</p>
+        </div>
       ) : null}
 
       {!hasReferenceData && (
-        <p className="mb-3 text-xs text-muted-foreground">
+        <p className="rounded-xl border border-amber-300/30 bg-amber-50 px-3 py-2 text-xs text-amber-700">
           Chưa có dữ liệu tham chiếu từ Firebase. Hãy chạy script seed nếu cần.
         </p>
       )}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Thành phố</label>
+        <FilterField icon={MapPin} label="Thành phố">
           <Select
             value={filter.cityId || "__all__"}
             onValueChange={(value) =>
               setFilter({ cityId: value === "__all__" ? "" : value, districtId: "" })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-12 bg-card">
               <SelectValue placeholder="Chọn thành phố" />
             </SelectTrigger>
             <SelectContent>
@@ -81,17 +87,16 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FilterField>
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Quận / Huyện</label>
+        <FilterField icon={MapPin} label="Quận / Huyện">
           <Select
             value={filter.districtId || "__all__"}
             onValueChange={(value) =>
               setFilter({ districtId: value === "__all__" ? "" : value })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-12 bg-card">
               <SelectValue placeholder="Tất cả quận" />
             </SelectTrigger>
             <SelectContent>
@@ -103,17 +108,16 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FilterField>
 
-        <div className="space-y-1">
-          <label className="text-xs font-medium text-muted-foreground">Môn học</label>
+        <FilterField icon={BookOpen} label="Môn học">
           <Select
             value={filter.subjectId || "__all__"}
             onValueChange={(value) =>
               setFilter({ subjectId: value === "__all__" ? "" : value })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-12 bg-card">
               <SelectValue placeholder="Tất cả môn" />
             </SelectTrigger>
             <SelectContent>
@@ -125,17 +129,33 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
               ))}
             </SelectContent>
           </Select>
-        </div>
+        </FilterField>
 
-        <div className="space-y-1 sm:col-span-2">
-          <label className="text-xs font-medium text-muted-foreground">Sắp xếp</label>
+        <FilterField icon={Monitor} label="Hình thức học">
+          <Select
+            value={filter.teachingMode}
+            onValueChange={(value) =>
+              setFilter({ teachingMode: value as typeof filter.teachingMode })
+            }
+          >
+            <SelectTrigger className="h-12 bg-card">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Tất cả hình thức</SelectItem>
+              <SelectItem value="OFFLINE">Học trực tiếp</SelectItem>
+            </SelectContent>
+          </Select>
+        </FilterField>
+
+        <FilterField icon={ArrowUpDown} label="Sắp xếp" className="sm:col-span-2">
           <Select
             value={filter.sortBy}
             onValueChange={(value) =>
               setFilter({ sortBy: value as typeof filter.sortBy })
             }
           >
-            <SelectTrigger>
+            <SelectTrigger className="h-12 bg-card">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -145,7 +165,7 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
               <SelectItem value="reviewCount">Nhiều đánh giá</SelectItem>
             </SelectContent>
           </Select>
-        </div>
+        </FilterField>
       </div>
 
       <div className="mt-4 flex justify-end">
@@ -160,6 +180,28 @@ export function TutorFilter({ compact = false }: { compact?: boolean }) {
           Xóa bộ lọc
         </Button>
       </div>
+    </div>
+  );
+}
+
+function FilterField({
+  icon: Icon,
+  label,
+  children,
+  className,
+}: {
+  icon: typeof MapPin;
+  label: string;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <div className={className}>
+      <label className="mb-1.5 flex items-center gap-1.5 text-xs font-semibold text-muted-foreground">
+        <Icon className="h-3.5 w-3.5 text-primary" />
+        {label}
+      </label>
+      {children}
     </div>
   );
 }

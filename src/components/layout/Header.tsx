@@ -33,10 +33,6 @@ export function Header() {
   const navRef = useRef<HTMLElement>(null);
   const [pill, setPill] = useState<{ left: number; width: number } | null>(null);
 
-  const activeHref = NAV_LINKS.find(({ href }) =>
-    href === "/" ? pathname === "/" : pathname.startsWith(href)
-  )?.href;
-
   /* Update pill position whenever active link or layout changes */
   useEffect(() => {
     if (!navRef.current) return;
@@ -125,7 +121,7 @@ export function Header() {
         /* Transition: height, background, border-color, shadow */
         scrolled
           ? "border-b border-border/70 bg-card/96 shadow-sm shadow-black/4"
-          : "border-b border-transparent bg-card/70",
+          : "border-b border-border/50 bg-card/88 shadow-sm shadow-black/3",
         /* Backdrop blur — only when scrolled to avoid mobile perf cost */
         scrolled ? "backdrop-blur-xl" : "backdrop-blur-md",
       )}
@@ -135,7 +131,7 @@ export function Header() {
         <div
           className="flex items-center"
           style={{
-            height: scrolled ? "3.75rem" : "4.5rem",
+            height: scrolled ? "3.5rem" : "4.125rem",
             transition: "height 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
           }}
         >
@@ -162,8 +158,8 @@ export function Header() {
                 className="font-extrabold tracking-tight text-foreground"
                 style={{
                   fontFamily: "'Space Grotesk', sans-serif",
-                  fontSize: scrolled ? "1.5rem" : "1.75rem",
-                  letterSpacing: "-0.03em",
+                  fontSize: scrolled ? "1.38rem" : "1.6rem",
+                  letterSpacing: 0,
                   transition: "font-size 0.3s cubic-bezier(0.16,1,0.3,1)",
                 }}
               >
