@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
@@ -48,8 +49,8 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/10">
-          <GraduationCap className="h-5 w-5 text-white" />
+        <div className="relative h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-white/20">
+          <Image src="/logo.png" alt="LIFLOW" fill sizes="36px" className="object-contain" />
         </div>
         <span className="text-lg font-bold text-white">
           LI<span className="text-amber-300">FLOW</span>
@@ -141,7 +142,9 @@ export function TutorSidebar() {
           href="/dashboard/tutor"
           className="flex items-center gap-2 text-lg font-bold"
         >
-          <GraduationCap className="h-5 w-5 text-primary" />
+          <span className="relative h-8 w-8 shrink-0 overflow-hidden rounded-lg">
+            <Image src="/logo.png" alt="LIFLOW" fill sizes="32px" className="object-contain" />
+          </span>
           <span>
             LI<span className="text-accent">FLOW</span>{" "}
             <span className="text-xs font-normal text-muted-foreground">Gia sư</span>

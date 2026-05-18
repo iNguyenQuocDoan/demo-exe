@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
-  GraduationCap,
   Mail,
   Lock,
   AlertCircle,
@@ -107,9 +106,9 @@ function LoginForm() {
           {/* Content */}
           <div className="relative z-10 flex h-full flex-col justify-between p-10 xl:p-12">
             <Link href="/" className="inline-flex items-center gap-2 text-white">
-              <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-white/15 backdrop-blur-md ring-1 ring-white/20">
-                <GraduationCap className="h-5 w-5 text-white" />
-              </div>
+              <span className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-white/30">
+                <Image src="/logo.png" alt="LIFLOW" fill sizes="40px" className="object-contain" />
+              </span>
               <span className="text-lg font-bold tracking-tight">
                 LI<span className="text-amber-300">FLOW</span>
               </span>
@@ -177,9 +176,9 @@ function LoginForm() {
             href="/"
             className="mb-8 inline-flex items-center gap-2 self-start lg:hidden"
           >
-            <div className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary shadow-md shadow-primary/30">
-              <GraduationCap className="h-4.5 w-4.5 text-primary-foreground" />
-            </div>
+            <span className="relative h-9 w-9 shrink-0 overflow-hidden rounded-xl">
+              <Image src="/logo.png" alt="LIFLOW" fill sizes="36px" className="object-contain" />
+            </span>
             <span className="text-base font-bold tracking-tight">
               LI<span className="text-primary">FLOW</span>
             </span>

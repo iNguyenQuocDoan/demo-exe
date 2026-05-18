@@ -1,6 +1,7 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { GraduationCap, Facebook, Youtube, MessageCircle } from "lucide-react";
+import { Facebook, Youtube, MessageCircle } from "lucide-react";
 
 export function Footer() {
   return (
@@ -13,8 +14,14 @@ export function Footer() {
           {/* Brand */}
           <div className="space-y-5">
             <div className="flex items-center gap-2.5 text-2xl font-bold">
-              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary">
-                <GraduationCap className="h-6 w-6 text-white" />
+              <div className="relative h-10 w-10 shrink-0 overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-white/20">
+                <Image
+                  src="/logo.png"
+                  alt="LIFLOW"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                />
               </div>
               LI<span className="text-accent">FLOW</span>
             </div>

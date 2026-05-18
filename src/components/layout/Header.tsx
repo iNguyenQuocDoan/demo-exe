@@ -1,10 +1,11 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  GraduationCap, Menu, X, User, LogOut, LayoutDashboard,
+  Menu, X, User, LogOut, LayoutDashboard,
   ChevronDown, Shield, Users, BookOpen, UserCheck, CalendarDays,
   Flag, Wallet, Clock, ClipboardList, Crown,
 } from "lucide-react";
@@ -139,19 +140,20 @@ export function Header() {
           <div className="flex flex-1 items-center">
             <Link href="/" className="group flex items-center gap-2.5 select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg">
               <div
-                className="flex items-center justify-center rounded-xl bg-primary shadow-sm shadow-primary/30 group-hover:shadow-primary/50 transition-all duration-300 group-hover:scale-[1.06]"
+                className="relative shrink-0 transition-transform duration-300 group-hover:scale-[1.06]"
                 style={{
                   width: scrolled ? "2rem" : "2.25rem",
                   height: scrolled ? "2rem" : "2.25rem",
-                  transition: "width 0.3s cubic-bezier(0.16,1,0.3,1), height 0.3s cubic-bezier(0.16,1,0.3,1)",
+                  transition: "width 0.3s cubic-bezier(0.16,1,0.3,1), height 0.3s cubic-bezier(0.16,1,0.3,1), transform 0.3s ease",
                 }}
               >
-                <GraduationCap
-                  className="text-primary-foreground transition-all duration-300"
-                  style={{
-                    width: scrolled ? "1.1rem" : "1.3rem",
-                    height: scrolled ? "1.1rem" : "1.3rem",
-                  }}
+                <Image
+                  src="/logo.png"
+                  alt="LIFLOW"
+                  fill
+                  sizes="40px"
+                  className="object-contain"
+                  priority
                 />
               </div>
               <span
