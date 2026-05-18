@@ -4,6 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
+  ArrowLeft,
   GraduationCap,
   Mail,
   Lock,
@@ -272,8 +273,12 @@ function LoginForm() {
             </div>
 
             <p className="mt-8 text-center text-xs text-muted-foreground">
-              <Link href="/" className="transition-colors hover:text-primary">
-                ← Quay về trang chủ
+              <Link
+                href="/"
+                className="inline-flex items-center gap-1.5 transition-colors hover:text-primary"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                Quay về trang chủ
               </Link>
             </p>
           </div>

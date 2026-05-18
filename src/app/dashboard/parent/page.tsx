@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  ArrowRight,
   BookOpen,
   CalendarDays,
   CheckCircle2,
@@ -222,7 +223,7 @@ export default function ParentDashboard() {
                   )}
                 </div>
                 <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                  <Link href="/parent/bookings">Xem tất cả →</Link>
+                  <Link href="/parent/bookings" className="inline-flex items-center gap-1">Xem tất cả <ArrowRight className="h-3 w-3" /></Link>
                 </Button>
               </div>
               {pendingBookings.length === 0 ? (
@@ -280,7 +281,7 @@ export default function ParentDashboard() {
                   <h2 className="text-sm font-semibold text-foreground">Lịch sắp học</h2>
                 </div>
                 <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                  <Link href="/parent/bookings">Xem tất cả →</Link>
+                  <Link href="/parent/bookings" className="inline-flex items-center gap-1">Xem tất cả <ArrowRight className="h-3 w-3" /></Link>
                 </Button>
               </div>
               {confirmedBookings.length === 0 ? (
@@ -343,7 +344,7 @@ export default function ParentDashboard() {
                 <h2 className="text-sm font-semibold text-foreground">Lịch đặt gần đây</h2>
               </div>
               <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                <Link href="/parent/bookings">Xem tất cả →</Link>
+                <Link href="/parent/bookings" className="inline-flex items-center gap-1">Xem tất cả <ArrowRight className="h-3 w-3" /></Link>
               </Button>
             </div>
 

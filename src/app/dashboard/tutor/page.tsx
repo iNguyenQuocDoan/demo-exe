@@ -287,7 +287,7 @@ export default function TutorDashboard() {
                   )}
                 </div>
                 <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                  <Link href="/tutor/bookings">Xem tất cả →</Link>
+                  <Link href="/tutor/bookings" className="inline-flex items-center gap-1">Xem tất cả <ArrowRight className="h-3 w-3" /></Link>
                 </Button>
               </div>
               {pendingBookings.length === 0 ? (
@@ -355,7 +355,7 @@ export default function TutorDashboard() {
                   )}
                 </div>
                 <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                  <Link href="/tutor/schedule">Xem lịch →</Link>
+                  <Link href="/tutor/schedule" className="inline-flex items-center gap-1">Xem lịch <ArrowRight className="h-3 w-3" /></Link>
                 </Button>
               </div>
               {confirmedBookings.length === 0 ? (
@@ -404,8 +404,9 @@ export default function TutorDashboard() {
                   <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
                   <h2 className="text-sm font-semibold text-foreground">Đánh giá gần đây</h2>
                   {avgRating && (
-                    <span className="rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
-                      ★ {avgRating}
+                    <span className="inline-flex items-center gap-1 rounded-full bg-amber-50 px-2 py-0.5 text-xs font-semibold text-amber-700">
+                      <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      {avgRating}
                     </span>
                   )}
                   {unrespondedReviews > 0 && (
@@ -413,7 +414,7 @@ export default function TutorDashboard() {
                   )}
                 </div>
                 <Button variant="ghost" size="sm" asChild className="h-7 px-2 text-xs">
-                  <Link href="/tutor/reviews">Xem tất cả →</Link>
+                  <Link href="/tutor/reviews" className="inline-flex items-center gap-1">Xem tất cả <ArrowRight className="h-3 w-3" /></Link>
                 </Button>
               </div>
               <div className="divide-y divide-border">

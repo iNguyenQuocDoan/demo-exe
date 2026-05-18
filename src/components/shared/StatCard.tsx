@@ -1,5 +1,5 @@
 import { cn } from "@/lib/utils";
-import { LucideIcon } from "lucide-react";
+import { ArrowDown, ArrowUp, LucideIcon } from "lucide-react";
 
 interface StatCardProps {
   label: string;
@@ -36,11 +36,16 @@ export function StatCard({
         {trend && (
           <p
             className={cn(
-              "text-xs font-medium",
+              "inline-flex items-center gap-1 text-xs font-medium",
               trend.direction === "up" ? "text-success" : "text-error",
             )}
           >
-            {trend.direction === "up" ? "↑" : "↓"} {trend.value}
+            {trend.direction === "up" ? (
+              <ArrowUp className="h-3 w-3" />
+            ) : (
+              <ArrowDown className="h-3 w-3" />
+            )}
+            {trend.value}
           </p>
         )}
       </div>

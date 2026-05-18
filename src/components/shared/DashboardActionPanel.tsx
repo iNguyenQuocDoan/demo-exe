@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, ArrowRight } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -55,7 +55,9 @@ export function DashboardActionPanel({
         </div>
         {viewAllHref && (
           <Button asChild variant="ghost" size="sm" className="h-7 text-xs px-2">
-            <Link href={viewAllHref}>Xem tất cả →</Link>
+            <Link href={viewAllHref} className="inline-flex items-center gap-1">
+              Xem tất cả <ArrowRight className="h-3 w-3" />
+            </Link>
           </Button>
         )}
       </div>
