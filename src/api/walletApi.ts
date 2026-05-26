@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/apiClient";
+import { realApiClient } from "@/lib/realApiClient";
 import type {
   Wallet,
   Transaction,
@@ -6,122 +6,177 @@ import type {
   WithdrawRequest,
   BookingHold,
   PaymentMethod,
+  TransactionType,
   TransactionStatus,
 } from "@/types";
 
-export async function getWallet(): Promise<Wallet> {
-  const { data } = await apiClient.get<{ ok: boolean; wallet: Wallet }>("/wallet/me");
-  return data.wallet;
+interface BeWalletResponse {
+  availableBalance: number;
+  frozenBalance: number;
+  currency: string;
 }
 
-export async function getTransactions(limit = 100): Promise<Transaction[]> {
-  const { data } = await apiClient.get<{ ok: boolean; transactions: Transaction[] }>(
-    "/wallet/transactions",
-    { params: { limit } }
-  );
-  return data.transactions;
-}
-
-export async function createDepositRequest(body: {
-  userId: string;
+interface BeWalletTransactionResponse {
+  id: string;
   amount: number;
-  paymentMethod: PaymentMethod;
-  paymentProof?: string;
-  bankTransferInfo?: DepositRequest["bankTransferInfo"];
-}): Promise<{ ok: boolean; requestId?: string; error?: string }> {
+  type: string;
+  status: string;
+  description: string;
+  relatedEntityId?: string;
+  createdAt: string;
+}
+
+function getCurrentUserId(): string {
+  if (typeof window === "undefined") return "";
   try {
-    const { data } = await apiClient.post<{ ok: boolean; requestId: string }>("/wallet/deposit", body);
-    return { ok: true, requestId: data.requestId };
+    const u = JSON.parse(localStorage.getItem("auth_user") ?? "null");
+    return (u?.id as string) ?? "";
+  } catch {
+    return "";
+  }
+}
+
+function mapTxType(t: string | undefined): TransactionType {
+  const v = (t ?? "").toUpperCase();
+  if (v.includes("DEPOSIT")) return "DEPOSIT";
+  if (v.includes("WITHDRAW")) return "WITHDRAW";
+  if (v.includes("HOLD")) return "BOOKING_HOLD";
+  if (v.includes("CHARGE")) return "BOOKING_CHARGE";
+  if (v.includes("REFUND")) return "REFUND";
+  if (v.includes("PAYOUT")) return "TUTOR_PAYOUT";
+  if (v.includes("FEE")) return "PLATFORM_FEE";
+  return "DEPOSIT";
+}
+
+function mapTxStatus(s: string | undefined): TransactionStatus {
+  const v = (s ?? "").toUpperCase();
+  if (v.includes("COMPLET") || v.includes("SUCCESS")) return "Completed";
+  if (v.includes("FAIL")) return "Failed";
+  if (v.includes("CANCEL")) return "Cancelled";
+  return "Pending";
+}
+
+export async function getWallet(): Promise<Wallet> {
+  const { data } = await realApiClient.get<BeWalletResponse>("/wallet/me");
+  const userId = getCurrentUserId();
+  const now = new Date().toISOString();
+  return {
+    id: `wallet-${userId}`,
+    userId,
+    balance: data.availableBalance ?? 0,
+    currency: (data.currency as Wallet["currency"]) ?? "VND",
+    createdAt: now,
+    updatedAt: now,
+  };
+}
+
+export async function getTransactions(_limit = 100): Promise<Transaction[]> {
+  try {
+    const { data } = await realApiClient.get<BeWalletTransactionResponse[]>(
+      "/wallet/transactions",
+    );
+    const userId = getCurrentUserId();
+    return (data ?? []).map((t) => ({
+      id: t.id,
+      walletId: `wallet-${userId}`,
+      userId,
+      type: mapTxType(t.type),
+      amount: t.amount,
+      balanceBefore: 0,
+      balanceAfter: 0,
+      status: mapTxStatus(t.status),
+      description: t.description ?? "",
+      referenceId: t.relatedEntityId,
+      createdAt: t.createdAt,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+// BE: GET /api/wallet/deposit?amount=X → trả URL VNPay (string)
+// FE caller cần redirect window.location tới URL này
+export async function createDepositRequest(body: {
+  userId?: string;
+  amount: number;
+  paymentMethod?: PaymentMethod;
+}): Promise<{ ok: boolean; redirectUrl?: string; requestId?: string; error?: string }> {
+  try {
+    const { data } = await realApiClient.get<string>("/wallet/deposit", {
+      params: { amount: body.amount },
+    });
+    return { ok: true, redirectUrl: data, requestId: undefined };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-      "Không thể tạo yêu cầu nạp tiền.";
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể khởi tạo nạp tiền.";
     return { ok: false, error: msg };
   }
 }
 
-export async function approveDeposit(
-  depositId: string,
-  _adminId: string
-): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await apiClient.put(`/wallet/deposit/${depositId}/approve`);
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Không thể duyệt nạp tiền." };
-  }
+// BE không hỗ trợ duyệt deposit thủ công (luồng deposit qua VNPay tự động) — stub
+export async function approveDeposit(): Promise<{ ok: boolean; error?: string }> {
+  return { ok: false, error: "BE deposit qua VNPay không có duyệt thủ công" };
 }
 
-export async function rejectDeposit(
-  depositId: string,
-  _adminId: string,
-  reason: string
-): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await apiClient.put(`/wallet/deposit/${depositId}/reject`, { reason });
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Không thể từ chối yêu cầu." };
-  }
+export async function rejectDeposit(): Promise<{ ok: boolean; error?: string }> {
+  return { ok: false, error: "BE deposit qua VNPay không có duyệt thủ công" };
 }
 
-export async function createWithdrawRequest(data: {
-  userId: string;
+// BE: POST /api/wallet/withdraw
+export async function createWithdrawRequest(input: {
+  userId?: string;
   amount: number;
   bankInfo: WithdrawRequest["bankInfo"];
 }): Promise<{ ok: boolean; requestId?: string; error?: string }> {
   try {
-    const { data: res } = await apiClient.post<{ ok: boolean; requestId: string }>("/wallet/withdraw", data);
-    return { ok: true, requestId: res.requestId };
+    await realApiClient.post("/wallet/withdraw", {
+      amount: input.amount,
+      bankName: input.bankInfo.bankName,
+      bankAccountNumber: input.bankInfo.accountNumber,
+      bankAccountName: input.bankInfo.accountName,
+    });
+    return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
       "Không thể tạo yêu cầu rút tiền.";
     return { ok: false, error: msg };
   }
 }
 
+// BE: POST /api/wallet/withdraw/{id}/process
 export async function processWithdraw(
   withdrawId: string,
   _adminId: string,
   approved: boolean,
-  rejectedReason?: string
+  rejectedReason?: string,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await apiClient.put(`/wallet/withdraw/${withdrawId}/process`, { approved, rejectedReason });
+    await realApiClient.post(`/wallet/withdraw/${withdrawId}/process`, {
+      approve: approved,
+      adminNote: rejectedReason ?? "",
+    });
     return { ok: true };
-  } catch {
-    return { ok: false, error: "Không thể xử lý rút tiền." };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể xử lý rút tiền.";
+    return { ok: false, error: msg };
   }
 }
 
-export async function getDepositRequests(filter?: {
-  userId?: string;
-  status?: TransactionStatus;
-}): Promise<DepositRequest[]> {
-  const params: Record<string, string> = {};
-  if (filter?.status) params.status = filter.status;
-  const { data } = await apiClient.get<{ ok: boolean; deposits: DepositRequest[] }>(
-    "/wallet/deposits",
-    { params }
-  );
-  return data.deposits;
+// BE chưa expose list deposit / withdraw requests — trả mảng rỗng
+export async function getDepositRequests(): Promise<DepositRequest[]> {
+  return [];
 }
 
-export async function getWithdrawRequests(filter?: {
-  userId?: string;
-  status?: TransactionStatus;
-}): Promise<WithdrawRequest[]> {
-  const params: Record<string, string> = {};
-  if (filter?.status) params.status = filter.status;
-  const { data } = await apiClient.get<{ ok: boolean; withdrawals: WithdrawRequest[] }>(
-    "/wallet/withdrawals",
-    { params }
-  );
-  return data.withdrawals;
+export async function getWithdrawRequests(): Promise<WithdrawRequest[]> {
+  return [];
 }
 
-// Stubs kept for type compatibility — held escrow is managed server-side
+// Escrow holds: BE quản lý nội bộ qua wallet_transactions (BOOKING_HOLD type).
+// FE caller dùng các stub này — giữ no-op để không gãy UI.
 export async function holdFundsForBooking(): Promise<{ ok: boolean; holdId?: string; error?: string }> {
   return { ok: true };
 }

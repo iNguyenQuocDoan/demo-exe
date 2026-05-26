@@ -250,6 +250,8 @@ export interface FreeSlot {
   endTime: string;
   duration: number;
   tutorId: string;
+  /** BE slot id (UUID) when source là /api/tutors/slots/{tutorId} — dùng cho POST /api/bookings/book/{slotId} */
+  slotId?: string;
 }
 
 // ─── Booking ──────────────────────────────────────────────────────────────────

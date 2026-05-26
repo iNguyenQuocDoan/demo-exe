@@ -47,3 +47,7 @@ next-env.d.ts
 !README.md
 
 .vercel
+
+# AI agent skills (machine-local symlinks from `npx skills add`)
+.agents/
+skills-lock.json

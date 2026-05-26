@@ -1,57 +1,40 @@
-import { apiClient } from "@/lib/apiClient";
+import { realApiClient } from "@/lib/realApiClient";
 import type { Review } from "@/types";
 
-export async function getAllReviews(params?: { tutorId?: string }): Promise<Review[]> {
-  try {
-    const { data } = await apiClient.get<{ ok: boolean; reviews: Review[] }>("/reviews", { params });
-    return data.reviews;
-  } catch {
-    return [];
-  }
-}
-
-export async function getReviewByBookingId(bookingId: string): Promise<Review | null> {
-  try {
-    const { data } = await apiClient.get<{ ok: boolean; review: Review | null }>(
-      `/reviews/booking/${bookingId}`
-    );
-    return data.review ?? null;
-  } catch {
-    return null;
-  }
-}
-
-export async function replyToReview(
-  reviewId: string,
-  text: string,
-): Promise<{ ok: boolean; review?: Review; error?: string }> {
-  try {
-    const { data } = await apiClient.post<{ ok: boolean; review: Review; error?: string }>(
-      `/reviews/${reviewId}/reply`,
-      { text },
-    );
-    return data;
-  } catch (err: unknown) {
-    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-    return { ok: false, error: msg ?? "Không thể gửi phản hồi." };
-  }
-}
-
+// BE: POST /api/feedback/review (PARENT) — body { bookingId, rating, comment }
 export async function createReview(payload: {
   bookingId: string;
   tutorId: string;
   rating: number;
   comment: string;
-
 }): Promise<{ ok: boolean; review?: Review; error?: string }> {
   try {
-    const { data } = await apiClient.post<{ ok: boolean; review: Review; error?: string }>(
-      "/reviews",
-      payload
-    );
-    return data;
+    await realApiClient.post("/feedback/review", {
+      bookingId: payload.bookingId,
+      rating: payload.rating,
+      comment: payload.comment,
+    });
+    return { ok: true };
   } catch (err: unknown) {
-    const msg = (err as { response?: { data?: { error?: string } } })?.response?.data?.error;
-    return { ok: false, error: msg ?? "Không thể gửi đánh giá." };
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể gửi đánh giá.";
+    return { ok: false, error: msg };
   }
+}
+
+// BE chưa expose list / get / reply review — trả mảng rỗng / null để tương thích UI
+export async function getAllReviews(_params?: { tutorId?: string }): Promise<Review[]> {
+  return [];
+}
+
+export async function getReviewByBookingId(_bookingId: string): Promise<Review | null> {
+  return null;
+}
+
+export async function replyToReview(
+  _reviewId: string,
+  _text: string,
+): Promise<{ ok: boolean; review?: Review; error?: string }> {
+  return { ok: false, error: "BE chưa hỗ trợ phản hồi đánh giá" };
 }

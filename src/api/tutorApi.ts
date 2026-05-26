@@ -1,4 +1,5 @@
 import { apiClient } from "@/lib/apiClient";
+import { realApiClient } from "@/lib/realApiClient";
 import type {
   FreeSlot,
   Review,
@@ -7,100 +8,225 @@ import type {
   PaginationParams,
   PaginationMeta,
 } from "@/types";
-import { computeFreeSlots } from "@/lib/business/query";
 
+// ── BE shapes ────────────────────────────────────────────────────────────────
+interface BeTutorDetail {
+  id: string;
+  email?: string;
+  fullName?: string;
+  phoneNumber?: string;
+  gender?: string;
+  address?: string;
+  dob?: string;
+  avatarUrl?: string;
+  description?: string;
+  rating?: number;
+  academicLevel?: string;
+  major?: string;
+  education?: string;
+  experience?: number;
+  hourlyRate?: number;
+  subjects?: string[];
+  certificateUrls?: string[];
+}
+
+interface BePageResponse<T> {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalElements: number;
+  data: T[];
+}
+
+interface BeApiResponse<T> {
+  code: number;
+  message: string;
+  success: boolean;
+  data: T;
+}
+
+function mapTutor(be: BeTutorDetail): TutorProfile {
+  return {
+    id: be.id,
+    fullName: be.fullName ?? "",
+    avatarUrl: be.avatarUrl ?? "",
+    bio: be.description ?? "",
+    teachingMode: "OFFLINE",
+    subjects: be.subjects ? Array.from(be.subjects) : [],
+    grades: [],
+    pricePerHour: be.hourlyRate ?? 0,
+    profileStatus: "Approved",
+    serviceAreas: { cityId: "", districtIds: [] },
+    ratingAvg: be.rating ?? 0,
+    reviewCount: 0,
+    experience: be.experience != null ? String(be.experience) : "",
+    education: be.education ?? "",
+  };
+}
+
+function bePageToFe(
+  page: BePageResponse<BeTutorDetail>,
+): { tutors: TutorProfile[]; pagination: PaginationMeta } {
+  return {
+    tutors: (page.data ?? []).map(mapTutor),
+    pagination: {
+      page: page.currentPage,
+      limit: page.pageSize,
+      total: page.totalElements,
+      totalPages: page.totalPages,
+    },
+  };
+}
+
+// ── Public API ───────────────────────────────────────────────────────────────
 export async function getTutors(
   filter?: Partial<TutorFilter>,
 ): Promise<TutorProfile[]> {
-  const params: Record<string, string | number | undefined> = {};
-  if (filter?.cityId) params.cityId = filter.cityId;
-  if (filter?.districtId) params.districtId = filter.districtId;
-  if (filter?.teachingMode && filter.teachingMode !== "ALL")
-    params.teachingMode = filter.teachingMode;
-  if (filter?.subjectId) params.subjectId = filter.subjectId;
-  if (filter?.minPrice) params.minPrice = filter.minPrice;
-  if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
-  if (filter?.sortBy) params.sortBy = filter.sortBy;
+  try {
+    // BE phân biệt list vs search: có subject/address/gender/price → /search; else → /tutors/tutors
+    const hasSearch =
+      !!filter?.subjectId ||
+      !!filter?.cityId ||
+      !!filter?.districtId ||
+      (filter?.minPrice ?? 0) > 0 ||
+      (filter?.maxPrice ?? 0) > 0;
 
-  const { data } = await apiClient.get<{ ok: boolean; tutors: TutorProfile[] }>(
-    "/tutors",
-    { params },
-  );
-  return data.tutors;
+    const params: Record<string, string | number | undefined> = {
+      page: 1,
+      size: 100,
+    };
+    let url = "/tutors/tutors";
+
+    if (hasSearch) {
+      url = "/tutors/search";
+      if (filter?.subjectId) params.subject = filter.subjectId;
+      if (filter?.cityId || filter?.districtId) {
+        params.address = [filter.cityId, filter.districtId].filter(Boolean).join(" ");
+      }
+      if (filter?.minPrice) params.minPrice = filter.minPrice;
+      if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
+    }
+
+    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(url, {
+      params,
+    });
+    return (data.data ?? []).map(mapTutor);
+  } catch {
+    return [];
+  }
 }
 
 export async function getTutorsPaginated(
   filter?: Partial<TutorFilter>,
   pagination?: PaginationParams,
 ): Promise<{ tutors: TutorProfile[]; pagination: PaginationMeta }> {
-  const params: Record<string, string | number | undefined> = {};
-  if (filter?.cityId) params.cityId = filter.cityId;
-  if (filter?.districtId) params.districtId = filter.districtId;
-  if (filter?.teachingMode && filter.teachingMode !== "ALL")
-    params.teachingMode = filter.teachingMode;
-  if (filter?.subjectId) params.subjectId = filter.subjectId;
-  if (filter?.minPrice) params.minPrice = filter.minPrice;
-  if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
-  if (filter?.sortBy) params.sortBy = filter.sortBy;
-  if (pagination?.page) params.page = pagination.page;
-  if (pagination?.limit) params.limit = pagination.limit;
+  try {
+    const hasSearch =
+      !!filter?.subjectId ||
+      !!filter?.cityId ||
+      !!filter?.districtId ||
+      (filter?.minPrice ?? 0) > 0 ||
+      (filter?.maxPrice ?? 0) > 0;
 
-  const { data } = await apiClient.get<{
-    ok: boolean;
-    tutors: TutorProfile[];
-    pagination: PaginationMeta;
-  }>("/tutors", { params });
+    const params: Record<string, string | number | undefined> = {
+      page: pagination?.page ?? 1,
+      size: pagination?.limit ?? 10,
+    };
+    let url = "/tutors/tutors";
 
-  return {
-    tutors: data.tutors,
-    pagination: data.pagination,
-  };
+    if (hasSearch) {
+      url = "/tutors/search";
+      if (filter?.subjectId) params.subject = filter.subjectId;
+      if (filter?.cityId || filter?.districtId) {
+        params.address = [filter.cityId, filter.districtId].filter(Boolean).join(" ");
+      }
+      if (filter?.minPrice) params.minPrice = filter.minPrice;
+      if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
+    }
+
+    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(url, {
+      params,
+    });
+    return bePageToFe(data);
+  } catch {
+    return {
+      tutors: [],
+      pagination: { page: 1, limit: pagination?.limit ?? 10, total: 0, totalPages: 0 },
+    };
+  }
 }
 
 export async function getTutorById(id: string): Promise<TutorProfile | null> {
   try {
-    const { data } = await apiClient.get<{ ok: boolean; tutor: TutorProfile }>(
-      `/tutors/${id}`,
+    const { data } = await realApiClient.get<BeApiResponse<BeTutorDetail>>(
+      `/tutors/${id}/details`,
     );
-    return data.tutor;
+    if (!data?.data) return null;
+    return mapTutor(data.data);
   } catch {
     return null;
   }
 }
 
+interface BeSlotResponse {
+  id: string;
+  startTime: string; // ISO date-time
+  endTime: string;
+  status: string;
+  hourlyRate: number;
+}
+
+// BE: GET /api/tutors/slots/{tutorId} → SlotResponse[] (slot do gia sư mở)
 export async function getTutorAvailability(
   tutorId: string,
   fromDate: string,
   toDate: string,
 ): Promise<FreeSlot[]> {
   try {
-    const [availRes, bookingsRes] = await Promise.all([
-      apiClient.get<{
-        ok: boolean;
-        availability: {
-          weeklySlots: unknown[];
-          exceptions: unknown[];
-          acceptingBookings: boolean;
-        };
-      }>(`/availability/${tutorId}`),
-      apiClient
-        .get<{ ok: boolean; bookings: Parameters<typeof computeFreeSlots>[1] }>(
-          "/bookings",
-          { params: { tutorId } },
-        )
-        .catch(() => ({ data: { ok: false, bookings: [] } })),
-    ]);
-
-    if (!availRes.data.availability || !availRes.data.availability.acceptingBookings) return [];
-
-    const avail = availRes.data.availability as Parameters<typeof computeFreeSlots>[0];
-    const bookings = bookingsRes.data.bookings ?? [];
-    return computeFreeSlots(avail, bookings, fromDate, toDate);
+    const { data } = await realApiClient.get<BeSlotResponse[]>(
+      `/tutors/slots/${tutorId}`,
+    );
+    const from = new Date(fromDate);
+    const to = new Date(toDate + "T23:59:59");
+    return (data ?? [])
+      .filter((s) => (s.status ?? "").toUpperCase() === "AVAILABLE")
+      .filter((s) => {
+        const t = new Date(s.startTime);
+        return t >= from && t <= to;
+      })
+      .map((s) => {
+        const start = new Date(s.startTime);
+        const end = new Date(s.endTime);
+        const dur = Math.round((end.getTime() - start.getTime()) / 60000);
+        return {
+          date: start.toISOString().slice(0, 10),
+          startTime: start.toTimeString().slice(0, 5),
+          endTime: end.toTimeString().slice(0, 5),
+          duration: dur,
+          tutorId,
+          slotId: s.id,
+        } as FreeSlot & { slotId?: string };
+      });
   } catch {
     return [];
   }
 }
 
+// BE: tất cả slot (cả ACTIVE và BOOKED) — tutor's own schedule view
+export async function getTutorAllSlots(
+  tutorId: string,
+): Promise<BeSlotResponse[]> {
+  try {
+    const { data } = await realApiClient.get<BeSlotResponse[]>(
+      `/tutors/slots/${tutorId}`,
+    );
+    return data ?? [];
+  } catch {
+    return [];
+  }
+}
+
+// ── Reviews — BE có entity nhưng chưa có controller, dùng mock ───────────────
 export async function getReviews(tutorId: string): Promise<Review[]> {
   try {
     const { data } = await apiClient.get<{ ok: boolean; reviews: Review[] }>(
@@ -112,17 +238,103 @@ export async function getReviews(tutorId: string): Promise<Review[]> {
   }
 }
 
+// BE: PUT /api/tutors/tutor/profile (multipart) — data + optional certificate files
 export async function updateTutorProfile(
-  id: string,
-  updates: Partial<TutorProfile>,
+  _id: string,
+  updates: Partial<TutorProfile> & { certificateFiles?: File[] },
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await apiClient.put(`/tutors/${id}`, updates);
+    const form = new FormData();
+    const payload: Record<string, unknown> = {};
+    if (updates.bio != null) payload.description = updates.bio;
+    if (updates.pricePerHour != null) payload.hourlyRate = updates.pricePerHour;
+    if (updates.experience != null) {
+      const n = Number(updates.experience);
+      if (!Number.isNaN(n)) payload.experience = n;
+    }
+    if (updates.education != null) payload.education = updates.education;
+    form.append(
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
+    );
+    (updates.certificateFiles ?? []).forEach((f) =>
+      form.append("certificate", f),
+    );
+    await realApiClient.put("/tutors/tutor/profile", form);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data
-        ?.error ?? "Không thể cập nhật hồ sơ";
+      (err as { response?: { data?: { message?: string; error?: string } } })?.response?.data
+        ?.message ??
+      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      "Không thể cập nhật hồ sơ";
     return { ok: false, error: msg };
+  }
+}
+
+// BE: POST /api/tutors/tutors/{id}/approve (ADMIN)
+export async function approveTutor(
+  id: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.post(`/tutors/tutors/${id}/approve`);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+    return { ok: false, error: msg ?? "Không thể duyệt gia sư" };
+  }
+}
+
+// BE: POST /api/tutors/tutors/{id}/reject?reason=... (ADMIN)
+export async function rejectTutor(
+  id: string,
+  reason: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.post(`/tutors/tutors/${id}/reject`, null, {
+      params: { reason },
+    });
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+    return { ok: false, error: msg ?? "Không thể từ chối gia sư" };
+  }
+}
+
+// BE: GET /api/tutors/pending (ADMIN)
+export async function getPendingTutors(
+  pagination?: PaginationParams,
+): Promise<{ tutors: TutorProfile[]; pagination: PaginationMeta }> {
+  try {
+    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+      "/tutors/pending",
+      {
+        params: {
+          pageNo: pagination?.page ?? 1,
+          pageSize: pagination?.limit ?? 10,
+        },
+      },
+    );
+    return bePageToFe(data);
+  } catch {
+    return {
+      tutors: [],
+      pagination: { page: 1, limit: pagination?.limit ?? 10, total: 0, totalPages: 0 },
+    };
+  }
+}
+
+// BE: DELETE /api/tutors/profile/certificates?url=... (TUTOR)
+export async function removeTutorCertificate(
+  url: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.delete("/tutors/profile/certificates", {
+      params: { url },
+    });
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg = (err as { response?: { data?: { message?: string } } })?.response?.data?.message;
+    return { ok: false, error: msg ?? "Không thể xoá chứng chỉ" };
   }
 }

@@ -1,5 +1,27 @@
 import { apiClient } from "@/lib/apiClient";
-import type { City, District, FeeConfig, Subject, TutorProfile, User } from "@/types";
+import { realApiClient } from "@/lib/realApiClient";
+import type { City, District, FeeConfig, Subject, TutorProfile } from "@/types";
+
+interface BeSubjectResponse {
+  subjectId: number;
+  name: string;
+}
+interface BeAcademicLevelResponse {
+  academicLevelId: number;
+  name: string;
+}
+interface BeApiResponse<T> {
+  code: number;
+  message: string;
+  success: boolean;
+  data: T;
+}
+
+export interface AcademicLevel {
+  id: string;
+  name: string;
+}
+let academicLevelsCache: AcademicLevel[] | null = null;
 
 let citiesCache: City[] | null = null;
 let districtsCache: District[] | null = null;
@@ -23,26 +45,65 @@ const DEFAULT_FEE_CONFIG: FeeConfig = {
   appliesToTrial: false,
 };
 
+// BE chưa expose city/district — wrap try/catch để UI không gãy khi USE_MOCK=false
 export async function getCities(force = false): Promise<City[]> {
   if (!force && citiesCache) return citiesCache;
-  const { data } = await apiClient.get<{ ok: boolean; data: City[] }>("/reference/cities");
-  citiesCache = data.data;
-  return citiesCache;
+  try {
+    const { data } = await apiClient.get<{ ok: boolean; data: City[] }>("/reference/cities");
+    citiesCache = data.data ?? [];
+    return citiesCache;
+  } catch {
+    citiesCache = [];
+    return citiesCache;
+  }
 }
 
 export async function getDistricts(cityId?: string, force = false): Promise<District[]> {
   if (!force && districtsCache && !cityId) return districtsCache;
   const params = cityId ? { cityId } : {};
-  const { data } = await apiClient.get<{ ok: boolean; data: District[] }>("/reference/districts", { params });
-  if (!cityId) districtsCache = data.data;
-  return data.data;
+  try {
+    const { data } = await apiClient.get<{ ok: boolean; data: District[] }>("/reference/districts", { params });
+    if (!cityId) districtsCache = data.data ?? [];
+    return data.data ?? [];
+  } catch {
+    if (!cityId) districtsCache = [];
+    return [];
+  }
 }
 
+// BE: GET /api/common/subjects → ApiResponse<List<SubjectResponse{subjectId, name}>>
 export async function getSubjects(force = false): Promise<Subject[]> {
   if (!force && subjectsCache) return subjectsCache;
-  const { data } = await apiClient.get<{ ok: boolean; data: Subject[] }>("/reference/subjects");
-  subjectsCache = data.data;
-  return subjectsCache;
+  try {
+    const { data } = await realApiClient.get<BeApiResponse<BeSubjectResponse[]>>(
+      "/common/subjects",
+    );
+    subjectsCache = (data.data ?? []).map((s) => ({
+      id: String(s.subjectId),
+      name: s.name,
+      grades: [],
+    }));
+    return subjectsCache;
+  } catch {
+    return [];
+  }
+}
+
+// BE: GET /api/common/academic-levels
+export async function getAcademicLevels(force = false): Promise<AcademicLevel[]> {
+  if (!force && academicLevelsCache) return academicLevelsCache;
+  try {
+    const { data } = await realApiClient.get<BeApiResponse<BeAcademicLevelResponse[]>>(
+      "/common/academic-levels",
+    );
+    academicLevelsCache = (data.data ?? []).map((a) => ({
+      id: String(a.academicLevelId),
+      name: a.name,
+    }));
+    return academicLevelsCache;
+  } catch {
+    return [];
+  }
 }
 
 export async function getFeeConfig(force = false): Promise<FeeConfig> {
@@ -86,47 +147,18 @@ export async function getDistrictMap(force = false): Promise<Record<string, stri
 
 export async function getUserNameMap(userIds: string[]): Promise<Record<string, string>> {
   const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
-  const missingIds = uniqueIds.filter((id) => !userNameCache.has(id));
-
-  if (missingIds.length > 0) {
-    const users = await Promise.all(
-      missingIds.map((id) =>
-        apiClient
-          .get<{ ok: boolean; user: User }>(`/users/${id}`)
-          .then((r) => r.data.user)
-          .catch(() => null)
-      )
-    );
-    users.forEach((user, i) => {
-      userNameCache.set(missingIds[i], user?.fullName ?? missingIds[i]);
-    });
-  }
-
+  // BE chưa expose GET /users/{id} — chỉ trả về id làm tên cho an toàn
+  uniqueIds.forEach((id) => {
+    if (!userNameCache.has(id)) userNameCache.set(id, id);
+  });
   return Object.fromEntries(uniqueIds.map((id) => [id, userNameCache.get(id) ?? id]));
 }
 
 export async function getUserContactMap(userIds: string[]): Promise<Record<string, UserContact>> {
   const uniqueIds = Array.from(new Set(userIds.filter(Boolean)));
-  const missingIds = uniqueIds.filter((id) => !userContactCache.has(id));
-
-  if (missingIds.length > 0) {
-    const users = await Promise.all(
-      missingIds.map((id) =>
-        apiClient
-          .get<{ ok: boolean; user: User }>(`/users/${id}`)
-          .then((r) => r.data.user)
-          .catch(() => null)
-      )
-    );
-    users.forEach((user, i) => {
-      userContactCache.set(missingIds[i], {
-        name: user?.fullName ?? missingIds[i],
-        phone: user?.phone,
-        address: user?.address,
-      });
-    });
-  }
-
+  uniqueIds.forEach((id) => {
+    if (!userContactCache.has(id)) userContactCache.set(id, { name: id });
+  });
   return Object.fromEntries(uniqueIds.map((id) => [id, userContactCache.get(id) ?? { name: id }]));
 }
 
@@ -137,11 +169,11 @@ export async function getTutorNameMap(tutorIds: string[]): Promise<Record<string
   if (missingIds.length > 0) {
     const tutors = await Promise.all(
       missingIds.map((id) =>
-        apiClient
-          .get<{ ok: boolean; tutor: TutorProfile }>(`/tutors/${id}`)
-          .then((r) => r.data.tutor)
-          .catch(() => null)
-      )
+        realApiClient
+          .get<{ data?: TutorProfile }>(`/tutors/${id}/details`)
+          .then((r) => r.data.data)
+          .catch(() => null),
+      ),
     );
     tutors.forEach((tutor, i) => {
       tutorNameCache.set(missingIds[i], tutor?.fullName ?? missingIds[i]);

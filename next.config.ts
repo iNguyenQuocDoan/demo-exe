@@ -1,5 +1,7 @@
 import type { NextConfig } from "next";
 
+const BE_ORIGIN = process.env.NEXT_PUBLIC_BE_ORIGIN ?? "http://localhost:8080";
+
 const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
@@ -17,6 +19,14 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
+  },
+  async rewrites() {
+    return [
+      {
+        source: "/api/be/:path*",
+        destination: `${BE_ORIGIN}/api/:path*`,
+      },
+    ];
   },
 };
 

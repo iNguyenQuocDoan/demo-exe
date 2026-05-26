@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/apiClient";
+import { realApiClient } from "@/lib/realApiClient";
 import type {
   DisputeReport,
   DisputeReason,
@@ -19,96 +19,116 @@ export interface ResolveDisputeInput {
   refundAmount?: number;
 }
 
-/**
- * Backend: POST /api/disputes (alias: /api/reports)
- */
+interface BeDisputeResponse {
+  id: string;
+  bookingId: string;
+  parentEmail?: string;
+  tutorName?: string;
+  reason?: string;
+  status?: string;
+  createdAt?: string;
+}
+
+function mapBeStatus(s: string | undefined): DisputeReportStatus {
+  const v = (s ?? "").toUpperCase();
+  if (v.includes("RESOLV")) return "Resolved";
+  if (v.includes("DISMISS")) return "Dismissed";
+  if (v.includes("REVIEW")) return "Reviewing";
+  return "Pending";
+}
+
+function mapDispute(be: BeDisputeResponse): DisputeReport {
+  return {
+    id: be.id,
+    bookingId: be.bookingId,
+    reporterId: "",
+    reporterRole: "parent",
+    reporterName: be.parentEmail ?? "",
+    reportedId: "",
+    reportedRole: "tutor",
+    reportedName: be.tutorName ?? "",
+    reason: "OTHER",
+    description: be.reason ?? "",
+    status: mapBeStatus(be.status),
+    createdAt: be.createdAt ?? new Date().toISOString(),
+  };
+}
+
+// BE: POST /api/feedback/dispute (PARENT) — body { bookingId, reason }
 export async function createDispute(
   input: CreateDisputeInput,
 ): Promise<{ ok: boolean; dispute?: DisputeReport; error?: string }> {
   try {
-    const { data } = await apiClient.post<{ ok: boolean; dispute: DisputeReport }>(
-      "/disputes",
-      input,
-    );
-    return { ok: true, dispute: data.dispute };
+    const beReason = input.description?.trim()
+      ? input.description
+      : (input.reason as string);
+    await realApiClient.post("/feedback/dispute", {
+      bookingId: input.bookingId,
+      reason: beReason,
+    });
+    return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
       "Không thể gửi khiếu nại.";
     return { ok: false, error: msg };
   }
 }
 
+// BE: GET /api/feedback/dispute/pending → List<DisputeResponse>
+// BE chỉ filter "pending" cứng — các filter khác bỏ qua, trả về kết quả pending kèm filter local
 export async function getDisputes(params?: {
   status?: DisputeReportStatus;
   reason?: DisputeReason;
   bookingId?: string;
 }): Promise<DisputeReport[]> {
   try {
-    const { data } = await apiClient.get<{ ok: boolean; disputes: DisputeReport[] }>(
-      "/disputes",
-      { params },
+    const { data } = await realApiClient.get<BeDisputeResponse[]>(
+      "/feedback/dispute/pending",
     );
-    return data.disputes;
+    let list = (data ?? []).map(mapDispute);
+    if (params?.status) list = list.filter((d) => d.status === params.status);
+    if (params?.bookingId) list = list.filter((d) => d.bookingId === params.bookingId);
+    return list;
   } catch {
     return [];
   }
 }
 
+// BE chưa có get-by-id — tận dụng list rồi find
 export async function getDispute(id: string): Promise<DisputeReport | null> {
-  try {
-    const { data } = await apiClient.get<{ ok: boolean; dispute: DisputeReport }>(
-      `/disputes/${id}`,
-    );
-    return data.dispute;
-  } catch {
-    return null;
-  }
+  const list = await getDisputes();
+  return list.find((d) => d.id === id) ?? null;
 }
 
 export async function getDisputesByBooking(bookingId: string): Promise<DisputeReport[]> {
-  try {
-    const { data } = await apiClient.get<{ ok: boolean; disputes: DisputeReport[] }>(
-      `/disputes/booking/${bookingId}`,
-    );
-    return data.disputes;
-  } catch {
-    return [];
-  }
+  return getDisputes({ bookingId });
 }
 
-export async function updateDisputeStatus(
-  id: string,
-  status: DisputeReportStatus,
-  adminNote?: string,
-): Promise<{ ok: boolean; dispute?: DisputeReport; error?: string }> {
-  try {
-    const { data } = await apiClient.patch<{ ok: boolean; dispute: DisputeReport }>(
-      `/disputes/${id}/status`,
-      { status, adminNote },
-    );
-    return { ok: true, dispute: data.dispute };
-  } catch (err: unknown) {
-    const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-      "Không thể cập nhật khiếu nại.";
-    return { ok: false, error: msg };
-  }
+export async function updateDisputeStatus(): Promise<{
+  ok: boolean;
+  dispute?: DisputeReport;
+  error?: string;
+}> {
+  return { ok: false, error: "BE không hỗ trợ cập nhật trạng thái — chỉ resolve" };
 }
 
+// BE: POST /api/feedback/{id}/resolve (ADMIN) — body { refundToParent: boolean, adminResolution: string }
 export async function resolveDispute(
   id: string,
   input: ResolveDisputeInput,
 ): Promise<{ ok: boolean; dispute?: DisputeReport; error?: string }> {
+  const refundToParent =
+    input.resolution === "FULL_REFUND" || input.resolution === "PARTIAL_REFUND";
   try {
-    const { data } = await apiClient.post<{ ok: boolean; dispute: DisputeReport }>(
-      `/disputes/${id}/resolve`,
-      input,
-    );
-    return { ok: true, dispute: data.dispute };
+    await realApiClient.post(`/feedback/${id}/resolve`, {
+      refundToParent,
+      adminResolution: input.adminNote ?? input.resolution,
+    });
+    return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
       "Không thể xử lý khiếu nại.";
     return { ok: false, error: msg };
   }

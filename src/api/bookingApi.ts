@@ -1,4 +1,4 @@
-import { apiClient } from "@/lib/apiClient";
+import { realApiClient } from "@/lib/realApiClient";
 import type {
   Booking,
   QualityFeedback,
@@ -12,15 +12,17 @@ export interface CreateBookingInput {
   startAt: string;
   endAt: string;
   subject: string;
-  subjectName?: string;   // snapshot display name
+  subjectName?: string;
   grade: string;
   teachingMode: string;
   studentName?: string;
   notes?: string;
   location?: string;
   baseAmount: number;
-  parentGoal?: string;    // parent intent (required by UI, optional here for compat)
+  parentGoal?: string;
   goalTags?: string[];
+  /** Nếu FE đã chọn được slotId của BE thì truyền vào để gọi /book/{slotId} */
+  slotId?: string;
 }
 
 export interface CreateSeriesInput {
@@ -37,73 +39,189 @@ export interface CreateSeriesInput {
   baseAmountPerSession: number;
 }
 
-export async function getBookings(params: {
+interface BeBookingResponse {
+  bookingId: string;
+  message?: string;
+  tutorName?: string;
+  startTime?: string;
+  endTime?: string;
+  totalPrice?: number;
+  status?: string;
+}
+
+interface BePageResponse<T> {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalElements: number;
+  data: T[];
+}
+
+function mapBeStatus(s: string | undefined): Booking["status"] {
+  const v = (s ?? "").toUpperCase();
+  if (v.includes("CONFIRM") || v.includes("ACCEPT")) return "Confirmed";
+  if (v.includes("PROGRESS")) return "InProgress";
+  if (v.includes("COMPLET")) return "Completed";
+  if (v.includes("CANCEL")) return "Cancelled";
+  if (v.includes("DISPUT")) return "Disputed";
+  if (v.includes("RESOLV")) return "Resolved";
+  if (v.includes("AWAIT")) return "AwaitingPayment";
+  return "Pending";
+}
+
+function getCurrentUser(): { id?: string; role?: string } {
+  if (typeof window === "undefined") return {};
+  try {
+    return JSON.parse(localStorage.getItem("auth_user") ?? "{}");
+  } catch {
+    return {};
+  }
+}
+
+function mapBeBooking(be: BeBookingResponse, fallbackTutorId = ""): Booking {
+  const me = getCurrentUser();
+  return {
+    id: be.bookingId,
+    type: "NORMAL",
+    parentId: me.role === "parent" ? me.id ?? "" : "",
+    tutorId: fallbackTutorId,
+    startAt: be.startTime ?? "",
+    endAt: be.endTime ?? "",
+    baseAmount: be.totalPrice ?? 0,
+    platformFee: 0,
+    totalAmount: be.totalPrice ?? 0,
+    status: mapBeStatus(be.status),
+    teachingMode: "OFFLINE",
+  };
+}
+
+// BE: GET /api/bookings/history?page=&size=&role=PARENT|TUTOR&startDate=&endDate=
+// role MUST khớp với vai trò user đang đăng nhập (BE check JWT — sai role → 500)
+function myBeRole(): "PARENT" | "TUTOR" | null {
+  const me = getCurrentUser();
+  if (me.role === "tutor") return "TUTOR";
+  if (me.role === "parent") return "PARENT";
+  return null;
+}
+
+export async function getBookings(_params: {
   parentId?: string;
   tutorId?: string;
 }): Promise<Booking[]> {
-  const { data } = await apiClient.get<{ ok: boolean; bookings: Booking[] }>(
-    "/bookings",
-    { params },
-  );
-  return data.bookings;
+  const role = myBeRole();
+  if (!role) return [];
+  try {
+    const { data } = await realApiClient.get<BePageResponse<BeBookingResponse>>(
+      "/bookings/history",
+      { params: { page: 1, size: 100, role } },
+    );
+    return (data.data ?? []).map((b) => mapBeBooking(b, ""));
+  } catch {
+    return [];
+  }
 }
 
 export async function getBookingsPaginated(
-  params: { parentId?: string; tutorId?: string; status?: string },
+  _params: { parentId?: string; tutorId?: string; status?: string },
   pagination?: PaginationParams,
 ): Promise<{ bookings: Booking[]; pagination: PaginationMeta }> {
-  const queryParams: Record<string, string | number | undefined> = {
-    ...params,
+  const role = myBeRole();
+  const emptyPage = {
+    bookings: [],
+    pagination: {
+      page: pagination?.page ?? 1,
+      limit: pagination?.limit ?? 10,
+      total: 0,
+      totalPages: 0,
+    },
   };
-  if (pagination?.page) queryParams.page = pagination.page;
-  if (pagination?.limit) queryParams.limit = pagination.limit;
-
-  const { data } = await apiClient.get<{
-    ok: boolean;
-    bookings: Booking[];
-    pagination: PaginationMeta;
-  }>("/bookings", { params: queryParams });
-
-  return {
-    bookings: data.bookings,
-    pagination: data.pagination,
-  };
+  if (!role) return emptyPage;
+  try {
+    const { data } = await realApiClient.get<BePageResponse<BeBookingResponse>>(
+      "/bookings/history",
+      {
+        params: {
+          page: pagination?.page ?? 1,
+          size: pagination?.limit ?? 10,
+          role,
+        },
+      },
+    );
+    return {
+      bookings: (data.data ?? []).map((b) => mapBeBooking(b, "")),
+      pagination: {
+        page: data.currentPage,
+        limit: data.pageSize,
+        total: data.totalElements,
+        totalPages: data.totalPages,
+      },
+    };
+  } catch {
+    return emptyPage;
+  }
 }
 
+// BE: POST /api/bookings/book/{slotId} — phải có slotId, không hỗ trợ booking theo startAt/endAt tự do
 export async function createBooking(
   input: CreateBookingInput,
 ): Promise<{ ok: boolean; booking?: Booking; error?: string }> {
+  if (!input.slotId) {
+    return {
+      ok: false,
+      error:
+        "Đặt lịch phải chọn 1 slot do gia sư mở. Vui lòng chọn khung giờ ở trang chi tiết gia sư.",
+    };
+  }
   try {
-    const { data } = await apiClient.post<{ ok: boolean; booking: Booking }>(
-      "/bookings",
-      input,
+    const { data } = await realApiClient.post<BeBookingResponse>(
+      `/bookings/book/${input.slotId}`,
     );
-    return { ok: true, booking: data.booking };
+    return {
+      ok: true,
+      booking: {
+        id: data.bookingId,
+        type: "NORMAL",
+        parentId: "",
+        tutorId: input.tutorId,
+        startAt: data.startTime ?? input.startAt,
+        endAt: input.endAt,
+        baseAmount: data.totalPrice ?? input.baseAmount,
+        platformFee: 0,
+        totalAmount: data.totalPrice ?? input.baseAmount,
+        status: "Pending",
+        subject: input.subject,
+        grade: input.grade,
+        teachingMode: "OFFLINE",
+        studentName: input.studentName,
+        parentGoal: input.parentGoal,
+        goalTags: input.goalTags,
+      },
+    };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data
-        ?.error ?? "Không thể tạo booking";
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể đặt lịch";
     return { ok: false, error: msg };
   }
 }
 
 async function bookingAction(
   id: string,
-  action: string,
+  action: "accept" | "reject" | "complete" | "cancel",
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    await apiClient.put(`/bookings/${id}/${action}`);
+    await realApiClient.post(`/bookings/${id}/${action}`);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data
-        ?.error ?? "Thao tác thất bại";
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Thao tác thất bại";
     return { ok: false, error: msg };
   }
 }
 
 export const acceptBooking = (id: string) => bookingAction(id, "accept");
-export const startBooking = (id: string) => bookingAction(id, "start");
+export const rejectBooking = (id: string) => bookingAction(id, "reject");
 export const completeBooking = (id: string) => bookingAction(id, "complete");
 export const cancelBooking = (
   id: string,
@@ -111,77 +229,59 @@ export const cancelBooking = (
   _reason?: string,
 ) => bookingAction(id, "cancel");
 
-export async function getSeries(params: {
+// FE còn 1 chỗ gọi startBooking — BE không có endpoint start, giữ no-op success
+export const startBooking = async (
+  _id: string,
+): Promise<{ ok: boolean; error?: string }> => ({ ok: true });
+
+// BE: POST /api/bookings/slots (TUTOR) — body List<{startTime, endTime}>
+export async function createTutorSlots(
+  slots: { startTime: string; endTime: string }[],
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.post("/bookings/slots", slots);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể tạo slot";
+    return { ok: false, error: msg };
+  }
+}
+
+// ── Series: BE chưa có endpoint định kỳ ──────────────────────────────────────
+export async function getSeries(_params: {
   parentId?: string;
   tutorId?: string;
 }): Promise<ScheduleSeries[]> {
-  try {
-    const { data } = await apiClient.get<{
-      ok: boolean;
-      series: ScheduleSeries[];
-    }>("/series", { params });
-    return data.series;
-  } catch {
-    return [];
-  }
+  return [];
 }
 
-export async function previewSeries(
-  input: CreateSeriesInput,
-): Promise<Booking[]> {
-  try {
-    const { data } = await apiClient.post<{ ok: boolean; sessions: Booking[] }>(
-      "/series/preview",
-      input,
-    );
-    return data.sessions;
-  } catch {
-    return [];
-  }
+export async function previewSeries(_input: CreateSeriesInput): Promise<Booking[]> {
+  return [];
 }
 
-export async function createSeries(input: CreateSeriesInput): Promise<{
+export async function createSeries(_input: CreateSeriesInput): Promise<{
   ok: boolean;
   series?: ScheduleSeries;
   sessions?: Booking[];
   conflicts?: Booking[];
   error?: string;
 }> {
-  try {
-    const { data } = await apiClient.post<{
-      ok: boolean;
-      series: ScheduleSeries;
-      sessions: Booking[];
-      conflicts: Booking[];
-    }>("/series", input);
-    return data;
-  } catch (err: unknown) {
-    const msg =
-      (err as { response?: { data?: { error?: string } } })?.response?.data
-        ?.error ?? "Không thể tạo lịch học";
-    return { ok: false, error: msg };
-  }
+  return { ok: false, error: "BE chưa hỗ trợ lịch định kỳ" };
 }
 
 export async function acceptSeries(
-  seriesId: string,
+  _seriesId: string,
 ): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await apiClient.put(`/series/${seriesId}/accept`);
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Không thể xác nhận lịch học" };
-  }
+  return { ok: false, error: "BE chưa hỗ trợ lịch định kỳ" };
 }
 
+// ── Session feedback chi tiết (4 tiêu chí): BE chỉ có /feedback/review tổng quát ──
+// Wrap qua reviewApi.createReview nếu caller cần chấm điểm tổng — ở đây giữ no-op
 export async function submitSessionFeedback(
-  bookingId: string,
-  feedback: QualityFeedback,
+  _bookingId: string,
+  _feedback: QualityFeedback,
 ): Promise<{ ok: boolean; error?: string }> {
-  try {
-    await apiClient.post(`/bookings/${bookingId}/feedback`, { feedback });
-    return { ok: true };
-  } catch {
-    return { ok: false, error: "Không thể gửi feedback." };
-  }
+  return { ok: false, error: "BE chỉ hỗ trợ review tổng — dùng reviewApi.createReview" };
 }
