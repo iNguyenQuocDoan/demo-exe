@@ -10,6 +10,7 @@ import type {
   TransactionStatus,
 } from "@/types";
 
+
 interface BeWalletResponse {
   availableBalance: number;
   frozenBalance: number;
@@ -115,11 +116,18 @@ export async function createDepositRequest(body: {
 }
 
 // BE không hỗ trợ duyệt deposit thủ công (luồng deposit qua VNPay tự động) — stub
-export async function approveDeposit(): Promise<{ ok: boolean; error?: string }> {
+export async function approveDeposit(
+  _depositId: string,
+  _adminId: string,
+): Promise<{ ok: boolean; error?: string }> {
   return { ok: false, error: "BE deposit qua VNPay không có duyệt thủ công" };
 }
 
-export async function rejectDeposit(): Promise<{ ok: boolean; error?: string }> {
+export async function rejectDeposit(
+  _depositId: string,
+  _adminId: string,
+  _reason: string,
+): Promise<{ ok: boolean; error?: string }> {
   return { ok: false, error: "BE deposit qua VNPay không có duyệt thủ công" };
 }
 
@@ -167,11 +175,17 @@ export async function processWithdraw(
 }
 
 // BE chưa expose list deposit / withdraw requests — trả mảng rỗng
-export async function getDepositRequests(): Promise<DepositRequest[]> {
+export async function getDepositRequests(_filter?: {
+  userId?: string;
+  status?: TransactionStatus;
+}): Promise<DepositRequest[]> {
   return [];
 }
 
-export async function getWithdrawRequests(): Promise<WithdrawRequest[]> {
+export async function getWithdrawRequests(_filter?: {
+  userId?: string;
+  status?: TransactionStatus;
+}): Promise<WithdrawRequest[]> {
   return [];
 }
 

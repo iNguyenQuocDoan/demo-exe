@@ -108,7 +108,10 @@ export async function register(data: {
   }
 }
 
-export async function updateUserRole(): Promise<{ ok: boolean; error?: string }> {
+export async function updateUserRole(
+  _userId: string,
+  _newRole: string,
+): Promise<{ ok: boolean; error?: string }> {
   return {
     ok: false,
     error: "Backend hiện chưa hỗ trợ đổi vai trò sau khi đăng ký",
