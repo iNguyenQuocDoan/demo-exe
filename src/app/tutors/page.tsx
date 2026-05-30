@@ -161,7 +161,12 @@ export default function TutorsPage() {
     <main className="min-h-dvh bg-(--bg-app)">
       <PageAnimations />
 
-      <section className="relative overflow-hidden border-b border-border/70 bg-[linear-gradient(145deg,#10233f_0%,#174070_48%,#f8fafc_48%,#f8fafc_100%)]">
+      <section className="relative overflow-hidden border-b border-border/70 bg-[linear-gradient(135deg,#10233f_0%,#16386a_52%,#174070_100%)]">
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-y-0 right-0 hidden w-[40%] bg-[#f8fafc] lg:block"
+          style={{ clipPath: "polygon(20% 0, 100% 0, 100% 100%, 0 100%)" }}
+        />
         <div
           className="pointer-events-none absolute inset-0 opacity-[0.08]"
           style={{
