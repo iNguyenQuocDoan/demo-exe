@@ -1,4 +1,3 @@
-import { apiClient } from "@/lib/apiClient";
 import { realApiClient } from "@/lib/realApiClient";
 import type {
   FreeSlot,
@@ -45,11 +44,17 @@ interface BeApiResponse<T> {
   data: T;
 }
 
+// BE avatarUrl thường null → fallback ảnh raster (PNG) để <Image> không lỗi empty src.
+// Dùng PNG (không phải SVG) vì next/image chặn SVG khi không bật dangerouslyAllowSVG.
+function avatarFallback(id: string): string {
+  return `https://api.dicebear.com/7.x/avataaars/png?seed=${encodeURIComponent(id)}`;
+}
+
 function mapTutor(be: BeTutorDetail): TutorProfile {
   return {
     id: be.id,
     fullName: be.fullName ?? "",
-    avatarUrl: be.avatarUrl ?? "",
+    avatarUrl: be.avatarUrl || avatarFallback(be.id),
     bio: be.description ?? "",
     teachingMode: "OFFLINE",
     subjects: be.subjects ? Array.from(be.subjects) : [],
@@ -226,13 +231,38 @@ export async function getTutorAllSlots(
   }
 }
 
-// ── Reviews — BE có entity nhưng chưa có controller, dùng mock ───────────────
+// ── Reviews — BE: GET /api/feedback/tutor/{tutorId} → ApiResponse<Page<ReviewResponse>>
+interface BeReviewResponse {
+  id: string;
+  parentFullName?: string;
+  rating: number;
+  comment?: string;
+  reply?: string;
+  createdAt: string;
+}
+
+export function mapBeReview(be: BeReviewResponse, tutorId: string): Review {
+  return {
+    id: be.id,
+    parentId: "",
+    tutorId,
+    bookingId: "",
+    rating: be.rating ?? 0,
+    comment: be.comment ?? "",
+    createdAt: be.createdAt,
+    parentName: be.parentFullName ?? "Phụ huynh",
+    tutorReply: be.reply
+      ? { text: be.reply, repliedAt: be.createdAt }
+      : undefined,
+  };
+}
+
 export async function getReviews(tutorId: string): Promise<Review[]> {
   try {
-    const { data } = await apiClient.get<{ ok: boolean; reviews: Review[] }>(
-      `/tutors/${tutorId}/reviews`,
-    );
-    return data.reviews;
+    const { data } = await realApiClient.get<
+      BeApiResponse<BePageResponse<BeReviewResponse>>
+    >(`/feedback/tutor/${tutorId}`, { params: { page: 1, size: 100 } });
+    return (data?.data?.data ?? []).map((r) => mapBeReview(r, tutorId));
   } catch {
     return [];
   }

@@ -45,12 +45,24 @@ const DEFAULT_FEE_CONFIG: FeeConfig = {
   appliesToTrial: false,
 };
 
-// BE chưa expose city/district — wrap try/catch để UI không gãy khi USE_MOCK=false
+// BE: GET /api/reference/provinces → raw [{ name, code, division_type, ... }]
+interface BeProvince {
+  name: string;
+  code: number;
+  division_type?: string;
+  districts?: BeDistrict[];
+}
+interface BeDistrict {
+  name: string;
+  code: number;
+  province_code?: number;
+}
+
 export async function getCities(force = false): Promise<City[]> {
   if (!force && citiesCache) return citiesCache;
   try {
-    const { data } = await apiClient.get<{ ok: boolean; data: City[] }>("/reference/cities");
-    citiesCache = data.data ?? [];
+    const { data } = await realApiClient.get<BeProvince[]>("/reference/provinces");
+    citiesCache = (data ?? []).map((p) => ({ id: String(p.code), name: p.name }));
     return citiesCache;
   } catch {
     citiesCache = [];
@@ -58,15 +70,24 @@ export async function getCities(force = false): Promise<City[]> {
   }
 }
 
+// BE: GET /api/reference/districts?provinceCode= → raw 1 province kèm districts[]
+// Cần cityId (provinceCode). Không có cityId → BE bắt buộc param nên trả [].
 export async function getDistricts(cityId?: string, force = false): Promise<District[]> {
   if (!force && districtsCache && !cityId) return districtsCache;
-  const params = cityId ? { cityId } : {};
+  if (!cityId) {
+    districtsCache = [];
+    return [];
+  }
   try {
-    const { data } = await apiClient.get<{ ok: boolean; data: District[] }>("/reference/districts", { params });
-    if (!cityId) districtsCache = data.data ?? [];
-    return data.data ?? [];
+    const { data } = await realApiClient.get<BeProvince>("/reference/districts", {
+      params: { provinceCode: cityId },
+    });
+    return (data?.districts ?? []).map((d) => ({
+      id: String(d.code),
+      cityId,
+      name: d.name,
+    }));
   } catch {
-    if (!cityId) districtsCache = [];
     return [];
   }
 }

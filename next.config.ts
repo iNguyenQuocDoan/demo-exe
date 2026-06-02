@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
-const BE_ORIGIN = process.env.NEXT_PUBLIC_BE_ORIGIN ?? "http://localhost:8080";
+// Lưu ý: việc proxy /api/be/* → BE đã chuyển sang Route Handler
+// src/app/api/be/[...slug]/route.ts (có retry ECONNRESET, ổn định hơn rewrites()).
 
 const nextConfig: NextConfig = {
   images: {
@@ -19,14 +20,6 @@ const nextConfig: NextConfig = {
         hostname: "images.unsplash.com",
       },
     ],
-  },
-  async rewrites() {
-    return [
-      {
-        source: "/api/be/:path*",
-        destination: `${BE_ORIGIN}/api/:path*`,
-      },
-    ];
   },
 };
 

@@ -1,11 +1,6 @@
 import { realApiClient } from "@/lib/realApiClient";
 import type { User } from "@/types";
 
-// BE chưa expose list users — trả mảng rỗng (admin user-management dùng mock)
-export async function getUsers(): Promise<User[]> {
-  return [];
-}
-
 interface BeUpdateProfilePayload {
   fullName?: string;
   phoneNumber?: string;
@@ -20,9 +15,28 @@ interface BeUserResponse {
   fullName: string;
   phoneNumber?: string;
   address?: string;
+  city?: string;
+  district?: string;
+  detail?: string;
   gender?: string;
   dob?: string;
+  active?: boolean;
+  avatarUrl?: string;
   role?: string;
+}
+
+interface BePageResponse<T> {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalElements: number;
+  data: T[];
+}
+interface BeApiResponse<T> {
+  code: number;
+  message: string;
+  success: boolean;
+  data: T;
 }
 
 function mapBeRole(role?: string): User["role"] {
@@ -35,6 +49,35 @@ function mapBeRole(role?: string): User["role"] {
       return "admin";
     default:
       return "parent";
+  }
+}
+
+function joinAddress(u: BeUserResponse): string | undefined {
+  const parts = [u.detail, u.district, u.city].filter(Boolean);
+  return parts.length ? parts.join(", ") : u.address;
+}
+
+function mapBeUser(u: BeUserResponse): User {
+  return {
+    id: u.id,
+    fullName: u.fullName,
+    email: u.email,
+    role: mapBeRole(u.role),
+    avatarUrl: u.avatarUrl ?? undefined,
+    phone: u.phoneNumber,
+    address: joinAddress(u),
+  };
+}
+
+// BE: GET /api/users?page&size&role (ADMIN) → ApiResponse<PageResponse<UserResponse>>
+export async function getUsers(role?: string): Promise<User[]> {
+  try {
+    const { data } = await realApiClient.get<
+      BeApiResponse<BePageResponse<BeUserResponse>>
+    >("/users", { params: { page: 1, size: 200, role } });
+    return (data?.data?.data ?? []).map(mapBeUser);
+  } catch {
+    return [];
   }
 }
 

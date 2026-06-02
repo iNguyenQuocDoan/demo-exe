@@ -1,4 +1,5 @@
 import { realApiClient } from "@/lib/realApiClient";
+import { getReviews } from "@/api/tutorApi";
 import type { Review } from "@/types";
 
 // BE: POST /api/feedback/review (PARENT) — body { bookingId, rating, comment }
@@ -23,9 +24,10 @@ export async function createReview(payload: {
   }
 }
 
-// BE chưa expose list / get / reply review — trả mảng rỗng / null để tương thích UI
-export async function getAllReviews(_params?: { tutorId?: string }): Promise<Review[]> {
-  return [];
+// BE: GET /api/feedback/tutor/{tutorId}. Không có tutorId → BE chưa có "tất cả review".
+export async function getAllReviews(params?: { tutorId?: string }): Promise<Review[]> {
+  if (!params?.tutorId) return [];
+  return getReviews(params.tutorId);
 }
 
 export async function getReviewByBookingId(_bookingId: string): Promise<Review | null> {
