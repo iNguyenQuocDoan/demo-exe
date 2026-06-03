@@ -46,6 +46,14 @@ import TiltedCard from "@/components/TiltedCard";
 import HeroHeadline from "@/components/home/HeroHeadline";
 import SubjectsCarousel from "@/components/home/SubjectsCarousel";
 import { StaggerGroup, RevealItem, RevealOnView, fadeLeft } from "@/components/motion/ScrollReveal";
+import type { Metadata } from "next";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { faqJsonLd } from "@/lib/seo";
+
+export const metadata: Metadata = {
+  // Trang chủ tự trỏ canonical về gốc; tiêu đề dùng mặc định ở root layout.
+  alternates: { canonical: "/" },
+};
 
 /* ─── Static data ──────────────────────────────────────────────────────────── */
 const HERO_HIGHLIGHTS = [
@@ -190,6 +198,7 @@ const FAQ = [
 export default function HomePage() {
   return (
     <main className="bg-(--bg-app)">
+      <JsonLd data={faqJsonLd(FAQ)} />
       <div id="scroll-progress" />
       <HomeAnimations />
 

@@ -17,6 +17,8 @@ import {
 } from "lucide-react";
 import { getDistrictMap, getSubjectMap } from "@/api/referenceApi";
 import { getReviews, getTutorById } from "@/api/tutorApi";
+import { JsonLd } from "@/components/seo/JsonLd";
+import { tutorJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getBookings } from "@/api/bookingApi";
 import { AvailabilityCalendar } from "@/components/shared/AvailabilityCalendar";
 import { BookingModal } from "@/components/shared/BookingModal";
@@ -96,8 +98,29 @@ export default function TutorDetailPage() {
 
   const districts = tutor.serviceAreas.districtIds.map((districtId) => districtMap[districtId] ?? districtId);
 
+  const subjectNames = tutor.subjects.map((sid) => subjectMap[sid] ?? sid);
+
   return (
     <main className="min-h-screen bg-[var(--bg-app)]">
+      <JsonLd
+        data={[
+          tutorJsonLd({
+            id: tutor.id,
+            fullName: tutor.fullName,
+            bio: tutor.bio,
+            avatarUrl: tutor.avatarUrl,
+            subjects: subjectNames,
+            pricePerHour: tutor.pricePerHour,
+            ratingAvg: tutor.ratingAvg,
+            reviewCount: reviews.length,
+          }),
+          breadcrumbJsonLd([
+            { name: "Trang chủ", url: "/" },
+            { name: "Gia sư", url: "/tutors" },
+            { name: tutor.fullName, url: `/tutors/${tutor.id}` },
+          ]),
+        ]}
+      />
       <div className="site-container py-6">
         <button
           type="button"
