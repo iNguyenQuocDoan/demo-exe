@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { AlertTriangle, Flag, X } from "lucide-react";
-import { createReport } from "@/api/reportApi";
+import { createDispute } from "@/api/disputeApi";
 import { Button } from "@/components/ui/button";
 import { DISPUTE_REASON_LABELS, type DisputeReason } from "@/types";
 
@@ -29,7 +29,7 @@ export function ReportDisputeModal({ bookingId, open, onClose, onSuccess }: Prop
     setError("");
     setSubmitting(true);
     try {
-      const result = await createReport({ bookingId, reason, description });
+      const result = await createDispute({ bookingId, reason, description });
       if (!result.ok) { setError(result.error ?? "Không thể gửi báo cáo."); return; }
       setReason("");
       setDescription("");

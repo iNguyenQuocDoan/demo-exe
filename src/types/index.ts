@@ -324,6 +324,7 @@ export interface User {
   avatarUrl?: string;
   phone?: string;
   address?: string;
+  active?: boolean; // BE: tài khoản đang hoạt động (false = đã khoá)
   tutorProfileId?: string; // only for role=tutor
   tutorApplicationId?: string; // for tutorCandidate
   walletBalance?: number; // for parent

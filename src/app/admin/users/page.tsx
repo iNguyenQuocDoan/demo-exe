@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { ShieldCheck, Users } from "lucide-react";
+import { ShieldCheck, Users, Ban, Check } from "lucide-react";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -18,7 +18,7 @@ import { FilterBarCompact } from "@/components/shared/FilterBarCompact";
 import { AdvancedFiltersSheet } from "@/components/shared/AdvancedFiltersSheet";
 import { SkeletonList } from "@/components/shared/SkeletonList";
 import { ROLE_LABELS } from "@/lib/permissions";
-import { getUsers } from "@/api/usersApi";
+import { getUsers, updateUserStatus } from "@/api/usersApi";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { User, UserRole } from "@/types";
 
@@ -31,6 +31,20 @@ export default function AdminUsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [roleFilter, setRoleFilter] = useState<UserRole | "ALL">("ALL");
+  const [busyId, setBusyId] = useState<string | null>(null);
+
+  // Khoá/mở tài khoản — PUT /users/{id}/status (BE thật). Cập nhật lạc quan.
+  const toggleBlock = async (target: User) => {
+    const block = target.active !== false; // đang hoạt động → khoá
+    setBusyId(target.id);
+    const result = await updateUserStatus(target.id, block);
+    setBusyId(null);
+    if (result.ok) {
+      setUsers((prev) =>
+        prev.map((u) => (u.id === target.id ? { ...u, active: !block } : u)),
+      );
+    }
+  };
 
   useEffect(() => {
     if (isLoading || !user) return;
@@ -174,12 +188,30 @@ export default function AdminUsersPage() {
                       <p className="text-xs text-muted-foreground">{item.email}</p>
                       <p className="text-[11px] text-muted-foreground/80">ID: {item.id}</p>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <Badge variant={item.role === "admin" ? "destructive" : "outline"}>
                         {ROLE_LABELS[item.role]}
                       </Badge>
+                      {item.active === false && (
+                        <Badge variant="secondary">Đã khoá</Badge>
+                      )}
                       {item.role === "admin" && (
                         <ShieldCheck className="h-4 w-4 text-destructive" />
+                      )}
+                      {item.id !== user?.id && (
+                        <Button
+                          size="sm"
+                          variant={item.active === false ? "outline" : "destructive"}
+                          className="gap-1.5"
+                          loading={busyId === item.id}
+                          onClick={() => void toggleBlock(item)}
+                        >
+                          {item.active === false ? (
+                            <><Check className="h-3.5 w-3.5" /> Mở khoá</>
+                          ) : (
+                            <><Ban className="h-3.5 w-3.5" /> Khoá</>
+                          )}
+                        </Button>
                       )}
                     </div>
                   </article>

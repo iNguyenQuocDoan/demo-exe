@@ -10,7 +10,7 @@ import {
   Flag,
   XCircle,
 } from "lucide-react";
-import { getReports, updateReport } from "@/api/reportApi";
+import { getDisputes, resolveDispute } from "@/api/disputeApi";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -37,12 +37,19 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
   const [expanded, setExpanded] = useState(false);
   const [adminNote, setAdminNote] = useState(report.adminNote ?? "");
   const [saving, setSaving] = useState(false);
+  const [actErr, setActErr] = useState("");
 
+  // BE chỉ hỗ trợ resolve: Resolved = hoàn tiền cho phụ huynh, Dismissed = không hoàn.
   const handleAction = async (status: DisputeReportStatus) => {
     setSaving(true);
+    setActErr("");
     try {
-      await updateReport(report.id, { status, adminNote: adminNote.trim() || undefined });
-      onUpdate();
+      const res = await resolveDispute(report.id, {
+        resolution: status === "Resolved" ? "FULL_REFUND" : "DISMISSED",
+        adminNote: adminNote.trim() || undefined,
+      });
+      if (res.ok) onUpdate();
+      else setActErr(res.error ?? "Máy chủ không xử lý được khiếu nại này.");
     } finally {
       setSaving(false);
     }
@@ -135,25 +142,23 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {report.status === "Pending" && (
-              <Button size="sm" variant="outline" loading={saving} onClick={() => void handleAction("Reviewing")}>
-                Bắt đầu xem xét
-              </Button>
-            )}
             {(report.status === "Pending" || report.status === "Reviewing") && (
               <>
                 <Button size="sm" className="gap-1.5" loading={saving} onClick={() => void handleAction("Resolved")}>
                   <CheckCircle2 className="h-3.5 w-3.5" />
-                  Đã giải quyết
+                  Giải quyết (hoàn tiền PH)
                 </Button>
                 <Button size="sm" variant="outline" className="gap-1.5 text-muted-foreground" loading={saving} onClick={() => void handleAction("Dismissed")}>
                   <XCircle className="h-3.5 w-3.5" />
-                  Bác bỏ
+                  Bác bỏ (không hoàn)
                 </Button>
               </>
             )}
             {(report.status === "Resolved" || report.status === "Dismissed") && (
               <span className="text-xs text-muted-foreground italic">Đã xử lý xong</span>
+            )}
+            {actErr && (
+              <span className="w-full text-xs text-destructive">{actErr}</span>
             )}
             <Link href={`/admin/disputes/${report.id}`}>
               <Button size="sm" variant="ghost" className="gap-1.5 text-muted-foreground ml-auto">
@@ -174,8 +179,8 @@ export default function AdminDisputesPage() {
   const [statusFilter, setStatusFilter] = useState<DisputeReportStatus | "all">("all");
 
   const loadDisputes = async () => {
-    const result = await getReports();
-    setDisputes(result.reports);
+    // BE: GET /feedback/dispute/pending — chỉ trả khiếu nại đang chờ xử lý.
+    setDisputes(await getDisputes());
   };
 
   useEffect(() => {

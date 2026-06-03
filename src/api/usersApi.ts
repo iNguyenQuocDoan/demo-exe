@@ -66,6 +66,7 @@ function mapBeUser(u: BeUserResponse): User {
     avatarUrl: u.avatarUrl ?? undefined,
     phone: u.phoneNumber,
     address: joinAddress(u),
+    active: u.active ?? true,
   };
 }
 
