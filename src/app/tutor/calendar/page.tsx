@@ -19,6 +19,7 @@ import {
   getBookings, acceptBooking, cancelBooking,
   startBooking, completeBooking,
 } from "@/api/bookingApi";
+import { getTutorAllSlots } from "@/api/tutorApi";
 import { getUserContactMap, type UserContact } from "@/api/referenceApi";
 import { getOrCreateConversation } from "@/api/chatApi";
 import { ScheduleCalendar } from "@/components/tutor/ScheduleCalendar";
@@ -55,6 +56,21 @@ function bookingToEvent(b: Booking): CalendarEvent {
     bookingId: b.id, studentName: b.studentName, subject: b.subject, amount: b.totalAmount,
     canAccept: status === "Pending",
     canReject: status === "Pending" || status === "Confirmed",
+  };
+}
+
+interface TutorSlotLite { id: string; startTime: string; endTime: string; status: string; hourlyRate: number; }
+function slotToEvent(s: TutorSlotLite): CalendarEvent {
+  const start = new Date(s.startTime);
+  const end   = new Date(s.endTime);
+  const fmt   = (d: Date) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return {
+    id: `slot-${s.id}`,
+    type: "availability",
+    title: "Ca trống",
+    date: `${start.getFullYear()}-${pad(start.getMonth() + 1)}-${pad(start.getDate())}`,
+    startTime: fmt(start), endTime: fmt(end),
+    amount: s.hourlyRate,
   };
 }
 
@@ -271,6 +287,7 @@ export default function TutorCalendarPage() {
   const { user, isLoading } = useAuthStore();
 
   const [bookings, setBookings]               = useState<Booking[]>([]);
+  const [slots, setSlots]                     = useState<TutorSlotLite[]>([]);
   const [parentContactMap, setParentContactMap] = useState<Record<string, UserContact>>({});
   const [loading, setLoading]                 = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
@@ -289,8 +306,12 @@ export default function TutorCalendarPage() {
   const load = useCallback(async (tid: string, silent = false) => {
     if (!silent) setLoading(true);
     try {
-      const b = await getBookings({ tutorId: tid });
+      const [b, sl] = await Promise.all([
+        getBookings({ tutorId: tid }),
+        getTutorAllSlots(tid).catch(() => [] as TutorSlotLite[]),
+      ]);
       setBookings(b);
+      setSlots(sl);
     } finally {
       if (!silent) setLoading(false);
     }
@@ -336,9 +357,13 @@ export default function TutorCalendarPage() {
     if (tutorId) void load(tutorId, true);
   };
 
-  const events = bookings.map(bookingToEvent);
-  const pendingCount  = events.filter((e) => e.status === "Pending").length;
-  const upcomingCount = events.filter(
+  const bookingEvents = bookings.map(bookingToEvent);
+  const slotEvents = slots
+    .filter((s) => (s.status ?? "").toUpperCase() === "AVAILABLE")
+    .map(slotToEvent);
+  const events = [...bookingEvents, ...slotEvents];
+  const pendingCount  = bookingEvents.filter((e) => e.status === "Pending").length;
+  const upcomingCount = bookingEvents.filter(
     (e) => e.date >= new Date().toISOString().split("T")[0] && e.status !== "Cancelled"
   ).length;
 

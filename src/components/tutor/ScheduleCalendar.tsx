@@ -48,14 +48,34 @@ const STATUS_CONFIG: Record<
   Resolved:       { label: "Đã giải quyết",  variant: "secondary",   pill: "bg-muted text-muted-foreground border-border" },
 };
 
-/** Background tint for week-view event chips */
-const EVENT_CHIP_BG: Partial<Record<BookingStatus, string>> = {
-  Pending:  "bg-warning/10 border-warning/20 text-warning-foreground",
-  Confirmed:"bg-success/10 border-success/20 text-success-foreground",
-  InProgress:"bg-primary/10 border-primary/20 text-primary-foreground",
-  Completed:"bg-muted border-border text-muted-foreground",
-  Cancelled:"bg-destructive/8 border-destructive/15 text-destructive",
+/** Minutes since midnight from a "HH:mm" string. */
+const toMin = (hhmm: string) => {
+  const [h, m] = hhmm.split(":").map(Number);
+  return (h || 0) * 60 + (m || 0);
 };
+
+/** Pixel height of one hour row in the time grid. */
+const GRID_HOUR_PX = 48;
+
+/** Color of a time-grid event block by type/status. */
+function eventBlockClass(e: CalendarEvent): string {
+  if (e.type === "availability")
+    return "border-dashed border-success/50 bg-success/10 text-success";
+  switch (e.status) {
+    case "Pending":
+    case "AwaitingPayment":
+      return "border-warning/40 bg-warning/15 text-warning-foreground";
+    case "Confirmed":
+      return "border-primary/50 bg-primary/15 text-primary";
+    case "InProgress":
+      return "border-success/50 bg-success/20 text-success";
+    case "Cancelled":
+    case "Disputed":
+      return "border-destructive/40 bg-destructive/10 text-destructive";
+    default: // Completed / Resolved
+      return "border-border bg-muted text-muted-foreground";
+  }
+}
 
 function StatusBadge({ status }: { status?: BookingStatus }) {
   if (!status) return null;
@@ -158,86 +178,108 @@ export function ScheduleCalendar({
         </div>
       </div>
 
-      {/* ══ WEEK VIEW ══ */}
-      {viewMode === "week" && (
-        <div className="surface-card overflow-hidden">
-          {/* Day header row */}
-          <div className="grid grid-cols-7 border-b border-border">
-            {weekDates.map((date, i) => {
-              const isToday = toDateStr(date) === today;
-              return (
-                <div
-                  key={i}
-                  className={`flex flex-col items-center gap-0.5 py-3 text-center ${i < 6 ? "border-r border-border" : ""} ${isToday ? "bg-primary/5" : ""}`}
-                >
-                  <span className={`text-xs font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
-                    {DAY_LABELS[date.getDay()]}
-                  </span>
-                  <span
-                    className={`flex h-8 w-8 items-center justify-center rounded-full text-sm font-bold ${
-                      isToday
-                        ? "bg-primary text-primary-foreground"
-                        : "text-foreground"
-                    }`}
-                  >
-                    {date.getDate()}
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    {date.toLocaleDateString("vi-VN", { month: "numeric" })}/
-                    {date.getFullYear().toString().slice(2)}
-                  </span>
-                </div>
-              );
-            })}
-          </div>
+      {/* ══ WEEK VIEW — time grid (Google Calendar style) ══ */}
+      {viewMode === "week" && (() => {
+        const weekEvents = events.filter((e) => weekDates.some((d) => toDateStr(d) === e.date));
+        let minH = 7;
+        let maxH = 21;
+        for (const e of weekEvents) {
+          minH = Math.min(minH, Math.floor(toMin(e.startTime) / 60));
+          maxH = Math.max(maxH, Math.ceil(toMin(e.endTime) / 60));
+        }
+        minH = Math.max(0, minH);
+        maxH = Math.min(24, Math.max(maxH, minH + 1));
+        const hours = Array.from({ length: maxH - minH }, (_, i) => minH + i);
+        const gridH = hours.length * GRID_HOUR_PX;
 
-          {/* Event cells */}
-          <div className="grid grid-cols-7 divide-x divide-border">
-            {weekDates.map((date, i) => {
-              const dayEvts = eventsForDate(date);
-              const isToday = toDateStr(date) === today;
-              return (
-                <div
-                  key={i}
-                  className={`min-h-40 p-1.5 space-y-1 ${isToday ? "bg-primary/3" : ""}`}
-                >
-                  {dayEvts.length === 0 ? (
-                    <div className="flex h-full min-h-36 items-center justify-center">
-                      <span className="text-xs text-muted-foreground/40">—</span>
+        return (
+          <div className="surface-card overflow-x-auto p-0">
+            <div className="min-w-[760px]">
+              {/* Header: weekday + date */}
+              <div className="flex border-b border-border">
+                <div className="w-14 shrink-0" />
+                {weekDates.map((date, i) => {
+                  const isToday = toDateStr(date) === today;
+                  return (
+                    <div key={i} className={`flex-1 py-2 text-center ${i < 6 ? "border-r border-border" : ""} ${isToday ? "bg-primary/5" : ""}`}>
+                      <div className={`text-xs font-medium ${isToday ? "text-primary" : "text-muted-foreground"}`}>
+                        {DAY_LABELS[date.getDay()]}
+                      </div>
+                      <div className={`mx-auto mt-0.5 flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold ${isToday ? "bg-primary text-primary-foreground" : "text-foreground"}`}>
+                        {date.getDate()}
+                      </div>
                     </div>
-                  ) : (
-                    dayEvts.map((evt, idx) => {
-                      const chipCls = (evt.status && EVENT_CHIP_BG[evt.status]) ?? "bg-muted border-border";
-                      return (
-                        <button
-                          key={idx}
-                          type="button"
-                          onClick={() => onEventClick?.(evt)}
-                          className={`w-full rounded-lg border px-2 py-1.5 text-left transition-opacity hover:opacity-80 ${chipCls}`}
-                        >
-                          <div className="text-xs font-semibold leading-tight truncate">
-                            {evt.startTime} – {evt.endTime}
-                          </div>
-                          <div className="mt-0.5 text-xs leading-tight truncate opacity-80">
-                            {evt.title}
-                          </div>
-                          {evt.status && (
-                            <div className="mt-1">
-                              <span className={`inline-block rounded-full px-1.5 py-0.5 text-[10px] font-medium border ${(STATUS_CONFIG[evt.status]?.pill ?? "")}`}>
-                                {STATUS_CONFIG[evt.status]?.label}
-                              </span>
-                            </div>
-                          )}
-                        </button>
-                      );
-                    })
-                  )}
+                  );
+                })}
+              </div>
+
+              {/* Body: hour gutter + day columns */}
+              <div className="flex">
+                <div className="w-14 shrink-0">
+                  {hours.map((h) => (
+                    <div key={h} style={{ height: GRID_HOUR_PX }} className="relative">
+                      <span className="absolute -top-2 right-1.5 text-[10px] text-muted-foreground">{h}:00</span>
+                    </div>
+                  ))}
                 </div>
-              );
-            })}
+
+                {weekDates.map((date, i) => {
+                  const isToday = toDateStr(date) === today;
+                  const dayEvents = [...eventsForDate(date)].sort((a, b) => toMin(a.startTime) - toMin(b.startTime));
+                  // Lane assignment so overlapping events sit side by side.
+                  const laneEnds: number[] = [];
+                  const placed = dayEvents.map((e) => {
+                    const s = toMin(e.startTime);
+                    const en = Math.max(toMin(e.endTime), s + 30);
+                    let lane = laneEnds.findIndex((end) => end <= s);
+                    if (lane === -1) {
+                      lane = laneEnds.length;
+                      laneEnds.push(en);
+                    } else {
+                      laneEnds[lane] = en;
+                    }
+                    return { e, s, en, lane };
+                  });
+                  const lanes = Math.max(1, laneEnds.length);
+                  return (
+                    <div
+                      key={i}
+                      className={`relative flex-1 ${i < 6 ? "border-r border-border" : ""} ${isToday ? "bg-primary/3" : ""}`}
+                      style={{ height: gridH }}
+                    >
+                      {hours.map((h) => (
+                        <div key={h} style={{ height: GRID_HOUR_PX }} className="border-t border-border/50" />
+                      ))}
+                      {placed.map(({ e, s, en, lane }) => {
+                        const widthPct = 100 / lanes;
+                        return (
+                          <button
+                            key={e.id}
+                            type="button"
+                            onClick={() => onEventClick?.(e)}
+                            style={{
+                              top: ((s - minH * 60) / 60) * GRID_HOUR_PX,
+                              height: Math.max(((en - s) / 60) * GRID_HOUR_PX - 2, 18),
+                              left: `calc(${lane * widthPct}% + 1px)`,
+                              width: `calc(${widthPct}% - 2px)`,
+                            }}
+                            className={`absolute overflow-hidden rounded-md border px-1.5 py-1 text-left leading-tight transition-opacity hover:opacity-80 ${eventBlockClass(e)}`}
+                          >
+                            <div className="truncate text-[10px] font-semibold">{e.startTime}–{e.endTime}</div>
+                            <div className="truncate text-[11px] font-medium">
+                              {e.type === "availability" ? "Ca trống" : e.title}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       {/* ══ LIST VIEW ══ */}
       {viewMode === "list" && (

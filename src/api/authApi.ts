@@ -47,13 +47,17 @@ function mapFeRoleToBe(role: string | undefined): string {
 }
 
 function mapUser(be: BeUserResponse): User {
+  const role = mapBeRoleToFe(be.role);
   return {
     id: be.id,
     fullName: be.fullName,
     email: be.email,
-    role: mapBeRoleToFe(be.role),
+    role,
     phone: be.phoneNumber,
     address: be.address,
+    // BE không trả tutorProfileId riêng — gia sư được đánh khóa theo chính UUID
+    // của user (/tutors/{uuid}/...). Gán để mở khóa dashboard/lịch trống/ví gia sư.
+    tutorProfileId: role === "tutor" ? be.id : undefined,
   };
 }
 
