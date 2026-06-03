@@ -238,23 +238,39 @@ export const startBooking = async (
   _id: string,
 ): Promise<{ ok: boolean; error?: string }> => ({ ok: true });
 
-// BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
-//   { startTime: "HH:mm:ss" (LocalTime), endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
-// Tạo slot lặp lại hàng tuần từ startDate, trong numberOfWeeks tuần.
+// BE: POST /api/bookings/slots (TUTOR) — body = List<SlotRequest>:
+//   [ { startTime: ISO LocalDateTime, endTime: ISO LocalDateTime }, ... ]
+// BE chỉ lưu từng ca với datetime cụ thể (không có khái niệm lặp tuần và
+// không nhận startDate/numberOfWeeks). Vì vậy ta tự bung startDate + numberOfWeeks
+// thành các ca có ngày cụ thể ở phía FE rồi gửi lên dưới dạng MỘT MẢNG.
 export async function createTutorSlots(input: {
-  startTime: string; // "HH:mm:ss" hoặc "HH:mm"
+  startTime: string; // "HH:mm" hoặc "HH:mm:ss"
   endTime: string;
   startDate: string; // "yyyy-MM-dd"
   numberOfWeeks?: number;
 }): Promise<{ ok: boolean; error?: string }> {
-  const toLocalTime = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
+  const hms = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
+  const weeks = Math.max(1, input.numberOfWeeks ?? 1);
+  const now = Date.now();
+
+  const slots: { startTime: string; endTime: string }[] = [];
+  for (let w = 0; w < weeks; w++) {
+    const base = new Date(`${input.startDate}T00:00:00`);
+    base.setDate(base.getDate() + w * 7);
+    const dateStr = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
+    const startTime = `${dateStr}T${hms(input.startTime)}`;
+    const endTime = `${dateStr}T${hms(input.endTime)}`;
+    // BE validate @Future trên từng ca → bỏ ca đã qua để không bị 400 cả mảng.
+    if (new Date(startTime).getTime() <= now) continue;
+    slots.push({ startTime, endTime });
+  }
+
+  if (slots.length === 0) {
+    return { ok: false, error: "Tất cả khung giờ đã ở quá khứ" };
+  }
+
   try {
-    await realApiClient.post("/bookings/slots", {
-      startTime: toLocalTime(input.startTime),
-      endTime: toLocalTime(input.endTime),
-      startDate: input.startDate,
-      numberOfWeeks: input.numberOfWeeks ?? 1,
-    });
+    await realApiClient.post("/bookings/slots", slots);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
