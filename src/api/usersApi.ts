@@ -81,6 +81,24 @@ export async function getUsers(role?: string): Promise<User[]> {
   }
 }
 
+// BE: PUT /api/users/{id}/status?isBlocked= (ADMIN) — khoá/mở tài khoản
+export async function updateUserStatus(
+  userId: string,
+  isBlocked: boolean,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.put(`/users/${userId}/status`, null, {
+      params: { isBlocked },
+    });
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể cập nhật trạng thái người dùng";
+    return { ok: false, error: msg };
+  }
+}
+
 // BE: PUT /api/users/profile (multipart) — phần `data` JSON + `avatar` file optional
 export async function updateSelf(
   _userId: string,

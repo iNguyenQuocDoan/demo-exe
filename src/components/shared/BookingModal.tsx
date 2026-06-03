@@ -158,6 +158,9 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
     setLoading(true);
     const result = await createBooking({
       tutorId: tutor.id,
+      // BE đặt lịch theo slotId (slot do gia sư mở). AvailabilityCalendar lấy từ
+      // /tutors/slots/{id} nên slot.slotId là UUID slot thật.
+      slotId: slot.slotId,
       startAt: `${slot.date}T${slot.startTime}:00`,
       endAt: `${slot.date}T${slot.endTime}:00`,
       subject: selectedSubjectId,

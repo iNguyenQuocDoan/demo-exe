@@ -207,7 +207,7 @@ export async function createBooking(
 
 async function bookingAction(
   id: string,
-  action: "accept" | "reject" | "complete" | "cancel",
+  action: "accept" | "reject" | "complete" | "cancel" | "tutor-complete",
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     await realApiClient.post(`/bookings/${id}/${action}`);
@@ -222,7 +222,11 @@ async function bookingAction(
 
 export const acceptBooking = (id: string) => bookingAction(id, "accept");
 export const rejectBooking = (id: string) => bookingAction(id, "reject");
+// Phụ huynh xác nhận hoàn thành (POST /bookings/{id}/complete)
 export const completeBooking = (id: string) => bookingAction(id, "complete");
+// Gia sư xác nhận hoàn thành (POST /bookings/{id}/tutor-complete).
+// LƯU Ý BE: chỉ hoàn thành được buổi đã qua giờ học (buổi tương lai → 500).
+export const tutorCompleteBooking = (id: string) => bookingAction(id, "tutor-complete");
 export const cancelBooking = (
   id: string,
   _cancelBy?: string,
@@ -234,12 +238,23 @@ export const startBooking = async (
   _id: string,
 ): Promise<{ ok: boolean; error?: string }> => ({ ok: true });
 
-// BE: POST /api/bookings/slots (TUTOR) — body List<{startTime, endTime}>
-export async function createTutorSlots(
-  slots: { startTime: string; endTime: string }[],
-): Promise<{ ok: boolean; error?: string }> {
+// BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
+//   { startTime: "HH:mm:ss" (LocalTime), endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
+// Tạo slot lặp lại hàng tuần từ startDate, trong numberOfWeeks tuần.
+export async function createTutorSlots(input: {
+  startTime: string; // "HH:mm:ss" hoặc "HH:mm"
+  endTime: string;
+  startDate: string; // "yyyy-MM-dd"
+  numberOfWeeks?: number;
+}): Promise<{ ok: boolean; error?: string }> {
+  const toLocalTime = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
   try {
-    await realApiClient.post("/bookings/slots", slots);
+    await realApiClient.post("/bookings/slots", {
+      startTime: toLocalTime(input.startTime),
+      endTime: toLocalTime(input.endTime),
+      startDate: input.startDate,
+      numberOfWeeks: input.numberOfWeeks ?? 1,
+    });
     return { ok: true };
   } catch (err: unknown) {
     const msg =
