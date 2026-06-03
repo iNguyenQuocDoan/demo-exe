@@ -17,7 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { getReport, updateReport } from "@/api/reportApi";
+import { getDispute, resolveDispute } from "@/api/disputeApi";
 import { DISPUTE_REASON_LABELS } from "@/types";
 import type { DisputeReport, DisputeReportStatus } from "@/types";
 import { PageAnimations } from "@/components/animations/PageAnimations";
@@ -99,19 +99,28 @@ export default function DisputeDetailPage() {
   const [saved, setSaved] = useState(false);
 
   useEffect(() => {
-    getReport(id).then((r) => {
+    getDispute(id).then((r) => {
       setReport(r);
       setAdminNote(r?.adminNote ?? "");
       setLoading(false);
     });
   }, [id]);
 
+  // BE chỉ có resolve: Resolved = hoàn tiền PH, còn lại = không hoàn (bác bỏ).
   const handleAction = async (status: DisputeReportStatus) => {
     if (!report) return;
     setSaving(true);
-    const res = await updateReport(report.id, { status, adminNote: adminNote.trim() || undefined });
-    if (res.ok && res.report) {
-      setReport(res.report);
+    const res = await resolveDispute(report.id, {
+      resolution: status === "Resolved" ? "FULL_REFUND" : "DISMISSED",
+      adminNote: adminNote.trim() || undefined,
+    });
+    if (res.ok) {
+      setReport({
+        ...report,
+        status,
+        adminNote: adminNote.trim() || undefined,
+        resolvedAt: new Date().toISOString(),
+      });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
     }
@@ -227,21 +236,12 @@ export default function DisputeDetailPage() {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              {report.status === "Pending" && (
-                <Button
-                  variant="outline"
-                  onClick={() => handleAction("Reviewing")}
-                  disabled={saving}
-                >
-                  <Clock className="mr-2 h-4 w-4" /> Bắt đầu xem xét
-                </Button>
-              )}
               <Button
                 onClick={() => handleAction("Resolved")}
                 disabled={saving}
                 className="bg-emerald-600 hover:bg-emerald-700 text-white"
               >
-                <CheckCircle2 className="mr-2 h-4 w-4" /> Đánh dấu đã giải quyết
+                <CheckCircle2 className="mr-2 h-4 w-4" /> Giải quyết (hoàn tiền PH)
               </Button>
               <Button
                 variant="outline"
