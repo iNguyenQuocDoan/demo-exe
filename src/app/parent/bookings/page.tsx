@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   AlertTriangle,
-  BookOpen,
   CalendarDays,
   Clock3,
   Search,
@@ -18,7 +17,6 @@ import { getBookings, cancelBooking } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
 import { getOrCreateConversation } from "@/api/chatApi";
 import { getBookingHoldsForUser } from "@/api/walletApi";
-import { getBookingEnhancement, type BookingEnhancement } from "@/lib/bookingEnhancedMock";
 import type { BookingHold } from "@/types";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { EmptyState } from "@/components/shared/EmptyState";
@@ -76,7 +74,6 @@ export default function ParentBookingsPage() {
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
-  const [enhancementMap, setEnhancementMap] = useState<Record<string, BookingEnhancement>>({});
   const [search, setSearch] = useState("");
 
   const parentId = user?.id ?? null;
@@ -109,15 +106,6 @@ export default function ParentBookingsPage() {
     if (isLoading || !user) return;
     void loadData(user.id);
   }, [isLoading, loadData, user]);
-
-  useEffect(() => {
-    if (bookings.length === 0) return;
-    const map: Record<string, BookingEnhancement> = {};
-    for (const booking of bookings) {
-      map[booking.id] = getBookingEnhancement(booking);
-    }
-    setEnhancementMap(map);
-  }, [bookings]);
 
   const filtered = useMemo(() => {
     let result = activeStatus === "all" ? bookings : bookings.filter((item) => item.status === activeStatus);
@@ -272,11 +260,6 @@ export default function ParentBookingsPage() {
                               }
                             : null;
 
-                  const enhancement = enhancementMap[booking.id];
-                  const hasSentPlan =
-                    !!enhancement?.studyPlan &&
-                    ["plan_sent", "in_session", "completed"].includes(enhancement.flowStatus);
-
                   return (
                     <article
                       key={booking.id}
@@ -314,14 +297,6 @@ export default function ParentBookingsPage() {
                         <Button size="sm" variant="outline" asChild>
                           <Link href={`/parent/bookings/${booking.id}`}>Chi tiết</Link>
                         </Button>
-                        {hasSentPlan && (
-                          <Button size="sm" variant="default" asChild className="gap-1.5">
-                            <Link href={`/parent/bookings/${booking.id}`}>
-                              <BookOpen className="h-3.5 w-3.5" />
-                              Xem kế hoạch học
-                            </Link>
-                          </Button>
-                        )}
                         {(booking.status === "Confirmed" || booking.status === "InProgress") && (
                           <Button
                             size="sm"

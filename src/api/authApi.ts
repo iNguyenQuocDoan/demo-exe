@@ -179,6 +179,20 @@ export async function changePassword(input: {
   }
 }
 
+// BE: POST /api/auth/forgot-password?email= — gửi mã OTP đặt lại mật khẩu về email
+export async function forgotPassword(
+  email: string,
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.post("/auth/forgot-password", null, {
+      params: { email },
+    });
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: extractError(err, "Không gửi được mã OTP") };
+  }
+}
+
 // BE: POST /api/auth/verify-otp?email=&otp=
 export async function verifyOtp(
   email: string,

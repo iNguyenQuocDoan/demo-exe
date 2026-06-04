@@ -2,23 +2,16 @@
 import React, { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import { Send, Wifi, WifiOff, Loader2 } from "lucide-react";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { useChat } from "@/hooks/useChat";
-import type { User } from "@/types";
-import type { BookingFlowStatus } from "@/lib/bookingEnhancedMock";
+import type { Booking, User } from "@/types";
+import { BOOKING_STATUS_META } from "@/lib/bookingStatus";
 import { Badge } from "@/components/ui/badge";
-import {
-  BookingContextCard,
-  BookingFlowBadge,
-  ChatOwnerChangeNote,
-} from "@/components/booking/EnhancedBookingBlocks";
 
 export interface BookingChatContext {
   bookingId: string;
-  status: BookingFlowStatus;
-  ownerName: string;
-  ownerRole: string;
-  latestOwnerChange?: string | null;
+  status?: Booking["status"];
   bookingHref?: string;
 }
 
@@ -66,19 +59,15 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
         <div className="flex items-center justify-between gap-3">
           <div>
             <div className="text-sm font-semibold text-[hsl(222_47%_11%)]">{otherName}</div>
-            {bookingContext ? (
-              <div className="mt-1 flex flex-wrap items-center gap-2">
-                <Badge variant="outline" className="text-[10px]">
-                  You&apos;re chatting with: {bookingContext.ownerName} ({bookingContext.ownerRole})
-                </Badge>
-              </div>
-            ) : (
-              <div className="text-xs text-[hsl(215_16%_47%)]">Chat trực tiếp / Direct chat</div>
-            )}
+            <div className="text-xs text-[hsl(215_16%_47%)]">Chat trực tiếp / Direct chat</div>
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            {bookingContext ? <BookingFlowBadge status={bookingContext.status} className="text-[11px]" /> : null}
+            {bookingContext?.status ? (
+              <Badge variant={BOOKING_STATUS_META[bookingContext.status].variant} className="text-[11px]">
+                {BOOKING_STATUS_META[bookingContext.status].label}
+              </Badge>
+            ) : null}
             <div
               className={cn(
                 "flex items-center gap-1.5 rounded-full px-2 py-1 text-xs font-medium",
@@ -100,18 +89,15 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
           </div>
         </div>
 
-        {bookingContext ? (
-          <>
-            <ChatOwnerChangeNote latestOwnerChange={bookingContext.latestOwnerChange ?? null} />
-            <div className="mt-2">
-              <BookingContextCard
-                bookingId={bookingContext.bookingId}
-                status={bookingContext.status}
-                contactOwnerText={`${bookingContext.ownerName} (${bookingContext.ownerRole})`}
-                bookingHref={bookingContext.bookingHref}
-              />
-            </div>
-          </>
+        {bookingContext?.bookingHref ? (
+          <div className="mt-2">
+            <Link
+              href={bookingContext.bookingHref}
+              className="text-xs font-medium text-[hsl(221_83%_53%)] hover:underline"
+            >
+              Xem chi tiết booking #{bookingContext.bookingId}
+            </Link>
+          </div>
         ) : null}
       </div>
 

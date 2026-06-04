@@ -25,6 +25,23 @@ type BarChartData = {
   color?: string;
 };
 
+type TooltipPayloadItem = {
+  name?: string;
+  value?: unknown;
+  payload?: {
+    name?: string;
+  };
+};
+
+type PieLabelProps = {
+  cx?: number | string;
+  cy?: number | string;
+  midAngle?: number;
+  innerRadius?: number;
+  outerRadius?: number;
+  percent?: number;
+};
+
 interface DashboardPieChartProps {
   title: string;
   data: PieChartData[];
@@ -44,17 +61,18 @@ const CustomTooltip = ({
   total,
 }: {
   active?: boolean;
-  payload?: readonly any[];
+  payload?: readonly TooltipPayloadItem[];
   total: number;
 }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
-    const percentage = total > 0 ? ((data.value / total) * 100).toFixed(1) : "0";
+    const value = Number(data.value ?? 0);
+    const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : "0";
     return (
       <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
         <p className="text-sm font-semibold text-foreground">{data.name}</p>
         <p className="text-sm text-muted-foreground">
-          {data.value} ({percentage}%)
+          {value} ({percentage}%)
         </p>
       </div>
     );
@@ -68,29 +86,37 @@ const BarTooltip = ({
   formatValue,
 }: {
   active?: boolean;
-  payload?: readonly any[];
+  payload?: readonly TooltipPayloadItem[];
   formatValue: (v: number) => string;
 }) => {
   if (active && payload && payload.length) {
     const data = payload[0];
+    const value = Number(data.value ?? 0);
     return (
       <div className="rounded-lg border border-border bg-background p-3 shadow-lg">
-        <p className="text-sm font-semibold text-foreground">{data.payload.name}</p>
-        <p className="text-sm text-muted-foreground">{formatValue(data.value)}</p>
+        <p className="text-sm font-semibold text-foreground">{data.payload?.name}</p>
+        <p className="text-sm text-muted-foreground">{formatValue(value)}</p>
       </div>
     );
   }
   return null;
 };
 
-const renderCustomLabel = (props: any) => {
-  const { cx, cy, midAngle, innerRadius, outerRadius, percent } = props;
+const renderCustomLabel = (props: PieLabelProps) => {
+  const {
+    cx = 0,
+    cy = 0,
+    midAngle = 0,
+    innerRadius = 0,
+    outerRadius = 0,
+    percent,
+  } = props;
   if (!percent || percent < 0.05) return null;
 
   const RADIAN = Math.PI / 180;
   const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-  const x = cx + radius * Math.cos(-midAngle * RADIAN);
-  const y = cy + radius * Math.sin(-midAngle * RADIAN);
+  const x = Number(cx) + radius * Math.cos(-midAngle * RADIAN);
+  const y = Number(cy) + radius * Math.sin(-midAngle * RADIAN);
 
   return (
     <text
@@ -165,8 +191,12 @@ export function DashboardPieChart({
               ))}
             </Pie>
             <Tooltip
-              content={(props: any) => (
-                <CustomTooltip {...props} total={total} />
+              content={(props) => (
+                <CustomTooltip
+                  active={props.active}
+                  payload={props.payload as readonly TooltipPayloadItem[] | undefined}
+                  total={total}
+                />
               )}
             />
           </PieChart>
@@ -261,8 +291,12 @@ export function DashboardBarChart({
               width={40}
             />
             <Tooltip
-              content={(props: any) => (
-                <BarTooltip {...props} formatValue={formatValue} />
+              content={(props) => (
+                <BarTooltip
+                  active={props.active}
+                  payload={props.payload as readonly TooltipPayloadItem[] | undefined}
+                  formatValue={formatValue}
+                />
               )}
             />
             <Bar dataKey="value" radius={[4, 4, 0, 0]}>

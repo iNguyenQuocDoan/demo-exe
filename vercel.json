@@ -4,8 +4,9 @@
   "outputDirectory": ".next",
   "installCommand": "npm install",
   "env": {
-    "NEXT_PUBLIC_USE_MOCK": "true",
-    "NEXT_PUBLIC_API_URL": "https://placeholder.api",
+    "NEXT_PUBLIC_USE_MOCK": "false",
+    "NEXT_PUBLIC_API_URL": "/api/be",
+    "NEXT_PUBLIC_REAL_API_URL": "/api/be",
     "NEXT_PUBLIC_BE_ORIGIN": "https://liflow-be.onrender.com",
     "NEXT_PUBLIC_GUEST_EMAIL": "parent1@tutor.com",
     "NEXT_PUBLIC_GUEST_PASSWORD": "12345",

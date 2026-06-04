@@ -492,6 +492,9 @@ export interface DepositRequest {
 export interface WithdrawRequest {
   id: string;
   userId: string;
+  /** Resolved on the BE for admin views (optional). */
+  userName?: string;
+  userEmail?: string;
   amount: number;
   bankInfo: {
     bankName: string;

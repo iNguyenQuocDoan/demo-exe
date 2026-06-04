@@ -17,7 +17,7 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { formatCurrency } from "@/lib/utils";
 import {
   getBookings, acceptBooking, cancelBooking,
-  startBooking, completeBooking,
+  startBooking, tutorCompleteBooking,
 } from "@/api/bookingApi";
 import { getTutorAllSlots } from "@/api/tutorApi";
 import { getUserContactMap, type UserContact } from "@/api/referenceApi";
@@ -34,7 +34,7 @@ const STATUS_CONFIG: Record<
 > = {
   Pending:         { label: "Chờ xác nhận",       variant: "warning" },
   AwaitingPayment: { label: "Chờ thanh toán",      variant: "warning" },
-  Confirmed:       { label: "Chưa bắt đầu",        variant: "success" },
+  Confirmed:       { label: "Đã xác nhận",         variant: "success" },
   InProgress:      { label: "Đang trong giờ học",  variant: "default" },
   Completed:       { label: "Hoàn thành",          variant: "success" },
   Cancelled:       { label: "Đã hủy",              variant: "destructive" },
@@ -124,13 +124,25 @@ function BookingCard({
   actionLoadingId?: string | null;
 }) {
   const [showCancel, setShowCancel] = useState(false);
+  const [now, setNow] = useState<number | null>(null);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const parentContact = parentContactMap[booking.parentId] ?? { name: booking.parentId };
   const parentName    = parentContact.name;
-  const showContact   = ["Confirmed", "InProgress"].includes(booking.status);
+  // Trạng thái lấy thẳng từ BE (InProgress là status thật sau khi gia sư bấm "Bắt đầu").
+  const effectiveStatus: Booking["status"] = booking.status;
+  const showContact   = ["Confirmed", "InProgress"].includes(effectiveStatus);
   const start         = new Date(booking.startAt);
   const end           = new Date(booking.endAt);
   const durationMin   = Math.round((end.getTime() - start.getTime()) / 60000);
-  const { label, variant } = STATUS_CONFIG[booking.status] ?? { label: booking.status, variant: "default" as const };
+  // BE chỉ cho gia sư xác nhận hoàn thành sau khi buổi học đã kết thúc (buổi tương lai → lỗi).
+  const sessionEnded  = now !== null && now >= end.getTime();
+  const { label, variant } = STATUS_CONFIG[effectiveStatus] ?? { label: effectiveStatus, variant: "default" as const };
   const busy = actionLoadingId === booking.id;
 
   return (
@@ -231,25 +243,35 @@ function BookingCard({
               </Button>
             </>
           )}
-          {booking.status === "Confirmed" && onStart && onCancel && !showCancel && (
+          {(effectiveStatus === "Confirmed" || effectiveStatus === "InProgress") && !showCancel && (
             <>
-              <Button size="sm" onClick={() => onStart(booking.id)}
-                loading={busy} disabled={!!actionLoadingId}
-                className="gap-1 w-full bg-success hover:bg-success/90 text-white">
-                <PlayCircle className="h-3.5 w-3.5" /> Bắt đầu giờ học
-              </Button>
-              <Button size="sm" variant="outline" onClick={() => setShowCancel(true)}
-                disabled={!!actionLoadingId} className="gap-1 w-full text-destructive hover:text-destructive">
-                <XCircle className="h-3.5 w-3.5" /> Hủy buổi học
-              </Button>
+              {effectiveStatus === "Confirmed" && onStart && (
+                <Button size="sm" onClick={() => onStart(booking.id)}
+                  disabled={!!actionLoadingId}
+                  className="gap-1 w-full bg-success hover:bg-success/90 text-white">
+                  <PlayCircle className="h-3.5 w-3.5" /> Bắt đầu buổi học
+                </Button>
+              )}
+              {effectiveStatus === "InProgress" && onComplete && (
+                <Button size="sm" onClick={() => onComplete(booking.id)}
+                  loading={busy} disabled={!!actionLoadingId || !sessionEnded}
+                  title={sessionEnded ? undefined : "Có thể hoàn thành sau khi buổi học kết thúc"}
+                  className="gap-1 w-full bg-primary hover:bg-primary/90 text-white">
+                  <Flag className="h-3.5 w-3.5" /> Hoàn thành buổi học
+                </Button>
+              )}
+              {onCancel && (
+                <Button size="sm" variant="outline" onClick={() => setShowCancel(true)}
+                  disabled={!!actionLoadingId} className="gap-1 w-full text-destructive hover:text-destructive">
+                  <XCircle className="h-3.5 w-3.5" /> Hủy buổi học
+                </Button>
+              )}
+              {effectiveStatus === "InProgress" && onComplete && !sessionEnded && (
+                <p className="text-[11px] leading-tight text-muted-foreground text-center">
+                  Có thể hoàn thành sau khi buổi học kết thúc
+                </p>
+              )}
             </>
-          )}
-          {booking.status === "InProgress" && onComplete && (
-            <Button size="sm" onClick={() => onComplete(booking.id)}
-              loading={busy} disabled={!!actionLoadingId}
-              className="gap-1 w-full bg-primary hover:bg-primary/90 text-white">
-              <Flag className="h-3.5 w-3.5" /> Hoàn thành buổi học
-            </Button>
           )}
           {["Confirmed", "InProgress", "Cancelled"].includes(booking.status) && onChat && (
             <Button size="sm" variant="outline" onClick={() => onChat(booking)} className="gap-1 w-full">
@@ -336,11 +358,37 @@ export default function TutorCalendarPage() {
     return fn().finally(() => setActionLoadingId(null));
   };
 
-  const handleAccept   = (id: string) => withLoading(id, async () => { await acceptBooking(id); if (tutorId) await load(tutorId, true); });
-  const handleDecline  = (id: string) => withLoading(id, async () => { if (!tutorId) return; await cancelBooking(id, tutorId, "Gia sư từ chối"); await load(tutorId, true); });
-  const handleStart    = (id: string) => withLoading(id, async () => { await startBooking(id); if (tutorId) await load(tutorId, true); });
-  const handleCancel   = (id: string, reason: string) => withLoading(id, async () => { if (!tutorId) return; await cancelBooking(id, tutorId, reason); await load(tutorId, true); });
-  const handleComplete = (id: string) => withLoading(id, async () => { await completeBooking(id); if (tutorId) await load(tutorId, true); setBookingSubTab("completed"); });
+  const handleAccept   = (id: string) => withLoading(id, async () => {
+    const res = await acceptBooking(id);
+    if (!res.ok) { alert(res.error ?? "Không thể chấp nhận buổi học"); return; }
+    if (tutorId) await load(tutorId, true);
+  });
+  const handleDecline  = (id: string) => withLoading(id, async () => {
+    if (!tutorId) return;
+    const res = await cancelBooking(id, tutorId, "Gia sư từ chối");
+    if (!res.ok) { alert(res.error ?? "Không thể từ chối buổi học"); return; }
+    await load(tutorId, true);
+  });
+  const handleCancel   = (id: string, reason: string) => withLoading(id, async () => {
+    if (!tutorId) return;
+    const res = await cancelBooking(id, tutorId, reason);
+    if (!res.ok) { alert(res.error ?? "Không thể hủy buổi học"); return; }
+    await load(tutorId, true);
+  });
+  // Bắt đầu buổi học → PUT /bookings/{id}/start (BE chuyển sang InProgress).
+  const handleStart = (id: string) => withLoading(id, async () => {
+    const res = await startBooking(id);
+    if (!res.ok) { alert(res.error ?? "Không thể bắt đầu buổi học"); return; }
+    if (tutorId) await load(tutorId, true);
+  });
+  // Gia sư xác nhận hoàn thành → POST /bookings/{id}/tutor-complete (KHÔNG dùng /complete
+  // vì endpoint đó chỉ dành cho PARENT). Sau đó phụ huynh mới xác nhận để giải ngân.
+  const handleComplete = (id: string) => withLoading(id, async () => {
+    const res = await tutorCompleteBooking(id);
+    if (!res.ok) { alert(res.error ?? "Không thể hoàn thành buổi học"); return; }
+    if (tutorId) await load(tutorId, true);
+    setBookingSubTab("completed");
+  });
   const handleChat = useCallback(async (booking: Booking) => {
     if (!user) return;
     const parentName = parentContactMap[booking.parentId]?.name ?? booking.parentId;

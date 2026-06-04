@@ -1,44 +1,22 @@
-﻿"use client";
+"use client";
 
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { ArrowLeft, Flag, MessageSquare, PencilLine, ShieldCheck, Star, MessageCircle } from "lucide-react";
-import {
-  confirmBookingAndUnlock,
-  confirmCompletion,
-  getEnhancedBookingDetail,
-  getLatestOwnerChange,
-  savePlanDraft,
-  sendPlan,
-  type SavePlanInput,
-} from "@/api/bookingEnhancedApi";
+import { ArrowLeft, Calendar, Flag, MessageSquare, PlayCircle, ShieldCheck } from "lucide-react";
+import { acceptBooking, getBookingById, startBooking, tutorCompleteBooking } from "@/api/bookingApi";
 import { buildConvId } from "@/api/chatApi";
-import {
-  formatContactOwnerRole,
-  isSensitiveInfoVisible,
-} from "@/lib/bookingEnhancedMock";
+import { BOOKING_STATUS_META } from "@/lib/bookingStatus";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
-import {
-  BookingFlowBadge,
-  BookingMetaRow,
-  BookingStatusTimeline,
-  CompletionConfirmCard,
-  ContactMethodCard,
-  ContactOwnerCard,
-  LocationCard,
-  ParentPreferencesCard,
-  PrivacyNotice,
-  StudyPlanCard,
-} from "@/components/booking/EnhancedBookingBlocks";
-import { StudyPlanEditorDialog } from "@/components/booking/StudyPlanEditorDialog";
 import { BookingGoalCard } from "@/components/booking/BookingGoalCard";
 import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
 import { BookingReportsList } from "@/components/booking/BookingReportsList";
+import type { Booking } from "@/types";
 
 export default function TutorBookingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -53,8 +31,7 @@ export default function TutorBookingDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportRefreshKey, setReportRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [editorOpen, setEditorOpen] = useState(false);
-  const [detail, setDetail] = useState<Awaited<ReturnType<typeof getEnhancedBookingDetail>>>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
 
   const tutorId = user?.tutorProfileId;
 
@@ -64,13 +41,13 @@ export default function TutorBookingDetailPage() {
     setError(null);
 
     try {
-      const data = await getEnhancedBookingDetail({ bookingId, tutorId });
+      const data = await getBookingById({ bookingId, tutorId });
       if (!data) {
         setError("Không tìm thấy booking hoặc bạn không có quyền xem.");
-        setDetail(null);
+        setBooking(null);
         return;
       }
-      setDetail(data);
+      setBooking(data);
     } finally {
       setLoading(false);
     }
@@ -85,10 +62,20 @@ export default function TutorBookingDetailPage() {
     if (!bookingId) return;
     setActionLoading(true);
     try {
-      const result = await confirmBookingAndUnlock(bookingId);
-      if (!result.ok) {
-        setError(result.error ?? "Không thể xác nhận booking.");
-      }
+      const result = await acceptBooking(bookingId);
+      if (!result.ok) setError(result.error ?? "Không thể xác nhận booking.");
+      await load();
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const handleStart = async () => {
+    if (!bookingId) return;
+    setActionLoading(true);
+    try {
+      const result = await startBooking(bookingId);
+      if (!result.ok) setError(result.error ?? "Không thể bắt đầu buổi học.");
       await load();
     } finally {
       setActionLoading(false);
@@ -99,30 +86,8 @@ export default function TutorBookingDetailPage() {
     if (!bookingId) return;
     setActionLoading(true);
     try {
-      const result = await confirmCompletion(bookingId, "tutor");
-      if (!result.ok) {
-        setError(result.error ?? "Không thể xác nhận hoàn thành.");
-      }
-      await load();
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleSaveDraft = async (input: SavePlanInput) => {
-    setActionLoading(true);
-    try {
-      await savePlanDraft(input);
-      await load();
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const handleSendPlan = async (input: SavePlanInput) => {
-    setActionLoading(true);
-    try {
-      await sendPlan(input);
+      const result = await tutorCompleteBooking(bookingId);
+      if (!result.ok) setError(result.error ?? "Không thể hoàn thành buổi học.");
       await load();
     } finally {
       setActionLoading(false);
@@ -142,7 +107,7 @@ export default function TutorBookingDetailPage() {
     );
   }
 
-  if (!detail || !tutorId || error) {
+  if (!booking || !tutorId || error) {
     return (
       <main className="min-h-dvh bg-(--bg-app)">
         <section className="pt-4 pb-8">
@@ -164,17 +129,19 @@ export default function TutorBookingDetailPage() {
     );
   }
 
-  const { booking, enhancement } = detail;
-  const flowStatus = enhancement.flowStatus;
-  const isSensitiveVisible = isSensitiveInfoVisible(flowStatus);
-  const latestOwnerChange = getLatestOwnerChange(detail);
-  const canConfirm = flowStatus === "pending_confirmation";
-  const canEditPlan = isSensitiveVisible;
-  const canComplete = flowStatus === "in_session" || flowStatus === "awaiting_completion";
-  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status as string)
-    || flowStatus === "in_session" || flowStatus === "awaiting_completion";
+  const statusMeta = BOOKING_STATUS_META[booking.status];
+  const sessionEnded = booking.endAt ? Date.now() >= new Date(booking.endAt).getTime() : false;
+  const canConfirm = booking.status === "Pending" || booking.status === "AwaitingPayment";
+  const canStart = booking.status === "Confirmed";
+  const canComplete = booking.status === "InProgress";
+  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status);
 
   const chatHref = `/tutor/chats?convId=${buildConvId(booking.parentId, booking.tutorId)}&bookingId=${booking.id}`;
+
+  const startAt = booking.startAt ? new Date(booking.startAt) : null;
+  const dateLabel = startAt
+    ? startAt.toLocaleString("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" })
+    : "—";
 
   return (
     <main className="min-h-dvh bg-(--bg-app)">
@@ -190,7 +157,11 @@ export default function TutorBookingDetailPage() {
                   </Link>
                 </Button>
                 <h1 className="text-2xl font-bold text-foreground">Chi tiết booking</h1>
-                <BookingMetaRow bookingId={booking.id} startAt={booking.startAt} />
+                <p className="flex items-center gap-1.5 text-sm text-muted-foreground">
+                  <Calendar className="h-4 w-4" />
+                  {dateLabel}
+                  <span className="ml-1 text-muted-foreground/60">#{booking.id}</span>
+                </p>
                 {(booking.subjectName ?? booking.subject) ? (
                   <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
                     <span className="font-medium text-foreground">
@@ -199,14 +170,12 @@ export default function TutorBookingDetailPage() {
                     {booking.grade ? <span>{booking.grade}</span> : null}
                     <span>·</span>
                     <span>Trực tiếp</span>
-                    {booking.studentName ? (
-                      <span>· Học sinh: {booking.studentName}</span>
-                    ) : null}
+                    {booking.studentName ? <span>· Học sinh: {booking.studentName}</span> : null}
                   </p>
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <BookingFlowBadge status={flowStatus} />
+                <Badge variant={statusMeta.variant} className="text-xs">{statusMeta.label}</Badge>
                 {canReport && (
                   <Button
                     variant="outline"
@@ -230,62 +199,46 @@ export default function TutorBookingDetailPage() {
                     Xác nhận booking
                   </Button>
                 ) : null}
-                {canEditPlan ? (
-                  <Button className="gap-2" onClick={() => setEditorOpen(true)}>
-                    <PencilLine className="h-4 w-4" />
-                    {enhancement.studyPlan ? "Sửa kế hoạch" : "Tạo kế hoạch"}
+                {canStart ? (
+                  <Button className="gap-2 bg-success hover:bg-success/90 text-white" loading={actionLoading} onClick={handleStart}>
+                    <PlayCircle className="h-4 w-4" />
+                    Bắt đầu buổi học
+                  </Button>
+                ) : null}
+                {canComplete ? (
+                  <Button
+                    className="gap-2"
+                    loading={actionLoading}
+                    disabled={!sessionEnded}
+                    title={sessionEnded ? undefined : "Có thể hoàn thành sau khi buổi học kết thúc"}
+                    onClick={handleComplete}
+                  >
+                    <Flag className="h-4 w-4" />
+                    Hoàn thành buổi học
                   </Button>
                 ) : null}
               </div>
             </div>
           </header>
 
-          {canComplete && (
-            <CompletionConfirmCard
-              flowStatus={flowStatus}
-              completionConfirmation={enhancement.completionConfirmation}
-              role="tutor"
-              onConfirm={handleComplete}
-              loading={actionLoading}
-            />
-          )}
-
           <div className="grid gap-4 lg:grid-cols-[1.4fr_1fr]">
             <div className="space-y-4">
-              <BookingStatusTimeline status={flowStatus} />
-              {!isSensitiveVisible ? <PrivacyNotice isTutorView /> : null}
-              <ParentPreferencesCard enhancement={enhancement} />
-              <ContactMethodCard
-                contactPreferences={enhancement.contactPreferences}
-                isSensitiveVisible={isSensitiveVisible}
-              />
-              <LocationCard enhancement={enhancement} isSensitiveVisible={isSensitiveVisible} isTutorView />
-              <StudyPlanCard enhancement={enhancement} />
+              <BookingGoalCard booking={booking} />
             </div>
 
             <div className="space-y-4">
-              <BookingGoalCard booking={booking} />
-
-              <ContactOwnerCard enhancement={enhancement} latestOwnerChange={latestOwnerChange} />
-
               <Card>
                 <CardHeader className="pb-4">
                   <CardTitle className="text-base">Trạng thái booking</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm">
                   <p>
-                    Người phụ trách liên lạc:
-                    <span className="ml-1 font-medium">
-                      {enhancement.currentContactOwner.name} ({formatContactOwnerRole(enhancement.currentContactOwner.role)})
-                    </span>
+                    Trạng thái hiện tại:
+                    <span className="ml-1 font-medium">{statusMeta.label}</span>
                   </p>
-                  <p>
-                    Thông tin liên lạc:
-                    <span className="ml-1 font-medium">{isSensitiveVisible ? "Đã mở khóa" : "Đang ẩn"}</span>
-                  </p>
-                  {!isSensitiveVisible ? (
+                  {canComplete && !sessionEnded ? (
                     <p className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
-                      Xác nhận booking để xem đầy đủ thông tin liên lạc của phụ huynh.
+                      Có thể xác nhận hoàn thành sau khi buổi học kết thúc.
                     </p>
                   ) : null}
                 </CardContent>
@@ -300,14 +253,6 @@ export default function TutorBookingDetailPage() {
         </div>
       </section>
 
-      <StudyPlanEditorDialog
-        open={editorOpen}
-        onOpenChange={setEditorOpen}
-        enhancement={enhancement}
-        onSaveDraft={handleSaveDraft}
-        onSendPlan={handleSendPlan}
-      />
-
       <ReportDisputeModal
         bookingId={booking.id}
         open={reportOpen}
@@ -317,4 +262,3 @@ export default function TutorBookingDetailPage() {
     </main>
   );
 }
-

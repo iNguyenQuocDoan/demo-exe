@@ -60,7 +60,7 @@ interface BePageResponse<T> {
 function mapBeStatus(s: string | undefined): Booking["status"] {
   const v = (s ?? "").toUpperCase();
   if (v.includes("CONFIRM") || v.includes("ACCEPT")) return "Confirmed";
-  if (v.includes("PROGRESS")) return "InProgress";
+  if (v.includes("PROGRESS") || v.includes("PROCESS")) return "InProgress"; // BE: "PROCESSING" (đang dạy)
   if (v.includes("COMPLET")) return "Completed";
   if (v.includes("CANCEL")) return "Cancelled";
   if (v.includes("DISPUT")) return "Disputed";
@@ -119,6 +119,16 @@ export async function getBookings(_params: {
   } catch {
     return [];
   }
+}
+
+export async function getBookingById(params: {
+  bookingId: string;
+  parentId?: string;
+  tutorId?: string;
+}): Promise<Booking | null> {
+  const { bookingId, parentId, tutorId } = params;
+  const list = await getBookings({ parentId, tutorId });
+  return list.find((item) => item.id === bookingId) ?? null;
 }
 
 export async function getBookingsPaginated(
@@ -222,6 +232,19 @@ async function bookingAction(
 
 export const acceptBooking = (id: string) => bookingAction(id, "accept");
 export const rejectBooking = (id: string) => bookingAction(id, "reject");
+// Gia sư bắt đầu buổi học → BE chuyển trạng thái sang InProgress.
+// LƯU Ý: endpoint này là PUT (khác accept/complete dùng POST).
+export const startBooking = async (id: string): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    await realApiClient.put(`/bookings/${id}/start`);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể bắt đầu buổi học";
+    return { ok: false, error: msg };
+  }
+};
 // Phụ huynh xác nhận hoàn thành (POST /bookings/{id}/complete)
 export const completeBooking = (id: string) => bookingAction(id, "complete");
 // Gia sư xác nhận hoàn thành (POST /bookings/{id}/tutor-complete).
@@ -233,44 +256,23 @@ export const cancelBooking = (
   _reason?: string,
 ) => bookingAction(id, "cancel");
 
-// FE còn 1 chỗ gọi startBooking — BE không có endpoint start, giữ no-op success
-export const startBooking = async (
-  _id: string,
-): Promise<{ ok: boolean; error?: string }> => ({ ok: true });
-
-// BE: POST /api/bookings/slots (TUTOR) — body = List<SlotRequest>:
-//   [ { startTime: ISO LocalDateTime, endTime: ISO LocalDateTime }, ... ]
-// BE chỉ lưu từng ca với datetime cụ thể (không có khái niệm lặp tuần và
-// không nhận startDate/numberOfWeeks). Vì vậy ta tự bung startDate + numberOfWeeks
-// thành các ca có ngày cụ thể ở phía FE rồi gửi lên dưới dạng MỘT MẢNG.
+// BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
+//   { startTime: "HH:mm:ss" (LocalTime), endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
+// Tạo slot lặp lại hàng tuần từ startDate, trong numberOfWeeks tuần.
 export async function createTutorSlots(input: {
-  startTime: string; // "HH:mm" hoặc "HH:mm:ss"
+  startTime: string; // "HH:mm:ss" hoặc "HH:mm"
   endTime: string;
   startDate: string; // "yyyy-MM-dd"
   numberOfWeeks?: number;
 }): Promise<{ ok: boolean; error?: string }> {
-  const hms = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
-  const weeks = Math.max(1, input.numberOfWeeks ?? 1);
-  const now = Date.now();
-
-  const slots: { startTime: string; endTime: string }[] = [];
-  for (let w = 0; w < weeks; w++) {
-    const base = new Date(`${input.startDate}T00:00:00`);
-    base.setDate(base.getDate() + w * 7);
-    const dateStr = `${base.getFullYear()}-${String(base.getMonth() + 1).padStart(2, "0")}-${String(base.getDate()).padStart(2, "0")}`;
-    const startTime = `${dateStr}T${hms(input.startTime)}`;
-    const endTime = `${dateStr}T${hms(input.endTime)}`;
-    // BE validate @Future trên từng ca → bỏ ca đã qua để không bị 400 cả mảng.
-    if (new Date(startTime).getTime() <= now) continue;
-    slots.push({ startTime, endTime });
-  }
-
-  if (slots.length === 0) {
-    return { ok: false, error: "Tất cả khung giờ đã ở quá khứ" };
-  }
-
+  const toLocalTime = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
   try {
-    await realApiClient.post("/bookings/slots", slots);
+    await realApiClient.post("/bookings/slots", {
+      startTime: toLocalTime(input.startTime),
+      endTime: toLocalTime(input.endTime),
+      startDate: input.startDate,
+      numberOfWeeks: input.numberOfWeeks ?? 1,
+    });
     return { ok: true };
   } catch (err: unknown) {
     const msg =
