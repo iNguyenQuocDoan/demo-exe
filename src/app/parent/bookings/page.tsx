@@ -6,14 +6,17 @@ import Link from "next/link";
 import {
   AlertTriangle,
   CalendarDays,
+  CheckCircle2,
   Clock3,
   Search,
+  Star,
   XCircle,
   Banknote,
   MessageSquare,
 } from "lucide-react";
+import { ReviewModal } from "@/components/booking/ReviewModal";
 import { Input } from "@/components/ui/input";
-import { getBookings, cancelBooking } from "@/api/bookingApi";
+import { getBookings, cancelBooking, completeBooking } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
 import { getOrCreateConversation } from "@/api/chatApi";
 import { getBookingHoldsForUser } from "@/api/walletApi";
@@ -55,6 +58,8 @@ const STATUS_BADGE: Record<
   AwaitingPayment: { label: "Chờ thanh toán", variant: "warning" },
   Confirmed: { label: "Đã xác nhận", variant: "success" },
   InProgress: { label: "Đang học", variant: "default" },
+  TutorCompleted: { label: "Chờ bạn xác nhận", variant: "warning" },
+  ParentCompleted: { label: "Chờ gia sư xác nhận", variant: "warning" },
   Completed: { label: "Hoàn thành", variant: "secondary" },
   Cancelled: { label: "Đã huỷ", variant: "destructive" },
   Disputed: { label: "Tranh chấp", variant: "destructive" },
@@ -75,6 +80,7 @@ export default function ParentBookingsPage() {
   const [confirmCancelId, setConfirmCancelId] = useState<string | null>(null);
   const [cancelReason, setCancelReason] = useState("");
   const [search, setSearch] = useState("");
+  const [reviewTarget, setReviewTarget] = useState<Booking | null>(null);
 
   const parentId = user?.id ?? null;
 
@@ -140,6 +146,18 @@ export default function ParentBookingsPage() {
     const tutorName = tutorNameMap[booking.tutorId] ?? booking.tutorId;
     const conv = await getOrCreateConversation(user.id, booking.tutorId, user.fullName, tutorName);
     router.push(`/parent/chats?convId=${conv.id}&bookingId=${booking.id}`);
+  };
+
+  const handleConfirmComplete = async (id: string) => {
+    if (!parentId) return;
+    setActionLoading(id);
+    try {
+      const res = await completeBooking(id);
+      if (!res.ok) { alert(res.error ?? "Không thể xác nhận hoàn thành."); return; }
+      await loadData(parentId);
+    } finally {
+      setActionLoading(null);
+    }
   };
 
   if (isLoading || loading) {
@@ -308,6 +326,27 @@ export default function ParentBookingsPage() {
                             Nhắn tin
                           </Button>
                         )}
+                        {booking.status === "TutorCompleted" && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5"
+                            loading={actionLoading === booking.id}
+                            onClick={() => void handleConfirmComplete(booking.id)}
+                          >
+                            <CheckCircle2 className="h-3.5 w-3.5" />
+                            Xác nhận hoàn thành
+                          </Button>
+                        )}
+                        {booking.status === "Completed" && (
+                          <Button
+                            size="sm"
+                            className="gap-1.5"
+                            onClick={() => setReviewTarget(booking)}
+                          >
+                            <Star className="h-3.5 w-3.5" />
+                            Đánh giá
+                          </Button>
+                        )}
                         {canCancel && (
                           <Button
                             size="sm"
@@ -331,6 +370,14 @@ export default function ParentBookingsPage() {
           </section>
         </div>
       </section>
+
+      <ReviewModal
+        open={!!reviewTarget}
+        bookingId={reviewTarget?.id ?? ""}
+        tutorId={reviewTarget?.tutorId ?? ""}
+        tutorName={reviewTarget ? tutorNameMap[reviewTarget.tutorId] : undefined}
+        onClose={() => setReviewTarget(null)}
+      />
 
       {/* Cancel confirmation dialog */}
       <Dialog

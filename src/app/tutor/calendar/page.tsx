@@ -36,6 +36,8 @@ const STATUS_CONFIG: Record<
   AwaitingPayment: { label: "Chờ thanh toán",      variant: "warning" },
   Confirmed:       { label: "Đã xác nhận",         variant: "success" },
   InProgress:      { label: "Đang trong giờ học",  variant: "default" },
+  TutorCompleted:  { label: "Chờ phụ huynh xác nhận", variant: "warning" },
+  ParentCompleted: { label: "Chờ bạn xác nhận",     variant: "warning" },
   Completed:       { label: "Hoàn thành",          variant: "success" },
   Cancelled:       { label: "Đã hủy",              variant: "destructive" },
   Disputed:        { label: "Tranh chấp",          variant: "destructive" },
@@ -124,13 +126,6 @@ function BookingCard({
   actionLoadingId?: string | null;
 }) {
   const [showCancel, setShowCancel] = useState(false);
-  const [now, setNow] = useState<number | null>(null);
-
-  useEffect(() => {
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
-    return () => window.clearInterval(timer);
-  }, []);
 
   const parentContact = parentContactMap[booking.parentId] ?? { name: booking.parentId };
   const parentName    = parentContact.name;
@@ -140,8 +135,6 @@ function BookingCard({
   const start         = new Date(booking.startAt);
   const end           = new Date(booking.endAt);
   const durationMin   = Math.round((end.getTime() - start.getTime()) / 60000);
-  // BE chỉ cho gia sư xác nhận hoàn thành sau khi buổi học đã kết thúc (buổi tương lai → lỗi).
-  const sessionEnded  = now !== null && now >= end.getTime();
   const { label, variant } = STATUS_CONFIG[effectiveStatus] ?? { label: effectiveStatus, variant: "default" as const };
   const busy = actionLoadingId === booking.id;
 
@@ -243,7 +236,7 @@ function BookingCard({
               </Button>
             </>
           )}
-          {(effectiveStatus === "Confirmed" || effectiveStatus === "InProgress") && !showCancel && (
+          {["Confirmed", "InProgress", "ParentCompleted", "TutorCompleted"].includes(effectiveStatus) && !showCancel && (
             <>
               {effectiveStatus === "Confirmed" && onStart && (
                 <Button size="sm" onClick={() => onStart(booking.id)}
@@ -252,28 +245,28 @@ function BookingCard({
                   <PlayCircle className="h-3.5 w-3.5" /> Bắt đầu buổi học
                 </Button>
               )}
-              {effectiveStatus === "InProgress" && onComplete && (
+              {/* Gia sư xác nhận xong khi đang dạy, hoặc khi phụ huynh đã xác nhận trước (ParentCompleted). */}
+              {(effectiveStatus === "InProgress" || effectiveStatus === "ParentCompleted") && onComplete && (
                 <Button size="sm" onClick={() => onComplete(booking.id)}
-                  loading={busy} disabled={!!actionLoadingId || !sessionEnded}
-                  title={sessionEnded ? undefined : "Có thể hoàn thành sau khi buổi học kết thúc"}
+                  loading={busy} disabled={!!actionLoadingId}
                   className="gap-1 w-full bg-primary hover:bg-primary/90 text-white">
                   <Flag className="h-3.5 w-3.5" /> Hoàn thành buổi học
                 </Button>
               )}
-              {onCancel && (
+              {effectiveStatus === "TutorCompleted" && (
+                <p className="text-[11px] leading-tight text-muted-foreground text-center">
+                  Đã báo hoàn thành — chờ phụ huynh xác nhận
+                </p>
+              )}
+              {onCancel && (effectiveStatus === "Confirmed" || effectiveStatus === "InProgress") && (
                 <Button size="sm" variant="outline" onClick={() => setShowCancel(true)}
                   disabled={!!actionLoadingId} className="gap-1 w-full text-destructive hover:text-destructive">
                   <XCircle className="h-3.5 w-3.5" /> Hủy buổi học
                 </Button>
               )}
-              {effectiveStatus === "InProgress" && onComplete && !sessionEnded && (
-                <p className="text-[11px] leading-tight text-muted-foreground text-center">
-                  Có thể hoàn thành sau khi buổi học kết thúc
-                </p>
-              )}
             </>
           )}
-          {["Confirmed", "InProgress", "Cancelled"].includes(booking.status) && onChat && (
+          {["Confirmed", "InProgress", "ParentCompleted", "TutorCompleted", "Cancelled"].includes(booking.status) && onChat && (
             <Button size="sm" variant="outline" onClick={() => onChat(booking)} className="gap-1 w-full">
               <MessageSquare className="h-3.5 w-3.5" /> Nhắn tin
             </Button>
@@ -296,7 +289,7 @@ function BookingCard({
 
 const BOOKING_TABS = [
   { key: "pending",   label: "Chờ xác nhận", statuses: ["Pending", "AwaitingPayment"] as Booking["status"][] },
-  { key: "confirmed", label: "Đang dạy",      statuses: ["Confirmed", "InProgress"]   as Booking["status"][] },
+  { key: "confirmed", label: "Đang dạy",      statuses: ["Confirmed", "InProgress", "ParentCompleted", "TutorCompleted"] as Booking["status"][] },
   { key: "completed", label: "Hoàn thành",    statuses: ["Completed", "Resolved"]     as Booking["status"][] },
   { key: "cancelled", label: "Đã hủy",        statuses: ["Cancelled", "Disputed"]     as Booking["status"][] },
 ];

@@ -15,7 +15,7 @@ interface ReviewCardProps {
   onReviewed?: () => void;
 }
 
-function StarRating({
+export function StarRating({
   value,
   onChange,
   size = "md",
@@ -74,8 +74,20 @@ export function ReviewCard({
     setError(null);
     try {
       const result = await createReview({ bookingId, tutorId, rating, comment });
-      if (result.ok && result.review) {
-        setReview(result.review);
+      // BE trả về thông báo, không kèm object review → tự dựng review để hiển thị ngay.
+      if (result.ok) {
+        setReview(
+          result.review ?? {
+            id: `local-${bookingId}`,
+            parentId: "",
+            tutorId,
+            bookingId,
+            rating,
+            comment,
+            createdAt: new Date().toISOString(),
+            parentName: "Bạn",
+          },
+        );
         onReviewed?.();
       } else {
         setError(result.error ?? "Không thể gửi đánh giá.");

@@ -262,7 +262,18 @@ export async function getReviews(tutorId: string): Promise<Review[]> {
     const { data } = await realApiClient.get<
       BeApiResponse<BePageResponse<BeReviewResponse>>
     >(`/feedback/tutor/${tutorId}`, { params: { page: 1, size: 100 } });
-    return (data?.data?.data ?? []).map((r) => mapBeReview(r, tutorId));
+    // Đánh giá mới nhất lên đầu. BE trả `createdAt` có thể null + xếp cũ→mới,
+    // nên: ưu tiên createdAt giảm dần; nếu không có createdAt thì đảo thứ tự BE
+    // (review mới được BE thêm vào cuối danh sách).
+    return (data?.data?.data ?? [])
+      .map((r, index) => ({ review: mapBeReview(r, tutorId), index }))
+      .sort((a, b) => {
+        const ta = a.review.createdAt ? new Date(a.review.createdAt).getTime() : NaN;
+        const tb = b.review.createdAt ? new Date(b.review.createdAt).getTime() : NaN;
+        if (!Number.isNaN(ta) && !Number.isNaN(tb)) return tb - ta;
+        return b.index - a.index;
+      })
+      .map((x) => x.review);
   } catch {
     return [];
   }
