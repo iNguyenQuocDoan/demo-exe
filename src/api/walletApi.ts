@@ -174,7 +174,7 @@ export async function processWithdraw(
   }
 }
 
-// BE chưa expose list deposit / withdraw requests — trả mảng rỗng
+// BE chưa expose list deposit (luồng nạp qua VNPay tự động) — trả mảng rỗng
 export async function getDepositRequests(_filter?: {
   userId?: string;
   status?: TransactionStatus;
@@ -182,11 +182,67 @@ export async function getDepositRequests(_filter?: {
   return [];
 }
 
-export async function getWithdrawRequests(_filter?: {
+interface BeWithdrawResponse {
+  id: string;
+  userId: string;
+  userEmail?: string;
+  userFullName?: string;
+  amount: number;
+  bankName?: string;
+  bankAccountNumber?: string;
+  bankAccountName?: string;
+  status?: string; // PENDING | APPROVED | REJECTED
+  adminNote?: string;
+  createdAt: string;
+}
+
+interface BePage<T> {
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalElements: number;
+  data: T[];
+}
+
+function mapWithdrawStatus(s: string | undefined): TransactionStatus {
+  const v = (s ?? "").toUpperCase();
+  if (v === "APPROVED") return "Completed";
+  if (v === "REJECTED") return "Failed";
+  return "Pending";
+}
+
+// BE: GET /api/wallet/withdraw/pending (ADMIN) — chỉ liệt kê yêu cầu rút đang chờ duyệt.
+// Các trạng thái khác chưa có endpoint list → trả mảng rỗng.
+export async function getWithdrawRequests(filter?: {
   userId?: string;
   status?: TransactionStatus;
 }): Promise<WithdrawRequest[]> {
-  return [];
+  if (filter?.status && filter.status !== "Pending") return [];
+  try {
+    const { data } = await realApiClient.get<BePage<BeWithdrawResponse>>(
+      "/wallet/withdraw/pending",
+      { params: { page: 1, size: 100 } },
+    );
+    let list: WithdrawRequest[] = (data?.data ?? []).map((w) => ({
+      id: String(w.id),
+      userId: String(w.userId),
+      userName: w.userFullName,
+      userEmail: w.userEmail,
+      amount: w.amount,
+      bankInfo: {
+        bankName: w.bankName ?? "",
+        accountNumber: w.bankAccountNumber ?? "",
+        accountName: w.bankAccountName ?? "",
+      },
+      status: mapWithdrawStatus(w.status),
+      rejectedReason: w.adminNote || undefined,
+      createdAt: w.createdAt,
+    }));
+    if (filter?.userId) list = list.filter((w) => w.userId === filter.userId);
+    return list;
+  } catch {
+    return [];
+  }
 }
 
 // Escrow holds: BE quản lý nội bộ qua wallet_transactions (BOOKING_HOLD type).

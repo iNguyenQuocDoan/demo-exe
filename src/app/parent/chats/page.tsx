@@ -5,14 +5,8 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { MessageSquare, Search } from "lucide-react";
 import { getConversations } from "@/api/chatApi";
-import {
-  getEnhancedBookingDetail,
-  getLatestOwnerChange,
-  parseConvId,
-  resolveEnhancedBookingForConversation,
-  type EnhancedBookingDetail,
-} from "@/api/bookingEnhancedApi";
-import { formatContactOwnerRole } from "@/lib/bookingEnhancedMock";
+import { getBookingById } from "@/api/bookingApi";
+import type { Booking } from "@/types";
 import { ChatBox, type BookingChatContext } from "@/components/shared/ChatBox";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -34,14 +28,11 @@ function ChatsSkeleton() {
   );
 }
 
-function toBookingContext(detail: EnhancedBookingDetail): BookingChatContext {
+function toBookingContext(booking: Booking): BookingChatContext {
   return {
-    bookingId: detail.booking.id,
-    status: detail.enhancement.flowStatus,
-    ownerName: detail.enhancement.currentContactOwner.name,
-    ownerRole: formatContactOwnerRole(detail.enhancement.currentContactOwner.role),
-    latestOwnerChange: getLatestOwnerChange(detail),
-    bookingHref: `/parent/bookings/${detail.booking.id}`,
+    bookingId: booking.id,
+    status: booking.status,
+    bookingHref: `/parent/bookings/${booking.id}`,
   };
 }
 
@@ -86,34 +77,12 @@ function ParentChatsContent() {
     let mounted = true;
 
     const resolveContext = async () => {
-      let detail: EnhancedBookingDetail | null = null;
-
+      let booking: Booking | null = null;
       if (bookingIdParam && (!autoConvId || selectedId === autoConvId)) {
-        detail = await getEnhancedBookingDetail({
-          bookingId: bookingIdParam,
-          parentId: user.id,
-        });
+        booking = await getBookingById({ bookingId: bookingIdParam, parentId: user.id });
       }
-
-      if (!detail) {
-        const selectedConversation = items.find((item) => item.id === selectedId) ?? null;
-        if (selectedConversation?.parentId && selectedConversation.tutorId) {
-          detail = await resolveEnhancedBookingForConversation(
-            selectedConversation.parentId,
-            selectedConversation.tutorId,
-          );
-        }
-      }
-
-      if (!detail) {
-        const ids = parseConvId(selectedId);
-        if (ids) {
-          detail = await resolveEnhancedBookingForConversation(ids.parentId, ids.tutorId);
-        }
-      }
-
       if (!mounted) return;
-      setChatContext(detail ? toBookingContext(detail) : null);
+      setChatContext(booking ? toBookingContext(booking) : null);
     };
 
     void resolveContext();
@@ -121,7 +90,7 @@ function ParentChatsContent() {
     return () => {
       mounted = false;
     };
-  }, [autoConvId, bookingIdParam, items, selectedId, user]);
+  }, [autoConvId, bookingIdParam, selectedId, user]);
 
   const selectedConversation = useMemo(
     () => items.find((item) => item.id === selectedId) ?? null,

@@ -5,32 +5,19 @@ import { useParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Calendar, Flag, MessageSquare, Monitor } from "lucide-react";
 import { getTutorNameMap } from "@/api/referenceApi";
-import { confirmCompletion, getEnhancedBookingDetail, getLatestOwnerChange } from "@/api/bookingEnhancedApi";
-import {
-  isSensitiveInfoVisible,
-  formatContactOwnerRole,
-} from "@/lib/bookingEnhancedMock";
+import { completeBooking, getBookingById } from "@/api/bookingApi";
 import { buildConvId } from "@/api/chatApi";
+import { BOOKING_STATUS_META } from "@/lib/bookingStatus";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  BookingFlowBadge,
-  BookingStatusTimeline,
-  CompletionConfirmCard,
-  ContactMethodCard,
-  ContactOwnerCard,
-  LocationCard,
-  PrivacyNotice,
-  StudyPlanCard,
-} from "@/components/booking/EnhancedBookingBlocks";
 import { BookingGoalCard } from "@/components/booking/BookingGoalCard";
 import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
 import { BookingReportsList } from "@/components/booking/BookingReportsList";
 import { ReviewCardLoader } from "@/components/booking/ReviewCard";
 import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
-
+import type { Booking } from "@/types";
 
 export default function ParentBookingDetailPage() {
   const params = useParams<{ id: string }>();
@@ -45,7 +32,7 @@ export default function ParentBookingDetailPage() {
   const [reportOpen, setReportOpen] = useState(false);
   const [reportRefreshKey, setReportRefreshKey] = useState(0);
   const [error, setError] = useState<string | null>(null);
-  const [detail, setDetail] = useState<Awaited<ReturnType<typeof getEnhancedBookingDetail>>>(null);
+  const [booking, setBooking] = useState<Booking | null>(null);
   const [tutorName, setTutorName] = useState<string>("");
 
   const load = useCallback(async () => {
@@ -54,20 +41,15 @@ export default function ParentBookingDetailPage() {
     setError(null);
 
     try {
-      const data = await getEnhancedBookingDetail({
-        bookingId,
-        parentId: user.id,
-      });
-
+      const data = await getBookingById({ bookingId, parentId: user.id });
       if (!data) {
         setError("Không tìm thấy booking hoặc bạn không có quyền xem.");
-        setDetail(null);
+        setBooking(null);
         return;
       }
-
-      setDetail(data);
-      const map = await getTutorNameMap([data.booking.tutorId]);
-      setTutorName(map[data.booking.tutorId] ?? data.booking.tutorId);
+      setBooking(data);
+      const map = await getTutorNameMap([data.tutorId]);
+      setTutorName(map[data.tutorId] ?? data.tutorId);
     } finally {
       setLoading(false);
     }
@@ -82,10 +64,8 @@ export default function ParentBookingDetailPage() {
     if (!bookingId) return;
     setActionLoading(true);
     try {
-      const result = await confirmCompletion(bookingId, "parent");
-      if (!result.ok) {
-        setError(result.error ?? "Không thể xác nhận hoàn thành.");
-      }
+      const result = await completeBooking(bookingId);
+      if (!result.ok) setError(result.error ?? "Không thể xác nhận hoàn thành.");
       await load();
     } finally {
       setActionLoading(false);
@@ -106,7 +86,7 @@ export default function ParentBookingDetailPage() {
     );
   }
 
-  if (!detail || error) {
+  if (!booking || error) {
     return (
       <main className="min-h-dvh bg-(--bg-app)">
         <section className="pt-4 pb-8">
@@ -126,26 +106,21 @@ export default function ParentBookingDetailPage() {
     );
   }
 
-  const { booking, enhancement } = detail;
-  const flowStatus = enhancement.flowStatus;
-  const isSensitiveVisible = isSensitiveInfoVisible(flowStatus);
-  const latestOwnerChange = getLatestOwnerChange(detail);
+  const statusMeta = BOOKING_STATUS_META[booking.status];
   const teachingMode = "Trực tiếp";
-  const canComplete = flowStatus === "in_session" || flowStatus === "awaiting_completion";
-  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status as string)
-    || flowStatus === "in_session" || flowStatus === "awaiting_completion";
+  const sessionEnded = booking.endAt ? Date.now() >= new Date(booking.endAt).getTime() : false;
+  const canComplete = booking.status === "InProgress";
+  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status);
 
   const chatHref = `/parent/chats?convId=${buildConvId(booking.parentId, booking.tutorId)}&bookingId=${booking.id}`;
 
-  const startDate = new Date(booking.startAt).toLocaleDateString("vi-VN", {
-    day: "2-digit",
-    month: "2-digit",
-    year: "numeric",
-  });
-  const startTime = new Date(booking.startAt).toLocaleTimeString("vi-VN", {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  const startAt = booking.startAt ? new Date(booking.startAt) : null;
+  const startDate = startAt
+    ? startAt.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" })
+    : "—";
+  const startTime = startAt
+    ? startAt.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+    : "";
 
   return (
     <main className="min-h-dvh bg-(--bg-app)">
@@ -168,7 +143,7 @@ export default function ParentBookingDetailPage() {
                   Chi tiết booking · <span className="text-muted-foreground font-normal text-base">Gia sư {tutorName}</span>
                 </h1>
                 <div className="flex flex-wrap items-center gap-2">
-                  <BookingFlowBadge status={flowStatus} />
+                  <Badge variant={statusMeta.variant} className="text-xs">{statusMeta.label}</Badge>
                   <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
                     <Monitor className="h-3 w-3" />
                     {teachingMode}
@@ -192,6 +167,19 @@ export default function ParentBookingDetailPage() {
                     Báo cáo
                   </Button>
                 )}
+                {canComplete ? (
+                  <Button
+                    size="sm"
+                    className="gap-2"
+                    loading={actionLoading}
+                    disabled={!sessionEnded}
+                    title={sessionEnded ? undefined : "Có thể xác nhận sau khi buổi học kết thúc"}
+                    onClick={handleComplete}
+                  >
+                    <Flag className="h-4 w-4" />
+                    Xác nhận hoàn thành
+                  </Button>
+                ) : null}
                 <Button asChild size="sm" className="gap-2">
                   <Link href={chatHref}>
                     <MessageSquare className="h-4 w-4" />
@@ -202,35 +190,15 @@ export default function ParentBookingDetailPage() {
             </div>
           </div>
 
-          {/* Completion confirmation */}
-          {canComplete && (
-            <CompletionConfirmCard
-              flowStatus={flowStatus}
-              completionConfirmation={enhancement.completionConfirmation}
-              role="parent"
-              onConfirm={handleComplete}
-              loading={actionLoading}
-            />
-          )}
-
           {/* Main content grid */}
           <div className="grid gap-3 lg:grid-cols-[1.4fr_1fr]">
             <div className="space-y-3">
-              <BookingStatusTimeline status={flowStatus} />
-              {!isSensitiveVisible ? <PrivacyNotice /> : null}
-              <ContactMethodCard
-                contactPreferences={enhancement.contactPreferences}
-                isSensitiveVisible={isSensitiveVisible}
-              />
-              <LocationCard enhancement={enhancement} isSensitiveVisible={isSensitiveVisible} />
-              <StudyPlanCard enhancement={enhancement} />
+              <BookingGoalCard booking={booking} />
             </div>
 
             <div className="space-y-3">
-              <BookingGoalCard booking={booking} />
-              <ContactOwnerCard enhancement={enhancement} latestOwnerChange={latestOwnerChange} />
               <BookingReportsList bookingId={booking.id} refreshKey={reportRefreshKey} />
-              {(booking.status === "Completed" || flowStatus === "completed") && (
+              {booking.status === "Completed" && (
                 <>
                   <ReviewCardLoader
                     bookingId={booking.id}

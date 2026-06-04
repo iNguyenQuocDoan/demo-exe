@@ -123,12 +123,11 @@ function parseBody(data: unknown): Record<string, unknown> {
   return data as Record<string, unknown>;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function routeMockRequest(config: {
   url?: string;
   method?: string;
-  params?: any;
-  data?: any;
+  params?: Record<string, unknown>;
+  data?: unknown;
 }): MockResponse | null {
   const raw = (config.url ?? "").replace(/\?.*/, "");
   const url = raw.startsWith("/") ? raw : `/${raw}`;

@@ -60,7 +60,7 @@ interface BePageResponse<T> {
 function mapBeStatus(s: string | undefined): Booking["status"] {
   const v = (s ?? "").toUpperCase();
   if (v.includes("CONFIRM") || v.includes("ACCEPT")) return "Confirmed";
-  if (v.includes("PROGRESS")) return "InProgress";
+  if (v.includes("PROGRESS") || v.includes("PROCESS")) return "InProgress"; // BE: "PROCESSING" (đang dạy)
   if (v.includes("COMPLET")) return "Completed";
   if (v.includes("CANCEL")) return "Cancelled";
   if (v.includes("DISPUT")) return "Disputed";
@@ -119,6 +119,16 @@ export async function getBookings(_params: {
   } catch {
     return [];
   }
+}
+
+export async function getBookingById(params: {
+  bookingId: string;
+  parentId?: string;
+  tutorId?: string;
+}): Promise<Booking | null> {
+  const { bookingId, parentId, tutorId } = params;
+  const list = await getBookings({ parentId, tutorId });
+  return list.find((item) => item.id === bookingId) ?? null;
 }
 
 export async function getBookingsPaginated(
@@ -222,6 +232,19 @@ async function bookingAction(
 
 export const acceptBooking = (id: string) => bookingAction(id, "accept");
 export const rejectBooking = (id: string) => bookingAction(id, "reject");
+// Gia sư bắt đầu buổi học → BE chuyển trạng thái sang InProgress.
+// LƯU Ý: endpoint này là PUT (khác accept/complete dùng POST).
+export const startBooking = async (id: string): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    await realApiClient.put(`/bookings/${id}/start`);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể bắt đầu buổi học";
+    return { ok: false, error: msg };
+  }
+};
 // Phụ huynh xác nhận hoàn thành (POST /bookings/{id}/complete)
 export const completeBooking = (id: string) => bookingAction(id, "complete");
 // Gia sư xác nhận hoàn thành (POST /bookings/{id}/tutor-complete).
@@ -232,11 +255,6 @@ export const cancelBooking = (
   _cancelBy?: string,
   _reason?: string,
 ) => bookingAction(id, "cancel");
-
-// FE còn 1 chỗ gọi startBooking — BE không có endpoint start, giữ no-op success
-export const startBooking = async (
-  _id: string,
-): Promise<{ ok: boolean; error?: string }> => ({ ok: true });
 
 // BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
 //   { startTime: "HH:mm:ss" (LocalTime), endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }

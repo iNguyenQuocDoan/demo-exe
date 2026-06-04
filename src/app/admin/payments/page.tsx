@@ -233,7 +233,11 @@ export default function AdminPaymentsPage() {
       setDeposits(deps);
       setWithdrawals(withs);
       const allUserIds = Array.from(new Set([...deps.map((d) => d.userId), ...withs.map((w) => w.userId)]));
-      if (allUserIds.length > 0) setUserNameMap(await getUserNameMap(allUserIds));
+      // Names resolved by the BE (withdraw/pending) take precedence over the lookup map.
+      const embedded: Record<string, string> = {};
+      for (const w of withs) if (w.userName) embedded[w.userId] = w.userName;
+      const resolved = allUserIds.length > 0 ? await getUserNameMap(allUserIds) : {};
+      setUserNameMap({ ...resolved, ...embedded });
     } finally {
       setLoading(false);
     }

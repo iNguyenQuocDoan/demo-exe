@@ -217,9 +217,17 @@ function LoginForm() {
               </div>
 
               <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Mật khẩu
-                </label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-foreground">
+                    Mật khẩu
+                  </label>
+                  <Link
+                    href="/auth/forgot-password"
+                    className="text-xs font-medium text-primary hover:underline"
+                  >
+                    Quên mật khẩu?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input

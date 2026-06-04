@@ -49,6 +49,14 @@ export function buildConvId(parentId: string, tutorId: string): string {
   return `${parentId}_${tutorId}`;
 }
 
+export function parseConvId(convId: string): { parentId: string; tutorId: string } | null {
+  const parts = convId.split("_");
+  if (parts.length !== 2) return null;
+  const [parentId, tutorId] = parts;
+  if (!parentId || !tutorId) return null;
+  return { parentId, tutorId };
+}
+
 export async function getOrCreateConversation(
   parentId: string,
   tutorId: string,

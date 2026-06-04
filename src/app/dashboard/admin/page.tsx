@@ -82,24 +82,10 @@ export default function AdminDashboardPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const now = new Date();
-        const monthStart = new Date(
-          now.getFullYear(),
-          now.getMonth(),
-          1,
-        ).toISOString();
-        const monthEnd = new Date(
-          now.getFullYear(),
-          now.getMonth() + 1,
-          0,
-          23,
-          59,
-          59,
-        ).toISOString();
 
         const [dashboardStats, applications, deposits, withdrawals] =
           await Promise.all([
-            getDashboardStats({ startDate: monthStart, endDate: monthEnd }),
+            getDashboardStats({ range: timeFilter }),
             getAllTutorApplications({ status: "Submitted" }),
             getDepositRequests({ status: "Pending" }),
             getWithdrawRequests({ status: "Pending" }),
@@ -147,7 +133,7 @@ export default function AdminDashboardPage() {
     return () => {
       cancelled = true;
     };
-  }, [user, loadTrigger]);
+  }, [user, loadTrigger, timeFilter]);
 
   const handleRefresh = () => {
     setRefreshing(true);

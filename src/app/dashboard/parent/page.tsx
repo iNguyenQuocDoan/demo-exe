@@ -4,7 +4,6 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
   ArrowRight,
-  BookOpen,
   CalendarDays,
   CheckCircle2,
   Clock3,
@@ -16,7 +15,6 @@ import {
 } from "lucide-react";
 import { getBookings, cancelBooking, acceptBooking, getSeries, acceptSeries } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
-import { getBookingEnhancement, type BookingEnhancement } from "@/lib/bookingEnhancedMock";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { KpiCardCompact } from "@/components/shared/KpiCardCompact";
 import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
@@ -45,7 +43,6 @@ export default function ParentDashboard() {
   const [tutorNameMap, setTutorNameMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
-  const [enhancementMap, setEnhancementMap] = useState<Record<string, BookingEnhancement>>({});
 
   const parentId = user?.id ?? null;
 
@@ -67,15 +64,6 @@ export default function ParentDashboard() {
     if (isLoading || !user) return;
     void loadData(user.id);
   }, [isLoading, loadData, user]);
-
-  useEffect(() => {
-    if (bookings.length === 0) return;
-    const map: Record<string, BookingEnhancement> = {};
-    for (const booking of bookings) {
-      map[booking.id] = getBookingEnhancement(booking);
-    }
-    setEnhancementMap(map);
-  }, [bookings]);
 
   useEffect(() => {
     const tutorIds = [...bookings.map((b) => b.tutorId), ...series.map((s) => s.tutorId)];
@@ -297,9 +285,6 @@ export default function ParentDashboard() {
               ) : (
                 <div className="divide-y divide-border">
                   {confirmedBookings.slice(0, 4).map((booking) => {
-                    const enh = enhancementMap[booking.id];
-                    const hasPlan = !!enh?.studyPlan &&
-                      ["plan_sent", "in_session", "completed"].includes(enh.flowStatus);
                     return (
                       <article key={booking.id} className="flex items-center gap-3 px-5 py-3">
                         <div className="flex h-9 w-14 shrink-0 flex-col items-center justify-center rounded-lg bg-success/10 text-center">
@@ -318,16 +303,7 @@ export default function ParentDashboard() {
                             <p className="text-xs text-muted-foreground">{booking.subject}</p>
                           )}
                         </div>
-                        {hasPlan ? (
-                          <Button size="sm" className="h-7 shrink-0 gap-1 px-2 text-xs" asChild>
-                            <Link href={`/parent/bookings/${booking.id}`}>
-                              <BookOpen className="h-3 w-3" />
-                              Giáo trình
-                            </Link>
-                          </Button>
-                        ) : (
-                          <Badge variant="success" className="shrink-0 text-xs">Xác nhận</Badge>
-                        )}
+                        <Badge variant="success" className="shrink-0 text-xs">Xác nhận</Badge>
                       </article>
                     );
                   })}
@@ -360,10 +336,6 @@ export default function ParentDashboard() {
               <div className="divide-y divide-border">
                 {recentBookings.map((booking) => {
                   const status = STATUS_BADGE[booking.status] ?? { label: booking.status, variant: "secondary" as const };
-                  const enhancement = enhancementMap[booking.id];
-                  const hasSentPlan =
-                    !!enhancement?.studyPlan &&
-                    ["plan_sent", "in_session", "completed"].includes(enhancement.flowStatus);
                   return (
                     <article
                       key={booking.id}
@@ -386,14 +358,6 @@ export default function ParentDashboard() {
                         <Button size="sm" variant="outline" className="h-8" asChild>
                           <Link href={`/parent/bookings/${booking.id}`}>Chi tiết</Link>
                         </Button>
-                        {hasSentPlan && (
-                          <Button size="sm" className="h-8 gap-1.5" asChild>
-                            <Link href={`/parent/bookings/${booking.id}`}>
-                              <BookOpen className="h-3.5 w-3.5" />
-                              Kế hoạch học
-                            </Link>
-                          </Button>
-                        )}
                         {booking.status === "Confirmed" && (
                           <Button
                             size="sm"

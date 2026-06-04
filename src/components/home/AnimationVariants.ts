@@ -25,27 +25,36 @@ export const SCROLL_REVEAL_CONFIG = {
   markers: false,
 };
 
+type TweenConfig = {
+  y?: number;
+  scale?: number;
+  boxShadow?: string;
+  duration: number;
+  ease: string;
+  overwrite?: "auto";
+};
+
 export const HOVER_ANIMATION_CONFIG = {
   cardLift: {
     y: -8, // Lift 8px
     duration: ANIMATION_TIMING.hover,
     ease: ANIMATION_EASING.hover,
     overwrite: "auto",
-  } as any,
+  },
   cardShadow: {
     boxShadow: "0 20px 50px rgba(0, 0, 0, 0.15)",
     duration: ANIMATION_TIMING.hover,
     ease: ANIMATION_EASING.hover,
     overwrite: "auto",
-  } as any,
+  },
   statCardHover: {
     y: -6,
     scale: 1.02,
     duration: ANIMATION_TIMING.hover,
     ease: ANIMATION_EASING.hover,
     overwrite: "auto",
-  } as any,
-};
+  },
+} satisfies Record<string, TweenConfig>;
 
 export const FLOATING_ANIMATIONS = {
   card1: {

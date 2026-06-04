@@ -16,7 +16,6 @@ import { Button } from "@/components/ui/button";
 import { AvailabilityCalendar } from "./AvailabilityCalendar";
 import { createBooking } from "@/api/bookingApi";
 import { getFeeConfig, getSubjects } from "@/api/referenceApi";
-import { initBookingEnhancement } from "@/lib/bookingEnhancedMock";
 import { useAuthStore } from "@/store/useAuthStore";
 import { formatCurrency } from "@/lib/utils";
 import type { FeeConfig, FreeSlot, Subject, TutorProfile } from "@/types";
@@ -39,6 +38,20 @@ const GOAL_TAGS = [
   "Chuẩn bị thi ĐH",
   "Học trước chương trình",
 ] as const;
+
+// Fallback khi BE chưa seed catalog môn học hoặc gia sư chưa gán môn nào.
+// id = tên môn (BE bỏ qua field subject khi đặt lịch, chỉ dùng slotId).
+const DEFAULT_SUBJECTS: Subject[] = [
+  "Toán",
+  "Vật lý",
+  "Hóa học",
+  "Sinh học",
+  "Ngữ văn",
+  "Tiếng Anh",
+  "Lịch sử",
+  "Địa lý",
+  "Tin học",
+].map((name) => ({ id: name, name, grades: [] }));
 
 function computeFee(pricePerHour: number, durationMins: number, feeConfig: FeeConfig) {
   const baseAmount = Math.round((pricePerHour * durationMins) / 60);
@@ -66,6 +79,8 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
 
   // ── Goal step state ──────────────────────────────────────────────────────
   const [tutorSubjects, setTutorSubjects] = useState<Subject[]>([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(true);
+  const [subjectsUsingFallback, setSubjectsUsingFallback] = useState(false);
   const [selectedSubjectId, setSelectedSubjectId] = useState("");
   const [selectedSubjectName, setSelectedSubjectName] = useState("");
   const [selectedGrade, setSelectedGrade] = useState(tutor.grades?.[0] ?? "");
@@ -91,10 +106,27 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
 
   useEffect(() => {
     let active = true;
+    setSubjectsLoading(true);
     void Promise.all([getFeeConfig(), getSubjects()]).then(([config, allSubjects]) => {
       if (!active) return;
       setFeeConfig(config);
-      setTutorSubjects(allSubjects.filter((s) => tutor.subjects.includes(s.id)));
+      // BE trả tutor.subjects dưới dạng TÊN môn (Subject::getName); mock có thể trả id.
+      // Khớp theo cả id lẫn tên để không phụ thuộc nguồn dữ liệu.
+      const matched = allSubjects.filter(
+        (s) => tutor.subjects.includes(s.id) || tutor.subjects.includes(s.name),
+      );
+      // Fallback khi gia sư chưa gán môn (matched rỗng): cho phụ huynh chọn từ catalog
+      // đầy đủ, hoặc danh sách mặc định nếu BE chưa seed catalog. BE bỏ qua field subject
+      // khi đặt lịch (chỉ dùng slotId) nên việc này không ảnh hưởng tính đúng đắn.
+      const resolved =
+        matched.length > 0
+          ? matched
+          : allSubjects.length > 0
+            ? allSubjects
+            : DEFAULT_SUBJECTS;
+      setTutorSubjects(resolved);
+      setSubjectsUsingFallback(matched.length === 0);
+      setSubjectsLoading(false);
     });
     return () => {
       active = false;
@@ -123,7 +155,7 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
     if (!selectedSubjectId) {
       setSubjectError("Vui lòng chọn môn học");
       hasError = true;
-    } else if (!tutor.subjects.includes(selectedSubjectId)) {
+    } else if (!tutorSubjects.some((s) => s.id === selectedSubjectId)) {
       setSubjectError("Môn học không hợp lệ với gia sư này");
       hasError = true;
     }
@@ -174,13 +206,6 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
     setLoading(false);
 
     if (result.ok && result.booking) {
-      initBookingEnhancement(result.booking, {
-        contactPhone: contactPhone.trim() || undefined,
-        contactZalo: contactZalo.trim() || undefined,
-        locationDistrict: locationDistrict.trim() || undefined,
-        locationCity: locationCity.trim() || undefined,
-        locationFullAddress: locationFullAddress.trim() || undefined,
-      });
       setBookingId(result.booking.id);
       setStep("success");
       return;
@@ -251,25 +276,33 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
               <label className="text-sm font-medium text-foreground">
                 Môn học <span className="text-destructive">*</span>
               </label>
-              {tutorSubjects.length === 0 ? (
+              {subjectsLoading ? (
                 <p className="text-sm text-muted-foreground">Đang tải danh sách môn...</p>
               ) : (
-                <select
-                  title="Chọn môn học"
-                  value={selectedSubjectId}
-                  onChange={(e) => {
-                    const sub = tutorSubjects.find((s) => s.id === e.target.value);
-                    setSelectedSubjectId(e.target.value);
-                    setSelectedSubjectName(sub?.name ?? "");
-                    setSubjectError("");
-                  }}
-                  className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
-                >
-                  <option value="">Chọn môn học...</option>
-                  {tutorSubjects.map((s) => (
-                    <option key={s.id} value={s.id}>{s.name}</option>
-                  ))}
-                </select>
+                <>
+                  <select
+                    title="Chọn môn học"
+                    value={selectedSubjectId}
+                    onChange={(e) => {
+                      const sub = tutorSubjects.find((s) => s.id === e.target.value);
+                      setSelectedSubjectId(e.target.value);
+                      setSelectedSubjectName(sub?.name ?? "");
+                      setSubjectError("");
+                    }}
+                    className="h-10 w-full rounded-lg border border-border bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
+                  >
+                    <option value="">Chọn môn học...</option>
+                    {tutorSubjects.map((s) => (
+                      <option key={s.id} value={s.id}>{s.name}</option>
+                    ))}
+                  </select>
+                  {subjectsUsingFallback && (
+                    <p className="text-xs text-muted-foreground">
+                      Gia sư chưa khai báo môn cụ thể — chọn môn bạn muốn học để trao đổi
+                      thêm khi gia sư xác nhận.
+                    </p>
+                  )}
+                </>
               )}
               {subjectError && <p className="text-xs text-destructive">{subjectError}</p>}
             </div>

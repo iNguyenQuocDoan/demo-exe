@@ -12,9 +12,16 @@ import { vi } from "date-fns/locale";
 
 export function SubscriptionBanner() {
   const [sub, setSub] = useState<Subscription | null | undefined>(undefined);
+  const [now, setNow] = useState<number | null>(null);
 
   useEffect(() => {
     getMySubscription().then(setSub);
+  }, []);
+
+  useEffect(() => {
+    setNow(Date.now());
+    const timer = window.setInterval(() => setNow(Date.now()), 60_000);
+    return () => window.clearInterval(timer);
   }, []);
 
   if (sub === undefined) return null;
@@ -22,7 +29,7 @@ export function SubscriptionBanner() {
   // Active subscription
   if (sub) {
     const expiresAt = new Date(sub.expiresAt);
-    const daysLeft = Math.ceil((expiresAt.getTime() - Date.now()) / 86_400_000);
+    const daysLeft = now === null ? null : Math.ceil((expiresAt.getTime() - now) / 86_400_000);
     return (
       <div className="flex items-center justify-between gap-4 rounded-2xl border border-amber-200 bg-linear-to-br from-amber-50 to-orange-50 dark:from-amber-950/30 dark:to-orange-950/20 px-5 py-4">
         <div className="flex items-center gap-3">
@@ -35,7 +42,7 @@ export function SubscriptionBanner() {
               <Badge className="bg-amber-500 text-white border-0 text-xs">ACTIVE</Badge>
             </div>
             <p className="text-sm text-amber-700/70 dark:text-amber-400/70">
-              Còn <span className="font-medium text-amber-700 dark:text-amber-400">{daysLeft} ngày</span> · Hết hạn{" "}
+              Còn <span className="font-medium text-amber-700 dark:text-amber-400">{daysLeft ?? "..."} ngày</span> · Hết hạn{" "}
               {format(expiresAt, "dd/MM/yyyy", { locale: vi })}
             </p>
           </div>
