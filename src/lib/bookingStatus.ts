@@ -9,6 +9,8 @@ export const BOOKING_STATUS_META: Record<
   AwaitingPayment: { label: "Chờ thanh toán",     variant: "warning" },
   Confirmed:       { label: "Đã xác nhận",         variant: "success" },
   InProgress:      { label: "Đang trong giờ học",  variant: "default" },
+  TutorCompleted:  { label: "Chờ phụ huynh xác nhận", variant: "warning" },
+  ParentCompleted: { label: "Chờ gia sư xác nhận",  variant: "warning" },
   Completed:       { label: "Hoàn thành",          variant: "success" },
   Cancelled:       { label: "Đã hủy",              variant: "destructive" },
   Disputed:        { label: "Tranh chấp",          variant: "destructive" },

@@ -10,9 +10,11 @@ import {
   Flag,
   Repeat2,
   Search,
+  Star,
   Wallet,
   XCircle,
 } from "lucide-react";
+import { ReviewModal } from "@/components/booking/ReviewModal";
 import { getBookings, cancelBooking, acceptBooking, getSeries, acceptSeries } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
 import { PageAnimations } from "@/components/animations/PageAnimations";
@@ -43,6 +45,7 @@ export default function ParentDashboard() {
   const [tutorNameMap, setTutorNameMap] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<Booking | null>(null);
 
   const parentId = user?.id ?? null;
 
@@ -358,6 +361,12 @@ export default function ParentDashboard() {
                         <Button size="sm" variant="outline" className="h-8" asChild>
                           <Link href={`/parent/bookings/${booking.id}`}>Chi tiết</Link>
                         </Button>
+                        {booking.status === "Completed" && (
+                          <Button size="sm" className="h-8 gap-1.5" onClick={() => setReviewTarget(booking)}>
+                            <Star className="h-3.5 w-3.5" />
+                            Đánh giá
+                          </Button>
+                        )}
                         {booking.status === "Confirmed" && (
                           <Button
                             size="sm"
@@ -425,6 +434,14 @@ export default function ParentDashboard() {
 
         </div>
       </section>
+
+      <ReviewModal
+        open={!!reviewTarget}
+        bookingId={reviewTarget?.id ?? ""}
+        tutorId={reviewTarget?.tutorId ?? ""}
+        tutorName={reviewTarget ? tutorNameMap[reviewTarget.tutorId] : undefined}
+        onClose={() => setReviewTarget(null)}
+      />
     </main>
   );
 }

@@ -108,9 +108,9 @@ export default function ParentBookingDetailPage() {
 
   const statusMeta = BOOKING_STATUS_META[booking.status];
   const teachingMode = "Trực tiếp";
-  const sessionEnded = booking.endAt ? Date.now() >= new Date(booking.endAt).getTime() : false;
-  const canComplete = booking.status === "InProgress";
-  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status);
+  // Phụ huynh xác nhận hoàn thành khi đang học, hoặc khi gia sư đã báo xong trước.
+  const canComplete = booking.status === "InProgress" || booking.status === "TutorCompleted";
+  const canReport = ["Confirmed", "InProgress", "TutorCompleted", "ParentCompleted", "Completed"].includes(booking.status);
 
   const chatHref = `/parent/chats?convId=${buildConvId(booking.parentId, booking.tutorId)}&bookingId=${booking.id}`;
 
@@ -172,8 +172,6 @@ export default function ParentBookingDetailPage() {
                     size="sm"
                     className="gap-2"
                     loading={actionLoading}
-                    disabled={!sessionEnded}
-                    title={sessionEnded ? undefined : "Có thể xác nhận sau khi buổi học kết thúc"}
                     onClick={handleComplete}
                   >
                     <Flag className="h-4 w-4" />

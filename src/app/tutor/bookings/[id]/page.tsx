@@ -130,11 +130,11 @@ export default function TutorBookingDetailPage() {
   }
 
   const statusMeta = BOOKING_STATUS_META[booking.status];
-  const sessionEnded = booking.endAt ? Date.now() >= new Date(booking.endAt).getTime() : false;
   const canConfirm = booking.status === "Pending" || booking.status === "AwaitingPayment";
   const canStart = booking.status === "Confirmed";
-  const canComplete = booking.status === "InProgress";
-  const canReport = ["Confirmed", "InProgress", "Completed"].includes(booking.status);
+  // Gia sư xác nhận hoàn thành khi đang dạy, hoặc khi phụ huynh đã xác nhận trước.
+  const canComplete = booking.status === "InProgress" || booking.status === "ParentCompleted";
+  const canReport = ["Confirmed", "InProgress", "TutorCompleted", "ParentCompleted", "Completed"].includes(booking.status);
 
   const chatHref = `/tutor/chats?convId=${buildConvId(booking.parentId, booking.tutorId)}&bookingId=${booking.id}`;
 
@@ -209,8 +209,6 @@ export default function TutorBookingDetailPage() {
                   <Button
                     className="gap-2"
                     loading={actionLoading}
-                    disabled={!sessionEnded}
-                    title={sessionEnded ? undefined : "Có thể hoàn thành sau khi buổi học kết thúc"}
                     onClick={handleComplete}
                   >
                     <Flag className="h-4 w-4" />
@@ -236,11 +234,6 @@ export default function TutorBookingDetailPage() {
                     Trạng thái hiện tại:
                     <span className="ml-1 font-medium">{statusMeta.label}</span>
                   </p>
-                  {canComplete && !sessionEnded ? (
-                    <p className="rounded-lg border border-amber-200 bg-amber-50 px-2 py-1 text-xs text-amber-900">
-                      Có thể xác nhận hoàn thành sau khi buổi học kết thúc.
-                    </p>
-                  ) : null}
                 </CardContent>
               </Card>
 

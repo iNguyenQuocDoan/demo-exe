@@ -61,6 +61,9 @@ function mapBeStatus(s: string | undefined): Booking["status"] {
   const v = (s ?? "").toUpperCase();
   if (v.includes("CONFIRM") || v.includes("ACCEPT")) return "Confirmed";
   if (v.includes("PROGRESS") || v.includes("PROCESS")) return "InProgress"; // BE: "PROCESSING" (đang dạy)
+  // Hoàn thành 2 phía: 1 bên xác nhận trước → trạng thái chờ; cả 2 xong → COMPLETED.
+  if (v.includes("TUTOR_COMPLET")) return "TutorCompleted";   // gia sư xong, chờ phụ huynh
+  if (v.includes("PARENT_COMPLET")) return "ParentCompleted"; // phụ huynh xong, chờ gia sư
   if (v.includes("COMPLET")) return "Completed";
   if (v.includes("CANCEL")) return "Cancelled";
   if (v.includes("DISPUT")) return "Disputed";

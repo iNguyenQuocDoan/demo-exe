@@ -12,6 +12,8 @@ export type BookingStatus =
   | "AwaitingPayment"
   | "Confirmed"
   | "InProgress"
+  | "TutorCompleted"
+  | "ParentCompleted"
   | "Completed"
   | "Cancelled"
   | "Disputed"

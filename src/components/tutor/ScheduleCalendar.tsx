@@ -42,6 +42,8 @@ const STATUS_CONFIG: Record<
   AwaitingPayment:{ label: "Chờ thanh toán", variant: "warning",     pill: "bg-warning/15 text-warning border-warning/30" },
   Confirmed:      { label: "Đã xác nhận",    variant: "success",     pill: "bg-success/15 text-success border-success/30" },
   InProgress:     { label: "Đang học",       variant: "default",     pill: "bg-primary/15 text-primary border-primary/30" },
+  TutorCompleted: { label: "Chờ PH xác nhận", variant: "warning",    pill: "bg-warning/15 text-warning border-warning/30" },
+  ParentCompleted:{ label: "Chờ GS xác nhận", variant: "warning",    pill: "bg-warning/15 text-warning border-warning/30" },
   Completed:      { label: "Hoàn thành",     variant: "secondary",   pill: "bg-muted text-muted-foreground border-border" },
   Cancelled:      { label: "Đã hủy",         variant: "destructive", pill: "bg-destructive/10 text-destructive border-destructive/25" },
   Disputed:       { label: "Tranh chấp",     variant: "destructive", pill: "bg-destructive/10 text-destructive border-destructive/25" },
