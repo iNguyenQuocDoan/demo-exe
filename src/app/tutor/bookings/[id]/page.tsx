@@ -6,13 +6,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Calendar, Flag, MessageSquare, PlayCircle, ShieldCheck } from "lucide-react";
 import { acceptBooking, getBookingById, startBooking, tutorCompleteBooking } from "@/api/bookingApi";
 import { buildConvId } from "@/api/chatApi";
-import { BOOKING_STATUS_META } from "@/lib/bookingStatus";
+import { bookingStatusMeta } from "@/lib/bookingStatus";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
 import { BookingGoalCard } from "@/components/booking/BookingGoalCard";
 import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
 import { BookingReportsList } from "@/components/booking/BookingReportsList";
@@ -129,7 +128,7 @@ export default function TutorBookingDetailPage() {
     );
   }
 
-  const statusMeta = BOOKING_STATUS_META[booking.status];
+  const statusMeta = bookingStatusMeta(booking.status, "tutor");
   const canConfirm = booking.status === "Pending" || booking.status === "AwaitingPayment";
   const canStart = booking.status === "Confirmed";
   // Gia sư xác nhận hoàn thành khi đang dạy, hoặc khi phụ huynh đã xác nhận trước.
@@ -175,7 +174,7 @@ export default function TutorBookingDetailPage() {
                 ) : null}
               </div>
               <div className="flex flex-wrap items-center gap-2">
-                <Badge variant={statusMeta.variant} className="text-xs">{statusMeta.label}</Badge>
+                <StatusBadge meta={statusMeta} className="text-xs" />
                 {canReport && (
                   <Button
                     variant="outline"
@@ -238,9 +237,6 @@ export default function TutorBookingDetailPage() {
               </Card>
 
               <BookingReportsList bookingId={booking.id} refreshKey={reportRefreshKey} />
-              {booking.status === "Completed" && (
-                <SessionFeedbackCard booking={booking} readOnly />
-              )}
             </div>
           </div>
         </div>

@@ -1,7 +1,6 @@
 import { realApiClient } from "@/lib/realApiClient";
 import type {
   Booking,
-  QualityFeedback,
   ScheduleSeries,
   PaginationParams,
   PaginationMeta,
@@ -88,6 +87,8 @@ function mapBeBooking(be: BeBookingResponse, fallbackTutorId = ""): Booking {
     type: "NORMAL",
     parentId: me.role === "parent" ? me.id ?? "" : "",
     tutorId: fallbackTutorId,
+    // BE history KHÔNG trả tutorId, chỉ có tutorName → giữ lại để hiển thị.
+    tutorName: be.tutorName,
     startAt: be.startTime ?? "",
     endAt: be.endTime ?? "",
     baseAmount: be.totalPrice ?? 0,
@@ -154,7 +155,8 @@ export async function getBookingsPaginated(
       "/bookings/history",
       {
         params: {
-          page: pagination?.page ?? 1,
+          // BE phân trang 1-indexed: page=0 → HTTP 500. Luôn ≥ 1.
+          page: Math.max(1, pagination?.page ?? 1),
           size: pagination?.limit ?? 10,
           role,
         },
@@ -313,11 +315,3 @@ export async function acceptSeries(
   return { ok: false, error: "BE chưa hỗ trợ lịch định kỳ" };
 }
 
-// ── Session feedback chi tiết (4 tiêu chí): BE chỉ có /feedback/review tổng quát ──
-// Wrap qua reviewApi.createReview nếu caller cần chấm điểm tổng — ở đây giữ no-op
-export async function submitSessionFeedback(
-  _bookingId: string,
-  _feedback: QualityFeedback,
-): Promise<{ ok: boolean; error?: string }> {
-  return { ok: false, error: "BE chỉ hỗ trợ review tổng — dùng reviewApi.createReview" };
-}

@@ -1,18 +1,9 @@
-import type { BookingStatus } from "@/types";
-
-/** Nhãn + variant hiển thị cho trạng thái booking lấy thẳng từ BE. */
-export const BOOKING_STATUS_META: Record<
-  BookingStatus,
-  { label: string; variant: "default" | "warning" | "success" | "destructive" | "secondary" }
-> = {
-  Pending:         { label: "Chờ xác nhận",       variant: "warning" },
-  AwaitingPayment: { label: "Chờ thanh toán",     variant: "warning" },
-  Confirmed:       { label: "Đã xác nhận",         variant: "success" },
-  InProgress:      { label: "Đang trong giờ học",  variant: "default" },
-  TutorCompleted:  { label: "Chờ phụ huynh xác nhận", variant: "warning" },
-  ParentCompleted: { label: "Chờ gia sư xác nhận",  variant: "warning" },
-  Completed:       { label: "Hoàn thành",          variant: "success" },
-  Cancelled:       { label: "Đã hủy",              variant: "destructive" },
-  Disputed:        { label: "Tranh chấp",          variant: "destructive" },
-  Resolved:        { label: "Đã giải quyết",       variant: "secondary" },
-};
+/**
+ * @deprecated Giữ lại để tương thích import cũ. Nguồn chuẩn là `@/lib/statusMeta`.
+ * Tất cả nhãn/variant/icon trạng thái booking nay nằm ở BOOKING_STATUS_META (statusMeta.ts).
+ */
+export {
+  BOOKING_STATUS_META,
+  bookingStatusMeta,
+  type StatusMeta,
+} from "./statusMeta";

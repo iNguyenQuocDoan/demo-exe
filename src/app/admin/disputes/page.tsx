@@ -14,24 +14,19 @@ import { getDisputes, resolveDispute } from "@/api/disputeApi";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { DISPUTE_STATUS_META } from "@/lib/statusMeta";
 import { Skeleton } from "@/components/ui/skeleton";
 import { DISPUTE_REASON_LABELS } from "@/types";
 import type { DisputeReport, DisputeReportStatus } from "@/types";
 
+// BE DisputeStatus chỉ có PENDING/RESOLVED/REJECTED(→Dismissed) — không có "Reviewing".
 const STATUS_TABS: { value: DisputeReportStatus | "all"; label: string }[] = [
   { value: "all", label: "Tất cả" },
   { value: "Pending", label: "Chờ xử lý" },
-  { value: "Reviewing", label: "Đang xem xét" },
   { value: "Resolved", label: "Đã giải quyết" },
-  { value: "Dismissed", label: "Bác bỏ" },
+  { value: "Dismissed", label: "Không hợp lệ" },
 ];
-
-const STATUS_BADGE: Record<DisputeReportStatus, { label: string; variant: Parameters<typeof Badge>[0]["variant"] }> = {
-  Pending: { label: "Chờ xử lý", variant: "warning" },
-  Reviewing: { label: "Đang xem xét", variant: "default" },
-  Resolved: { label: "Đã giải quyết", variant: "success" },
-  Dismissed: { label: "Bác bỏ", variant: "secondary" },
-};
 
 function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () => void }) {
   const [expanded, setExpanded] = useState(false);
@@ -55,7 +50,6 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
     }
   };
 
-  const meta = STATUS_BADGE[report.status];
   const createdAt = new Date(report.createdAt).toLocaleDateString("vi-VN", {
     day: "2-digit", month: "2-digit", year: "numeric",
   });
@@ -70,7 +64,7 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
         <Flag className="h-4 w-4 mt-0.5 text-destructive shrink-0" />
         <div className="flex-1 min-w-0 space-y-1.5">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant={meta.variant}>{meta.label}</Badge>
+            <StatusBadge registry={DISPUTE_STATUS_META} value={report.status} />
             <span className="text-xs text-muted-foreground">Booking #{report.bookingId}</span>
             <span className="text-xs text-muted-foreground">· {createdAt}</span>
           </div>
@@ -142,7 +136,7 @@ function DisputeRow({ report, onUpdate }: { report: DisputeReport; onUpdate: () 
           </div>
 
           <div className="flex flex-wrap gap-2">
-            {(report.status === "Pending" || report.status === "Reviewing") && (
+            {report.status === "Pending" && (
               <>
                 <Button size="sm" className="gap-1.5" loading={saving} onClick={() => void handleAction("Resolved")}>
                   <CheckCircle2 className="h-3.5 w-3.5" />

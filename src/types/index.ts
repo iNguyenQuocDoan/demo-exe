@@ -276,6 +276,8 @@ export interface Booking {
   subject?: string;
   grade?: string;
   studentName?: string;
+  /** Tên gia sư — BE `BookingResponse.tutorName` (history không trả tutorId). */
+  tutorName?: string;
   teachingMode?: TeachingMode;
   location?: string;
   // Parent intent snapshot (set at booking creation)
@@ -444,6 +446,8 @@ export interface Wallet {
   id: string;
   userId: string;
   balance: number;
+  /** BE `frozenBalance` — tiền đang bị giữ (escrow) cho các booking chưa hoàn tất. */
+  frozenBalance?: number;
   currency: "VND";
   createdAt: string;
   updatedAt: string;

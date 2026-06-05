@@ -1,11 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import { Wallet, Plus, ArrowDownCircle, ArrowUpCircle, Clock, CheckCircle, XCircle, RefreshCw } from "lucide-react";
+import { Wallet, Plus, ArrowUpCircle, Clock, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import type { Transaction, TransactionType, TransactionStatus, PaymentMethod } from "@/types";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { TRANSACTION_TYPE_META, TRANSACTION_STATUS_META, txDisplay } from "@/lib/statusMeta";
+import type { Transaction, PaymentMethod } from "@/types";
 
 interface BankInfo {
   bankName: string;
@@ -16,12 +18,14 @@ interface BankInfo {
 interface ParentWalletProps {
   userId: string;
   balance: number;
+  /** Tiền đang bị giữ (escrow) cho booking chưa hoàn tất — BE `frozenBalance`. */
+  frozenBalance?: number;
   transactions?: Transaction[];
   onDeposit?: (amount: number, method: PaymentMethod) => Promise<void>;
   onWithdraw?: (amount: number, bankInfo: BankInfo) => Promise<void>;
 }
 
-export function ParentWallet({ userId, balance, transactions = [], onDeposit, onWithdraw }: ParentWalletProps) {
+export function ParentWallet({ userId, balance, frozenBalance = 0, transactions = [], onDeposit, onWithdraw }: ParentWalletProps) {
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [depositAmount, setDepositAmount] = useState(100000);
@@ -77,68 +81,35 @@ export function ParentWallet({ userId, balance, transactions = [], onDeposit, on
     }
   };
 
-  const getTransactionIcon = (type: TransactionType) => {
-    switch (type) {
-      case "DEPOSIT":
-        return <ArrowDownCircle className="h-4 w-4 text-green-600" />;
-      case "WITHDRAW":
-        return <ArrowUpCircle className="h-4 w-4 text-orange-600" />;
-      case "BOOKING_HOLD":
-      case "BOOKING_CHARGE":
-        return <ArrowUpCircle className="h-4 w-4 text-blue-600" />;
-      case "REFUND":
-      case "TUTOR_PAYOUT":
-        return <ArrowDownCircle className="h-4 w-4 text-green-600" />;
-      default:
-        return <RefreshCw className="h-4 w-4 text-muted-foreground" />;
-    }
-  };
-
-  const getStatusBadge = (status: TransactionStatus) => {
-    const variants: Record<TransactionStatus, { label: string; variant: "default" | "warning" | "success" | "destructive" }> = {
-      Pending: { label: "Đang xử lý", variant: "warning" },
-      Completed: { label: "Thành công", variant: "success" },
-      Failed: { label: "Thất bại", variant: "destructive" },
-      Cancelled: { label: "Đã hủy", variant: "default" },
-    };
-    const config = variants[status];
-    return <Badge variant={config.variant} className="text-xs">{config.label}</Badge>;
-  };
-
-  const getTransactionLabel = (type: TransactionType): string => {
-    const labels: Record<TransactionType, string> = {
-      DEPOSIT: "Nạp tiền",
-      WITHDRAW: "Rút tiền",
-      BOOKING_HOLD: "Giữ tiền đặt lịch",
-      BOOKING_CHARGE: "Thanh toán học phí",
-      REFUND: "Hoàn tiền",
-      TUTOR_PAYOUT: "Chi trả gia sư",
-      PLATFORM_FEE: "Phí nền tảng",
-    };
-    return labels[type];
-  };
-
   const quickAmounts = [50000, 100000, 200000, 500000, 1000000];
 
   return (
     <div className="space-y-6">
       {/* Balance Card */}
-      <Card className="bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+      <Card className="bg-linear-to-br from-primary to-primary/80 text-primary-foreground">
         <CardContent className="p-6">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <Wallet className="h-6 w-6" />
-              <h3 className="text-lg font-semibold">Số dư ví</h3>
+              <h3 className="text-lg font-semibold">Số dư khả dụng</h3>
             </div>
             <Badge variant="secondary" className="bg-white/20 text-white">
               VNĐ
             </Badge>
           </div>
-          
-          <div className="text-4xl font-bold mb-6">
+
+          <div className="text-4xl font-bold mb-2">
             {balance.toLocaleString("vi-VN")}
           </div>
-          
+
+          {frozenBalance > 0 && (
+            <div className="flex items-center gap-1.5 text-sm text-white/80 mb-6">
+              <Lock className="h-3.5 w-3.5" />
+              Đang giữ cho booking: {frozenBalance.toLocaleString("vi-VN")} VNĐ
+            </div>
+          )}
+          {frozenBalance <= 0 && <div className="mb-6" />}
+
           <div className="flex gap-3">
             <Button
               variant="secondary"
@@ -323,29 +294,31 @@ export function ParentWallet({ userId, balance, transactions = [], onDeposit, on
             </div>
           ) : (
             <div className="space-y-3">
-              {transactions.map((tx, idx) => (
-                <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    {getTransactionIcon(tx.type)}
-                    <div>
-                      <p className="font-medium text-sm">{getTransactionLabel(tx.type)}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {new Date(tx.createdAt).toLocaleString("vi-VN")}
+              {transactions.map((tx, idx) => {
+                const typeMeta = TRANSACTION_TYPE_META[tx.type];
+                const Icon = typeMeta?.icon ?? Wallet;
+                const amt = txDisplay(tx.type, tx.amount);
+                return (
+                  <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                    <div className="flex items-center gap-3">
+                      <Icon className={`h-4 w-4 ${amt.colorClass}`} />
+                      <div>
+                        <p className="font-medium text-sm">{typeMeta?.label ?? tx.type}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {new Date(tx.createdAt).toLocaleString("vi-VN")}
+                        </p>
+                      </div>
+                    </div>
+
+                    <div className="text-right space-y-1">
+                      <p className={`font-semibold ${amt.colorClass}`}>
+                        {amt.sign}{amt.value.toLocaleString("vi-VN")} VNĐ
                       </p>
+                      <StatusBadge registry={TRANSACTION_STATUS_META} value={tx.status} showIcon={false} className="text-xs" />
                     </div>
                   </div>
-                  
-                  <div className="text-right">
-                    <p className={`font-semibold ${
-                      ["DEPOSIT", "REFUND"].includes(tx.type) ? "text-green-600" : "text-orange-600"
-                    }`}>
-                      {["DEPOSIT", "REFUND"].includes(tx.type) ? "+" : "-"}
-                      {tx.amount.toLocaleString("vi-VN")} VNĐ
-                    </p>
-                    {getStatusBadge(tx.status)}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </CardContent>
