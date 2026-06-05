@@ -9,7 +9,6 @@ import SpotlightCard from "@/components/SpotlightCard";
 interface SubjectCardItem {
   id: string;
   label: string;
-  count: string;
   image: string;
 }
 
@@ -125,7 +124,7 @@ export default function SubjectsCarousel({
                     {subject.label}
                   </h3>
                   <p className="text-[11px] text-muted-foreground transition-colors duration-300 group-hover/card:text-primary/70">
-                    {subject.count} gia sư
+                    Xem gia sư
                   </p>
                 </div>
               </Link>
