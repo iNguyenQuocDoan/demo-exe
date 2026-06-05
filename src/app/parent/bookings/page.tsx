@@ -36,35 +36,27 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency } from "@/lib/utils";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { bookingStatusMeta } from "@/lib/statusMeta";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { Booking, BookingStatus } from "@/types";
 
-const STATUS_OPTIONS: Array<{ key: "all" | BookingStatus; label: string }> = [
+// Gom nhóm trạng thái để booking ở các trạng thái trung gian (InProgress,
+// TutorCompleted, ParentCompleted…) vẫn xuất hiện trong tab tương ứng.
+const STATUS_GROUPS: Record<string, BookingStatus[]> = {
+  Pending: ["Pending", "AwaitingPayment"],
+  Active: ["Confirmed", "InProgress", "TutorCompleted", "ParentCompleted"],
+  Completed: ["Completed"],
+  Cancelled: ["Cancelled", "Disputed", "Resolved"],
+};
+
+const STATUS_OPTIONS: Array<{ key: "all" | keyof typeof STATUS_GROUPS; label: string }> = [
   { key: "all", label: "Tất cả" },
   { key: "Pending", label: "Chờ xác nhận" },
-  { key: "Confirmed", label: "Đã xác nhận" },
+  { key: "Active", label: "Đang diễn ra" },
   { key: "Completed", label: "Hoàn thành" },
   { key: "Cancelled", label: "Đã huỷ" },
 ];
-
-const STATUS_BADGE: Record<
-  BookingStatus,
-  {
-    label: string;
-    variant: "default" | "success" | "warning" | "destructive" | "secondary";
-  }
-> = {
-  Pending: { label: "Chờ xác nhận", variant: "warning" },
-  AwaitingPayment: { label: "Chờ thanh toán", variant: "warning" },
-  Confirmed: { label: "Đã xác nhận", variant: "success" },
-  InProgress: { label: "Đang học", variant: "default" },
-  TutorCompleted: { label: "Chờ bạn xác nhận", variant: "warning" },
-  ParentCompleted: { label: "Chờ gia sư xác nhận", variant: "warning" },
-  Completed: { label: "Hoàn thành", variant: "secondary" },
-  Cancelled: { label: "Đã huỷ", variant: "destructive" },
-  Disputed: { label: "Tranh chấp", variant: "destructive" },
-  Resolved: { label: "Đã xử lý", variant: "default" },
-};
 
 export default function ParentBookingsPage() {
   const router = useRouter();
@@ -114,11 +106,16 @@ export default function ParentBookingsPage() {
   }, [isLoading, loadData, user]);
 
   const filtered = useMemo(() => {
-    let result = activeStatus === "all" ? bookings : bookings.filter((item) => item.status === activeStatus);
+    let result =
+      activeStatus === "all"
+        ? bookings
+        : bookings.filter((item) => STATUS_GROUPS[activeStatus]?.includes(item.status));
     if (search.trim()) {
       const q = search.toLowerCase();
       result = result.filter((item) =>
-        (tutorNameMap[item.tutorId] ?? item.tutorId).toLowerCase().includes(q)
+        (item.tutorName || tutorNameMap[item.tutorId] || item.tutorId)
+          .toLowerCase()
+          .includes(q)
       );
     }
     return result;
@@ -247,10 +244,6 @@ export default function ParentBookingsPage() {
             ) : (
               <div className="divide-y divide-border">
                 {filtered.map((booking) => {
-                  const status = STATUS_BADGE[booking.status] ?? {
-                    label: booking.status,
-                    variant: "secondary" as const,
-                  };
                   const canCancel =
                     booking.status === "Pending" ||
                     booking.status === "Confirmed";
@@ -286,9 +279,9 @@ export default function ParentBookingsPage() {
                       <div className="space-y-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="text-sm font-semibold text-foreground">
-                            {tutorNameMap[booking.tutorId] ?? booking.tutorId}
+                            {booking.tutorName || tutorNameMap[booking.tutorId] || booking.tutorId || "Gia sư"}
                           </span>
-                          <Badge variant={status.variant}>{status.label}</Badge>
+                          <StatusBadge meta={bookingStatusMeta(booking.status, "parent")} />
                           <Badge variant="outline">{booking.type}</Badge>
                           {holdLabel && (
                             <span

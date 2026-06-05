@@ -37,14 +37,22 @@ function getCurrentUserId(): string {
   }
 }
 
+// BE TransactionType: DEPOSIT, WITHDRAW, PAYMENT, RECEIVE, REFUND, COMMISSION
+// → map sang FE TransactionType (giữ nguyên nhãn/icon FE đã có).
 function mapTxType(t: string | undefined): TransactionType {
   const v = (t ?? "").toUpperCase();
   if (v.includes("DEPOSIT")) return "DEPOSIT";
   if (v.includes("WITHDRAW")) return "WITHDRAW";
+  if (v.includes("REFUND")) return "REFUND";
+  // BE "PAYMENT" = phụ huynh trả/giữ học phí (ghi NỢ) → BOOKING_CHARGE
+  if (v.includes("PAYMENT")) return "BOOKING_CHARGE";
   if (v.includes("HOLD")) return "BOOKING_HOLD";
   if (v.includes("CHARGE")) return "BOOKING_CHARGE";
-  if (v.includes("REFUND")) return "REFUND";
+  // BE "RECEIVE" = gia sư nhận tiền dạy (ghi CÓ) → TUTOR_PAYOUT
+  if (v.includes("RECEIVE")) return "TUTOR_PAYOUT";
   if (v.includes("PAYOUT")) return "TUTOR_PAYOUT";
+  // BE "COMMISSION" = phí hoa hồng nền tảng (ghi NỢ) → PLATFORM_FEE
+  if (v.includes("COMMISSION")) return "PLATFORM_FEE";
   if (v.includes("FEE")) return "PLATFORM_FEE";
   return "DEPOSIT";
 }
@@ -65,6 +73,7 @@ export async function getWallet(): Promise<Wallet> {
     id: `wallet-${userId}`,
     userId,
     balance: data.availableBalance ?? 0,
+    frozenBalance: data.frozenBalance ?? 0,
     currency: (data.currency as Wallet["currency"]) ?? "VND",
     createdAt: now,
     updatedAt: now,

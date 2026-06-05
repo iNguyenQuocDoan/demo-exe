@@ -2,10 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  ArrowDownCircle,
   ArrowUpCircle,
   Clock,
-  RefreshCw,
   TrendingUp,
   Wallet,
 } from "lucide-react";
@@ -15,40 +13,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { TRANSACTION_TYPE_META, TRANSACTION_STATUS_META, txDisplay } from "@/lib/statusMeta";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { Transaction, TransactionStatus, TransactionType } from "@/types";
-
-function getTransactionIcon(type: TransactionType) {
-  switch (type) {
-    case "TUTOR_PAYOUT":
-    case "DEPOSIT":
-    case "REFUND":
-      return <ArrowDownCircle className="h-4 w-4 text-green-600" />;
-    case "WITHDRAW":
-    case "BOOKING_CHARGE":
-    case "BOOKING_HOLD":
-      return <ArrowUpCircle className="h-4 w-4 text-orange-600" />;
-    default:
-      return <RefreshCw className="h-4 w-4 text-muted-foreground" />;
-  }
-}
-
-const TRANSACTION_LABELS: Record<TransactionType, string> = {
-  TUTOR_PAYOUT: "Nhận thanh toán từ buổi học",
-  DEPOSIT: "Nạp tiền",
-  WITHDRAW: "Rút tiền",
-  BOOKING_HOLD: "Giữ tiền đặt lịch",
-  BOOKING_CHARGE: "Thanh toán học phí",
-  REFUND: "Hoàn tiền",
-  PLATFORM_FEE: "Phí nền tảng",
-};
-
-const STATUS_CONFIG: Record<TransactionStatus, { label: string; variant: "default" | "warning" | "success" | "destructive" }> = {
-  Pending: { label: "Đang xử lý", variant: "warning" },
-  Completed: { label: "Thành công", variant: "success" },
-  Failed: { label: "Thất bại", variant: "destructive" },
-  Cancelled: { label: "Đã hủy", variant: "default" },
-};
+import type { Transaction } from "@/types";
 
 export default function TutorWalletPage() {
   const { user, isLoading } = useAuthStore();
@@ -103,10 +71,10 @@ export default function TutorWalletPage() {
 
   const filteredTransactions = useMemo(() => {
     if (txTypeFilter === "all") return transactions;
-    const creditTypes = ["TUTOR_PAYOUT", "REFUND", "DEPOSIT"];
-    return transactions.filter((tx) =>
-      txTypeFilter === "credit" ? creditTypes.includes(tx.type) : !creditTypes.includes(tx.type)
-    );
+    return transactions.filter((tx) => {
+      const isCredit = TRANSACTION_TYPE_META[tx.type]?.direction === "credit";
+      return txTypeFilter === "credit" ? isCredit : !isCredit;
+    });
   }, [transactions, txTypeFilter]);
 
   if (isLoading || loading) {
@@ -253,24 +221,25 @@ export default function TutorWalletPage() {
               ) : (
                 <div className="space-y-3">
                   {filteredTransactions.map((tx, i) => {
-                    const isCredit = ["TUTOR_PAYOUT", "REFUND", "DEPOSIT"].includes(tx.type);
-                    const cfg = STATUS_CONFIG[tx.status];
+                    const typeMeta = TRANSACTION_TYPE_META[tx.type];
+                    const Icon = typeMeta?.icon ?? Wallet;
+                    const amt = txDisplay(tx.type, tx.amount);
                     return (
                       <div key={i} className="flex items-center justify-between rounded-lg border p-3">
                         <div className="flex items-center gap-3">
-                          {getTransactionIcon(tx.type)}
+                          <Icon className={`h-4 w-4 ${amt.colorClass}`} />
                           <div>
-                            <p className="text-sm font-medium">{TRANSACTION_LABELS[tx.type]}</p>
+                            <p className="text-sm font-medium">{typeMeta?.label ?? tx.type}</p>
                             <p className="text-xs text-muted-foreground">
                               {new Date(tx.createdAt).toLocaleString("vi-VN")}
                             </p>
                           </div>
                         </div>
                         <div className="text-right space-y-1">
-                          <p className={`text-sm font-semibold ${isCredit ? "text-green-600" : "text-orange-600"}`}>
-                            {isCredit ? "+" : "-"}{tx.amount.toLocaleString("vi-VN")} VNĐ
+                          <p className={`text-sm font-semibold ${amt.colorClass}`}>
+                            {amt.sign}{amt.value.toLocaleString("vi-VN")} VNĐ
                           </p>
-                          <Badge variant={cfg.variant} className="text-xs">{cfg.label}</Badge>
+                          <StatusBadge registry={TRANSACTION_STATUS_META} value={tx.status} showIcon={false} className="text-xs" />
                         </div>
                       </div>
                     );

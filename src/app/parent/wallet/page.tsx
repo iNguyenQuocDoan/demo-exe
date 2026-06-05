@@ -14,6 +14,7 @@ import type { Transaction, PaymentMethod } from "@/types";
 export default function ParentWalletPage() {
   const { user, isLoading } = useAuthStore();
   const [balance, setBalance] = useState(0);
+  const [frozenBalance, setFrozenBalance] = useState(0);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [depositSucceeded, setDepositSucceeded] = useState(false);
@@ -26,6 +27,7 @@ export default function ParentWalletPage() {
         getTransactions(),
       ]);
       setBalance(wallet.balance);
+      setFrozenBalance(wallet.frozenBalance ?? 0);
       setTransactions(txns);
     } finally {
       setLoading(false);
@@ -115,6 +117,7 @@ export default function ParentWalletPage() {
       <ParentWallet
         userId={user?.id ?? ""}
         balance={balance}
+        frozenBalance={frozenBalance}
         transactions={transactions}
         onDeposit={handleDeposit}
         onWithdraw={handleWithdraw}

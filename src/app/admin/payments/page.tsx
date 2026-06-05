@@ -14,6 +14,8 @@ import {
   approveDeposit, rejectDeposit, processWithdraw,
 } from "@/api/walletApi";
 import { getUserNameMap } from "@/api/referenceApi";
+import { StatusBadge } from "@/components/shared/StatusBadge";
+import { TRANSACTION_STATUS_META, WITHDRAW_STATUS_META } from "@/lib/statusMeta";
 import type { DepositRequest, WithdrawRequest, TransactionStatus } from "@/types";
 
 const METHOD_LABELS: Record<string, string> = {
@@ -22,14 +24,6 @@ const METHOD_LABELS: Record<string, string> = {
   VNPAY: "VNPay",
   ZALOPAY: "ZaloPay",
   CASH: "Tiền mặt",
-};
-
-const STATUS_CONFIG: Record<string, { label: string; variant: "default" | "warning" | "success" | "destructive" }> = {
-  Pending:   { label: "Chờ xử lý",  variant: "warning" },
-  Completed: { label: "Hoàn thành", variant: "success" },
-  Failed:    { label: "Thất bại",   variant: "destructive" },
-  Cancelled: { label: "Đã hủy",    variant: "destructive" },
-  Rejected:  { label: "Từ chối",    variant: "destructive" },
 };
 
 function AdminNote({ onConfirm, onCancel, label, loading }: {
@@ -68,7 +62,6 @@ function DepositRow({ deposit, userNameMap, onApprove, onReject }: {
 }) {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [busy, setBusy] = useState(false);
-  const { label, variant } = STATUS_CONFIG[deposit.status] ?? { label: deposit.status, variant: "default" };
   const date = new Date(deposit.createdAt).toLocaleString("vi-VN");
 
   const handle = async (fn: (id: string, note: string) => Promise<void>, note: string) => {
@@ -87,7 +80,7 @@ function DepositRow({ deposit, userNameMap, onApprove, onReject }: {
                 {userNameMap[deposit.userId] ?? deposit.userId}
               </span>
             </div>
-            <Badge variant={variant} className="text-xs">{label}</Badge>
+            <StatusBadge registry={TRANSACTION_STATUS_META} value={deposit.status} showIcon={false} className="text-xs" />
             <Badge variant="outline" className="text-xs">{METHOD_LABELS[deposit.paymentMethod] ?? deposit.paymentMethod}</Badge>
           </div>
           <div className="text-lg font-bold text-foreground">
@@ -148,7 +141,6 @@ function WithdrawRow({ withdraw, userNameMap, onApprove, onReject }: {
 }) {
   const [action, setAction] = useState<"approve" | "reject" | null>(null);
   const [busy, setBusy] = useState(false);
-  const { label, variant } = STATUS_CONFIG[withdraw.status] ?? { label: withdraw.status, variant: "default" };
   const date = new Date(withdraw.createdAt).toLocaleString("vi-VN");
 
   const handle = async (fn: (id: string, note: string) => Promise<void>, note: string) => {
@@ -167,7 +159,7 @@ function WithdrawRow({ withdraw, userNameMap, onApprove, onReject }: {
                 {userNameMap[withdraw.userId] ?? withdraw.userId}
               </span>
             </div>
-            <Badge variant={variant} className="text-xs">{label}</Badge>
+            <StatusBadge registry={WITHDRAW_STATUS_META} value={withdraw.status} showIcon={false} className="text-xs" />
             <Badge variant="outline" className="text-xs">Rút tiền</Badge>
           </div>
           <div className="text-lg font-bold text-foreground">

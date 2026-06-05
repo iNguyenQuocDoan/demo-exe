@@ -7,16 +7,15 @@ import { ArrowLeft, Calendar, Flag, MessageSquare, Monitor } from "lucide-react"
 import { getTutorNameMap } from "@/api/referenceApi";
 import { completeBooking, getBookingById } from "@/api/bookingApi";
 import { buildConvId } from "@/api/chatApi";
-import { BOOKING_STATUS_META } from "@/lib/bookingStatus";
+import { bookingStatusMeta } from "@/lib/bookingStatus";
 import { useAuthStore } from "@/store/useAuthStore";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/shared/StatusBadge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BookingGoalCard } from "@/components/booking/BookingGoalCard";
 import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
 import { BookingReportsList } from "@/components/booking/BookingReportsList";
 import { ReviewCardLoader } from "@/components/booking/ReviewCard";
-import { SessionFeedbackCard } from "@/components/booking/SessionFeedbackCard";
 import type { Booking } from "@/types";
 
 export default function ParentBookingDetailPage() {
@@ -48,8 +47,13 @@ export default function ParentBookingDetailPage() {
         return;
       }
       setBooking(data);
-      const map = await getTutorNameMap([data.tutorId]);
-      setTutorName(map[data.tutorId] ?? data.tutorId);
+      // BE history chỉ trả tutorName (không có tutorId) → ưu tiên dùng tên đó.
+      if (data.tutorName) {
+        setTutorName(data.tutorName);
+      } else {
+        const map = await getTutorNameMap([data.tutorId]);
+        setTutorName(map[data.tutorId] ?? data.tutorId);
+      }
     } finally {
       setLoading(false);
     }
@@ -106,7 +110,7 @@ export default function ParentBookingDetailPage() {
     );
   }
 
-  const statusMeta = BOOKING_STATUS_META[booking.status];
+  const statusMeta = bookingStatusMeta(booking.status, "parent");
   const teachingMode = "Trực tiếp";
   // Phụ huynh xác nhận hoàn thành khi đang học, hoặc khi gia sư đã báo xong trước.
   const canComplete = booking.status === "InProgress" || booking.status === "TutorCompleted";
@@ -143,7 +147,7 @@ export default function ParentBookingDetailPage() {
                   Chi tiết booking · <span className="text-muted-foreground font-normal text-base">Gia sư {tutorName}</span>
                 </h1>
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge variant={statusMeta.variant} className="text-xs">{statusMeta.label}</Badge>
+                  <StatusBadge meta={statusMeta} className="text-xs" />
                   <span className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs text-muted-foreground">
                     <Monitor className="h-3 w-3" />
                     {teachingMode}
@@ -197,14 +201,11 @@ export default function ParentBookingDetailPage() {
             <div className="space-y-3">
               <BookingReportsList bookingId={booking.id} refreshKey={reportRefreshKey} />
               {booking.status === "Completed" && (
-                <>
-                  <ReviewCardLoader
-                    bookingId={booking.id}
-                    tutorId={booking.tutorId}
-                    tutorName={tutorName}
-                  />
-                  <SessionFeedbackCard booking={booking} />
-                </>
+                <ReviewCardLoader
+                  bookingId={booking.id}
+                  tutorId={booking.tutorId}
+                  tutorName={tutorName}
+                />
               )}
             </div>
           </div>

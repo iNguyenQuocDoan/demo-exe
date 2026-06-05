@@ -29,10 +29,12 @@ interface BeDisputeResponse {
   createdAt?: string;
 }
 
+// BE DisputeStatus: PENDING · RESOLVED · REJECTED (không có "Reviewing"/"Dismissed").
 function mapBeStatus(s: string | undefined): DisputeReportStatus {
   const v = (s ?? "").toUpperCase();
   if (v.includes("RESOLV")) return "Resolved";
-  if (v.includes("DISMISS")) return "Dismissed";
+  // BE "REJECTED" = khiếu nại không hợp lệ → Dismissed (trước đây rơi nhầm về Pending)
+  if (v.includes("REJECT") || v.includes("DISMISS")) return "Dismissed";
   if (v.includes("REVIEW")) return "Reviewing";
   return "Pending";
 }
