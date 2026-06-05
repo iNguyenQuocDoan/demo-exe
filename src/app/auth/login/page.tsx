@@ -25,7 +25,7 @@ const LOGIN_HERO_IMAGE =
 
 const LOGIN_HIGHLIGHTS = [
   { icon: Shield, text: "Ví bảo đảm — tiền chỉ chuyển khi buổi học hoàn thành" },
-  { icon: CheckCircle2, text: "1.200+ gia sư xác thực, đánh giá thực tế" },
+  { icon: CheckCircle2, text: "Gia sư xác thực, đánh giá minh bạch" },
   { icon: Sparkles, text: "Đặt lịch nhanh, hủy hoàn tiền tự động" },
 ];
 
@@ -150,21 +150,21 @@ function LoginForm() {
               </ul>
             </div>
 
-            <div className="flex items-center gap-5 text-xs text-white/60">
-              <div>
-                <div className="text-lg font-bold text-white">58.000+</div>
-                <div className="uppercase tracking-wider">Buổi học</div>
-              </div>
-              <div className="h-8 w-px bg-white/15" />
-              <div>
-                <div className="text-lg font-bold text-white">4.9/5</div>
-                <div className="uppercase tracking-wider">Đánh giá</div>
-              </div>
-              <div className="h-8 w-px bg-white/15" />
-              <div>
-                <div className="text-lg font-bold text-white">1.200+</div>
-                <div className="uppercase tracking-wider">Gia sư</div>
-              </div>
+            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/70">
+              <span className="flex items-center gap-1.5">
+                <Shield className="h-3.5 w-3.5 text-amber-300" />
+                Bảo mật thông tin
+              </span>
+              <span className="h-4 w-px bg-white/15" />
+              <span className="flex items-center gap-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-amber-300" />
+                Gia sư xác thực
+              </span>
+              <span className="h-4 w-px bg-white/15" />
+              <span className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
+                Hoàn tiền khi huỷ
+              </span>
             </div>
           </div>
         </aside>

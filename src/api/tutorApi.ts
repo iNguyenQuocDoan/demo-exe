@@ -143,23 +143,24 @@ async function clientFilterTutors(
 export async function getTutors(
   filter?: Partial<TutorFilter>,
 ): Promise<TutorProfile[]> {
-  try {
-    if (isSearch(filter)) {
-      try {
-        const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
-          "/tutors/search",
-          { params: { page: 1, size: 100, ...searchParams(filter) } },
-        );
-        return (data.data ?? []).map(mapTutor);
-      } catch {
-        // /tutors/search lỗi (Render) → lấy danh sách đầy đủ rồi lọc client-side.
-        return clientFilterTutors(await fetchAllTutors(), filter);
-      }
+  // Lưu ý: KHÔNG nuốt lỗi máy chủ ở đây. Nếu BE trả 500 (vd /api/tutors/tutors
+  // đang lỗi), ta để lỗi nổi lên để trang /tutors hiện đúng trạng thái "Không thể
+  // kết nối máy chủ + Thử lại", thay vì hiểu nhầm thành "không có gia sư nào".
+  // BE trả 200 với data rỗng vẫn cho ra [] (đúng nghĩa "không có kết quả").
+  if (isSearch(filter)) {
+    try {
+      const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+        "/tutors/search",
+        { params: { page: 1, size: 100, ...searchParams(filter) } },
+      );
+      return (data.data ?? []).map(mapTutor);
+    } catch {
+      // /tutors/search lỗi (Render) → thử danh sách đầy đủ rồi lọc client-side.
+      // Nếu danh sách đầy đủ cũng lỗi → ném ra để trang hiện trạng thái lỗi.
+      return clientFilterTutors(await fetchAllTutors(), filter);
     }
-    return await fetchAllTutors(100);
-  } catch {
-    return [];
   }
+  return await fetchAllTutors(100);
 }
 
 export async function getTutorsPaginated(

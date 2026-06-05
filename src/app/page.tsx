@@ -3,7 +3,6 @@ import Link from "next/link";
 import {
   ArrowRight,
   BookMarked,
-  BookOpen,
   Calculator,
   CheckCircle2,
   Clock,
@@ -13,11 +12,9 @@ import {
   Languages,
   Landmark,
   Leaf,
-  Quote,
   Search,
   Shield,
   Star,
-  TrendingUp,
   Users,
   Wallet,
   Zap,
@@ -72,11 +69,12 @@ const FLOATING_SHAPES: { top: string; left: string; size: number; color: string 
   { top: "15%", left: "75%", size: 4, color: "oklch(0.85 0.18 70 / 0.45)" },
 ];
 
-const STATS = [
-  { label: "buổi học hoàn thành", value: "58.000+", num: "58000", suffix: "+", format: "dot", icon: BookOpen, color: "text-primary", bg: "bg-primary/10" },
-  { label: "gia sư xác thực", value: "1.200+", num: "1200", suffix: "+", format: "dot", icon: GraduationCap, color: "text-success", bg: "bg-success/10" },
-  { label: "đánh giá trung bình", value: "4.8/5", num: "4.8", suffix: "/5", decimals: "1", icon: Star, color: "text-warning", bg: "bg-warning/10" },
-  { label: "hỗ trợ khi có vấn đề", value: "24h", num: "24", suffix: "h", icon: Shield, color: "text-accent", bg: "bg-accent/10" },
+/* Giá trị cốt lõi (định tính — không phải số liệu live) */
+const HIGHLIGHTS = [
+  { title: "Gia sư đã xác minh", desc: "Hồ sơ, bằng cấp và kinh nghiệm được kiểm duyệt trước khi lên sàn.", icon: GraduationCap, color: "text-primary", bg: "bg-primary/10" },
+  { title: "Lịch trống thực tế", desc: "Xem đúng khung giờ gia sư còn rảnh và đặt buổi học phù hợp.", icon: Clock, color: "text-success", bg: "bg-success/10" },
+  { title: "Thanh toán bảo chứng", desc: "Tiền giữ trong ví, chỉ chuyển cho gia sư sau khi buổi học hoàn thành.", icon: Shield, color: "text-warning", bg: "bg-warning/10" },
+  { title: "Đánh giá minh bạch", desc: "Phản hồi từ phụ huynh gắn với buổi học thật, không chỉnh sửa.", icon: Star, color: "text-accent", bg: "bg-accent/10" },
 ];
 
 const HOW_IT_WORKS = [
@@ -112,22 +110,22 @@ const HOW_IT_WORKS = [
   },
 ];
 
-const SUBJECTS: { id: string; label: string; count: string; icon: LucideIcon; color: string; bg: string; image: string }[] = [
-  { id: "math", label: "Toán học", count: "380+", icon: Calculator, color: "text-primary", bg: "bg-primary/8",
+const SUBJECTS: { id: string; label: string; icon: LucideIcon; color: string; bg: string; image: string }[] = [
+  { id: "math", label: "Toán học", icon: Calculator, color: "text-primary", bg: "bg-primary/8",
     image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80&auto=format&fit=crop" },
-  { id: "english", label: "Tiếng Anh", count: "290+", icon: Languages, color: "text-sky-500", bg: "bg-sky-500/8",
+  { id: "english", label: "Tiếng Anh", icon: Languages, color: "text-sky-500", bg: "bg-sky-500/8",
     image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&q=80&auto=format&fit=crop" },
-  { id: "physics", label: "Vật lý", count: "180+", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/8",
+  { id: "physics", label: "Vật lý", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/8",
     image: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=600&q=80&auto=format&fit=crop" },
-  { id: "chem", label: "Hóa học", count: "150+", icon: FlaskConical, color: "text-purple-500", bg: "bg-purple-500/8",
+  { id: "chem", label: "Hóa học", icon: FlaskConical, color: "text-purple-500", bg: "bg-purple-500/8",
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=600&q=80&auto=format&fit=crop" },
-  { id: "bio", label: "Sinh học", count: "110+", icon: Leaf, color: "text-emerald-500", bg: "bg-emerald-500/8",
+  { id: "bio", label: "Sinh học", icon: Leaf, color: "text-emerald-500", bg: "bg-emerald-500/8",
     image: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=600&q=80&auto=format&fit=crop" },
-  { id: "lit", label: "Ngữ văn", count: "120+", icon: BookMarked, color: "text-rose-500", bg: "bg-rose-500/8",
+  { id: "lit", label: "Ngữ văn", icon: BookMarked, color: "text-rose-500", bg: "bg-rose-500/8",
     image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&q=80&auto=format&fit=crop" },
-  { id: "hist", label: "Lịch sử", count: "85+", icon: Landmark, color: "text-orange-500", bg: "bg-orange-500/8",
+  { id: "hist", label: "Lịch sử", icon: Landmark, color: "text-orange-500", bg: "bg-orange-500/8",
     image: "https://images.unsplash.com/photo-1461360228754-6e81c478b882?w=600&q=80&auto=format&fit=crop" },
-  { id: "it", label: "Lập trình", count: "95+", icon: Code2, color: "text-indigo-500", bg: "bg-indigo-500/8",
+  { id: "it", label: "Lập trình", icon: Code2, color: "text-indigo-500", bg: "bg-indigo-500/8",
     image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80&auto=format&fit=crop" },
 ];
 
@@ -161,27 +159,22 @@ const PLATFORM_FEATURES = [
   },
 ];
 
-const TESTIMONIALS = [
+/* Cam kết nền tảng (định tính — không phải lời chứng thực bịa) */
+const COMMITMENTS = [
   {
-    name: "Chị Nguyễn Mai Anh",
-    role: "Phụ huynh tại Q.1, TP.HCM",
-    avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&q=80&auto=format&fit=crop&crop=faces",
-    rating: 5,
-    quote: "Con tôi học Toán cùng cô Mai trên LIFLOW được 3 tháng — điểm số tăng từ 6 lên 8.5. Lịch học linh hoạt, đặt buổi qua app rất tiện.",
+    icon: GraduationCap,
+    title: "Kiểm duyệt gia sư nghiêm ngặt",
+    desc: "Mọi gia sư phải qua xét duyệt hồ sơ và xác minh bằng cấp trước khi được nhận học viên trên LIFLOW.",
   },
   {
-    name: "Anh Trần Văn Hùng",
-    role: "Phụ huynh tại Hà Nội",
-    avatar: "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=200&q=80&auto=format&fit=crop&crop=faces",
-    rating: 5,
-    quote: "Ban đầu hơi e ngại vì online, nhưng quy trình kiểm duyệt gia sư của LIFLOW rất kỹ. Ví bảo đảm giúp tôi yên tâm khi thanh toán.",
+    icon: Shield,
+    title: "Thanh toán được bảo vệ",
+    desc: "Học phí giữ trong ví LIFLOW và chỉ chuyển cho gia sư sau khi buổi học hoàn thành. Huỷ lịch được hoàn tiền tự động.",
   },
   {
-    name: "Chị Lê Thu Hà",
-    role: "Phụ huynh tại Đà Nẵng",
-    avatar: "https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=200&q=80&auto=format&fit=crop&crop=faces",
-    rating: 5,
-    quote: "Đặt được gia sư Tiếng Anh xịn cho con chỉ trong 1 ngày. Có thể xem hồ sơ, đánh giá thực tế — không phải đoán mò như trước.",
+    icon: Star,
+    title: "Đánh giá minh bạch",
+    desc: "Đánh giá chỉ đến từ phụ huynh đã hoàn thành buổi học thật, gắn với hồ sơ gia sư và không bị chỉnh sửa.",
   },
 ];
 
@@ -262,8 +255,8 @@ export default function HomePage() {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-300" />
               </span>
-              <TrendingUp className="h-3.5 w-3.5 text-amber-300" />
-              58.000+ buổi học đã hoàn thành
+              <Shield className="h-3.5 w-3.5 text-amber-300" />
+              Nền tảng kết nối gia sư đã xác minh
             </div>
 
             <HeroHeadline />
@@ -366,15 +359,14 @@ export default function HomePage() {
               <div className="hero-stat-card hero-stat-card-delay absolute top-4 -right-3 z-20 sm:top-5 sm:-right-4 lg:top-6 lg:-right-5">
                 <div className="flex items-center gap-3">
                   <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-amber-500 shadow-sm shadow-amber-500/40">
-                    <Star className="h-5 w-5 fill-white text-white" />
+                    <Shield className="h-5 w-5 text-white" />
                   </div>
                   <div>
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-xl font-extrabold leading-none text-slate-900">4.9</span>
-                      <span className="text-xs font-semibold text-slate-500">/5</span>
+                    <div className="text-sm font-bold leading-tight text-slate-900">
+                      Ví bảo đảm
                     </div>
-                    <div className="mt-0.5 text-[11px] font-medium uppercase tracking-wide text-slate-500">
-                      4.500+ phụ huynh
+                    <div className="mt-0.5 text-[11px] font-medium text-slate-500">
+                      Giữ tiền đến khi học xong
                     </div>
                   </div>
                 </div>
@@ -382,26 +374,15 @@ export default function HomePage() {
 
               <div className="hero-stat-card absolute -bottom-4 -left-3 z-20 sm:-bottom-5 sm:-left-5 lg:-bottom-6 lg:-left-6">
                 <div className="flex items-center gap-3">
-                  <div className="flex -space-x-2 shrink-0">
-                    {["AN", "MA", "HL"].map((seed, i) => (
-                      <div
-                        key={seed}
-                        className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white text-[11px] font-bold text-white shadow-sm"
-                        style={{ background: `oklch(${0.5 + i * 0.05} 0.16 ${245 + i * 22})` }}
-                      >
-                        {seed}
-                      </div>
-                    ))}
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-white bg-slate-100 text-[10px] font-bold text-slate-600 shadow-sm">
-                      +
-                    </div>
+                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80 shadow-sm shadow-primary/30">
+                    <GraduationCap className="h-5 w-5 text-white" />
                   </div>
                   <div>
                     <div className="text-sm font-bold leading-tight text-slate-900">
-                      +120 gia sư mới
+                      Gia sư xác minh
                     </div>
                     <div className="mt-0.5 text-[11px] font-medium text-slate-500">
-                      đã qua kiểm duyệt tháng này
+                      Hồ sơ &amp; bằng cấp được kiểm duyệt
                     </div>
                   </div>
                 </div>
@@ -425,26 +406,18 @@ export default function HomePage() {
         />
         <div className="site-container relative max-w-[1280px] py-7 lg:py-8" style={{ zIndex: 1 }}>
           <StaggerGroup className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-            {STATS.map(({ label, value, num, suffix, format, decimals, icon: Icon, color, bg }) => (
-              <RevealItem key={label}>
+            {HIGHLIGHTS.map(({ title, desc, icon: Icon, color, bg }) => (
+              <RevealItem key={title}>
                 <TiltedCard
                   maxTilt={6}
                   scale={1.03}
-                  className="group rounded-2xl border border-border/70 bg-card/90 p-4 text-left shadow-sm shadow-slate-950/3 hover:border-primary/30 hover:shadow-lg hover:bg-card cursor-default"
+                  className="group h-full rounded-2xl border border-border/70 bg-card/90 p-4 text-left shadow-sm shadow-slate-950/3 hover:border-primary/30 hover:shadow-lg hover:bg-card cursor-default"
                 >
                   <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${bg} transition-all duration-300 group-hover:scale-110 group-hover:rotate-6`}>
-                    <Icon className={`h-4.5 w-4.5 ${color} transition-transform duration-300`} style={{ width: "1.125rem", height: "1.125rem" }} />
+                    <Icon className={`${color} transition-transform duration-300`} style={{ width: "1.125rem", height: "1.125rem" }} />
                   </div>
-                  <div
-                    className={`ha-stat-num text-2xl font-bold leading-none sm:text-3xl ${color}`}
-                    data-value={num}
-                    data-suffix={suffix}
-                    data-format={format}
-                    data-decimals={decimals}
-                  >
-                    {value}
-                  </div>
-                  <div className="mt-2 text-xs font-semibold uppercase leading-tight text-muted-foreground transition-colors duration-300 group-hover:text-foreground">{label}</div>
+                  <div className="text-sm font-bold leading-tight text-foreground">{title}</div>
+                  <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground">{desc}</p>
                 </TiltedCard>
               </RevealItem>
             ))}
@@ -547,7 +520,6 @@ export default function HomePage() {
             subjects={SUBJECTS.map((s) => ({
               id: s.id,
               label: s.label,
-              count: s.count,
               image: s.image,
             }))}
           />
@@ -625,7 +597,7 @@ export default function HomePage() {
           {/* Bento metrics — with decorative imagery */}
           <StaggerGroup className="grid grid-cols-1 gap-4 lg:grid-cols-12">
 
-            {/* ── 96% card ── */}
+            {/* ── Payment-protection card ── */}
             <RevealItem className="lg:col-span-7 relative rounded-2xl border border-primary/15 bg-linear-to-br from-primary/8 via-primary/3 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
               {/* Decorative image — right side, heavily masked + tinted to stay subtle */}
               <div className="absolute right-0 top-0 bottom-0 w-1/2 hidden md:block pointer-events-none overflow-hidden">
@@ -654,29 +626,20 @@ export default function HomePage() {
               <div className="absolute bottom-12 right-1/3 h-1.5 w-1.5 rounded-full bg-amber-400/50 animate-pulse hidden md:block" style={{ animationDelay: "0.8s" }} />
 
               {/* Content */}
-              <div className="relative space-y-3 max-w-[24rem]">
-                <div
-                  className="ha-bento-num font-heading text-6xl lg:text-7xl font-bold tracking-tight text-gradient-primary leading-none"
-                  style={{ letterSpacing: "-0.05em" }}
-                  data-value="96"
-                  data-suffix="%"
-                >
-                  96%
+              <div className="relative space-y-3 max-w-[26rem]">
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
+                  <Shield className="h-7 w-7 text-primary" />
                 </div>
-                <p className="text-base lg:text-lg font-semibold text-foreground">
-                  Phụ huynh hài lòng sau buổi học đầu tiên
+                <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                  Thanh toán chỉ chuyển khi buổi học hoàn thành
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-[34ch]">
-                  Đánh giá từ hàng nghìn phụ huynh sau khi gia sư hoàn thành buổi dạy thực tế.
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[40ch]">
+                  Tiền của bạn được giữ an toàn trong ví LIFLOW. Nếu gia sư huỷ lịch, hệ thống
+                  hoàn tiền tự động — bạn không phải lo mất phí.
                 </p>
-                {/* Mini rating row */}
-                <div className="flex items-center gap-2 pt-1">
-                  <div className="flex">
-                    {[1, 2, 3, 4, 5].map((i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
-                  </div>
-                  <span className="text-xs text-muted-foreground font-medium">4.9 / 5 từ 4.500+ đánh giá</span>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-medium text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Ví giữ tiền</span>
+                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Hoàn tiền khi huỷ</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-1.5 btn-shimmer mt-3" asChild>
                   <Link href="/tutors">Tìm gia sư ngay <ArrowRight className="h-3.5 w-3.5" /></Link>
@@ -684,7 +647,7 @@ export default function HomePage() {
               </div>
             </RevealItem>
 
-            {/* ── 2.400+ card ── */}
+            {/* ── Tutor-vetting card ── */}
             <RevealItem className="lg:col-span-5 relative rounded-2xl border border-amber-400/25 bg-linear-to-br from-amber-400/10 via-amber-400/4 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
               {/* Decorative cluster — abstract amber glow + verified badge motif */}
               <div className="absolute -top-10 -right-10 w-48 h-48 hidden md:block pointer-events-none">
@@ -703,36 +666,18 @@ export default function HomePage() {
 
               {/* Content */}
               <div className="relative space-y-3">
-                <div
-                  className="ha-bento-num font-heading text-6xl lg:text-7xl font-bold tracking-tight text-gradient-accent leading-none"
-                  style={{ letterSpacing: "-0.05em" }}
-                  data-value="2400"
-                  data-suffix="+"
-                  data-format="dot"
-                >
-                  2.400+
+                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/15">
+                  <GraduationCap className="h-7 w-7 text-amber-500" />
                 </div>
-                <p className="text-base lg:text-lg font-semibold text-foreground">
-                  Gia sư xác thực sẵn sàng dạy học
+                <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                  Gia sư qua kiểm duyệt kỹ lưỡng
                 </p>
-                <p className="text-sm text-muted-foreground leading-relaxed max-w-[32ch]">
-                  Đã qua kiểm duyệt hồ sơ, bằng cấp và đánh giá thực tế.
+                <p className="text-sm text-muted-foreground leading-relaxed max-w-[34ch]">
+                  Mỗi hồ sơ được xét duyệt bằng cấp và kinh nghiệm trước khi nhận học viên.
                 </p>
-                {/* Mini avatar stack */}
-                <div className="flex items-center gap-2 pt-1">
-                  <div className="flex -space-x-2">
-                    {[
-                      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&q=80&auto=format&fit=crop&crop=faces",
-                      "https://images.unsplash.com/photo-1599566150163-29194dcaad36?w=80&q=80&auto=format&fit=crop&crop=faces",
-                      "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&q=80&auto=format&fit=crop&crop=faces",
-                      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&q=80&auto=format&fit=crop&crop=faces",
-                    ].map((src, i) => (
-                      <div key={i} className="relative h-6 w-6 rounded-full overflow-hidden border-2 border-card ring-1 ring-amber-400/20">
-                        <Image src={src} alt="" fill sizes="24px" className="object-cover" />
-                      </div>
-                    ))}
-                  </div>
-                  <span className="text-xs text-muted-foreground font-medium">+120 mới mỗi tháng</span>
+                <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-medium text-muted-foreground">
+                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-amber-500" /> Xác minh hồ sơ</span>
+                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-amber-500" /> Đánh giá thực tế</span>
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-1.5 btn-shimmer mt-3" asChild>
                   <Link href="/apply-tutor">Trở thành gia sư <ArrowRight className="h-3.5 w-3.5" /></Link>
@@ -756,79 +701,54 @@ export default function HomePage() {
         <div className="site-container relative" style={{ zIndex: 1 }}>
           <div className="text-center mb-10 space-y-3">
             <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
-              Đánh giá thực tế
+              Cam kết của chúng tôi
             </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
-              Phụ huynh nói gì về{" "}
-              <span className="text-gradient-primary">LIFLOW</span>
+              LIFLOW bảo vệ{" "}
+              <span className="text-gradient-primary">trải nghiệm học</span> của bạn
             </h2>
             <p className="text-muted-foreground text-sm max-w-[52ch] mx-auto leading-relaxed">
-              Hơn 4.500 phụ huynh đã đánh giá 5 sao sau khi đặt buổi học cùng gia sư trên LIFLOW.
+              Ba nguyên tắc nền tảng giúp phụ huynh yên tâm khi tìm và đặt gia sư.
             </p>
           </div>
 
           <StaggerGroup className="grid grid-cols-1 md:grid-cols-3 gap-4 lg:gap-5">
-            {TESTIMONIALS.map((t) => (
-              <RevealItem key={t.name}>
+            {COMMITMENTS.map(({ icon: Icon, title, desc }) => (
+              <RevealItem key={title}>
                 <TiltedCard
                   maxTilt={7}
                   scale={1.025}
-                  className="relative rounded-2xl border border-border bg-card p-6 group hover:shadow-xl hover:border-primary/20"
+                  className="relative h-full rounded-2xl border border-border bg-card p-6 group hover:shadow-xl hover:border-primary/20"
                 >
-                  <Quote
-                    className="absolute top-4 right-4 h-8 w-8 text-primary/15 group-hover:text-primary/30 transition-all duration-300 group-hover:scale-110"
-                    strokeWidth={2.5}
-                  />
-
-                  <div className="flex items-center gap-0.5 mb-3">
-                    {Array.from({ length: t.rating }).map((_, i) => (
-                      <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                    ))}
+                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 transition-transform duration-300 group-hover:scale-110">
+                    <Icon className="h-6 w-6 text-primary" />
                   </div>
-
-                  <p className="text-sm text-foreground leading-relaxed mb-5">
-                    &ldquo;{t.quote}&rdquo;
+                  <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                    {title}
+                  </h3>
+                  <p className="mt-2 text-sm text-muted-foreground leading-relaxed">
+                    {desc}
                   </p>
-
-                  <div className="flex items-center gap-3 pt-4 border-t border-border">
-                    <div className="relative h-10 w-10 rounded-full overflow-hidden ring-2 ring-primary/15 shrink-0 group-hover:ring-primary/40 transition-all duration-300">
-                      <Image
-                        src={t.avatar}
-                        alt={t.name}
-                        fill
-                        sizes="40px"
-                        className="object-cover"
-                      />
-                    </div>
-                    <div className="min-w-0">
-                      <div className="text-sm font-semibold text-foreground truncate">{t.name}</div>
-                      <div className="text-xs text-muted-foreground truncate">{t.role}</div>
-                    </div>
-                  </div>
                 </TiltedCard>
               </RevealItem>
             ))}
           </StaggerGroup>
 
-          {/* Trust strip */}
+          {/* Trust strip — định tính, không số liệu */}
           <div className="mt-10 pt-6 border-t border-border flex flex-wrap items-center justify-center gap-x-8 gap-y-3 text-xs text-muted-foreground">
             <div className="flex items-center gap-2">
-              <div className="flex items-center">
-                {[1, 2, 3, 4, 5].map((i) => (
-                  <Star key={i} className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                ))}
-              </div>
-              <span><strong className="text-foreground">4.9/5</strong> trên 4.500+ đánh giá</span>
+              <GraduationCap className="h-3.5 w-3.5 text-primary" />
+              <span className="text-foreground font-medium">Gia sư được kiểm duyệt</span>
             </div>
             <span className="hidden sm:inline-block w-px h-4 bg-border" />
             <div className="flex items-center gap-2">
               <Shield className="h-3.5 w-3.5 text-primary" />
-              <span><strong className="text-foreground">100%</strong> gia sư xác thực</span>
+              <span className="text-foreground font-medium">Thanh toán bảo chứng</span>
             </div>
             <span className="hidden sm:inline-block w-px h-4 bg-border" />
             <div className="flex items-center gap-2">
               <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
-              <span><strong className="text-foreground">58.000+</strong> buổi học hoàn thành</span>
+              <span className="text-foreground font-medium">Hoàn tiền khi huỷ lịch</span>
             </div>
           </div>
         </div>

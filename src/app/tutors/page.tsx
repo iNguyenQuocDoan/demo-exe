@@ -38,10 +38,10 @@ const TRUST_SIGNALS = [
   { label: "Hỗ trợ phụ huynh", icon: Users },
 ];
 
-const HERO_STATS = [
-  { value: "2.400+", label: "gia sư đã duyệt", icon: GraduationCap },
-  { value: "4.9/5", label: "điểm hài lòng", icon: Star },
-  { value: "15+", label: "khu vực hỗ trợ", icon: MapPin },
+const HERO_POINTS = [
+  { title: "Hồ sơ đã xác minh", desc: "Bằng cấp & kinh nghiệm được kiểm duyệt", icon: GraduationCap },
+  { title: "Đánh giá từ buổi học thật", desc: "Phản hồi gắn với booking đã hoàn thành", icon: Star },
+  { title: "Lọc theo khu vực & môn", desc: "Tìm gia sư phù hợp với gia đình bạn", icon: MapPin },
 ];
 
 export default function TutorsPage() {
@@ -221,14 +221,14 @@ export default function TutorsPage() {
                 </div>
               </div>
               <div className="grid gap-3">
-                {HERO_STATS.map(({ value, label, icon: Icon }) => (
-                  <div key={label} className="flex items-center gap-3 rounded-xl border border-border/80 bg-card px-3 py-3">
+                {HERO_POINTS.map(({ title, desc, icon: Icon }) => (
+                  <div key={title} className="flex items-center gap-3 rounded-xl border border-border/80 bg-card px-3 py-3">
                     <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/8">
                       <Icon className="h-4 w-4 text-primary" />
                     </div>
                     <div>
-                      <div className="text-lg font-bold leading-none text-foreground">{value}</div>
-                      <div className="mt-1 text-xs text-muted-foreground">{label}</div>
+                      <div className="text-sm font-bold leading-tight text-foreground">{title}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{desc}</div>
                     </div>
                   </div>
                 ))}

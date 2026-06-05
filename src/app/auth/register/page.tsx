@@ -27,7 +27,7 @@ const REGISTER_HERO_IMAGE =
 const REGISTER_BENEFITS = [
   {
     icon: Users,
-    title: "Cộng đồng 1.200+ gia sư",
+    title: "Cộng đồng gia sư xác thực",
     text: "Tìm gia sư theo môn, khu vực và lịch trống thực tế.",
   },
   {
