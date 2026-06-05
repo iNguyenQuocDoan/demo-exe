@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChangePasswordCard } from "@/components/shared/ChangePasswordCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { City, District, Subject, TeachingMode, TutorProfile } from "@/types";
 
@@ -463,6 +464,9 @@ export default function TutorProfilePage() {
               Lưu thay đổi
             </Button>
           </div>
+
+          {/* Đổi mật khẩu */}
+          <ChangePasswordCard />
         </div>
       </section>
     </main>

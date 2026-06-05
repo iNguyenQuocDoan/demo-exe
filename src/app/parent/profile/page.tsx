@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowLeft, Save, User, Phone, MapPin, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChangePasswordCard } from "@/components/shared/ChangePasswordCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import { updateSelf } from "@/api/usersApi";
 
@@ -128,6 +129,8 @@ export default function ParentProfilePage() {
             </Button>
           </CardContent>
         </Card>
+
+        <ChangePasswordCard />
 
       </div>
     </main>
