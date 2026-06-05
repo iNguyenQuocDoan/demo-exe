@@ -58,15 +58,37 @@ interface BeDistrict {
   province_code?: number;
 }
 
+// Fallback khi `/reference/provinces` fail/timeout (payload lớn + Render chậm).
+// id = mã tỉnh GSO (khớp `String(p.code)` của BE) → getDistricts vẫn gọi đúng.
+const STATIC_CITIES: City[] = [
+  { id: "1", name: "Hà Nội" },
+  { id: "79", name: "TP. Hồ Chí Minh" },
+  { id: "48", name: "Đà Nẵng" },
+  { id: "31", name: "Hải Phòng" },
+  { id: "92", name: "Cần Thơ" },
+  { id: "74", name: "Bình Dương" },
+  { id: "75", name: "Đồng Nai" },
+  { id: "56", name: "Khánh Hòa" },
+  { id: "77", name: "Bà Rịa - Vũng Tàu" },
+  { id: "46", name: "Thừa Thiên Huế" },
+  { id: "40", name: "Nghệ An" },
+  { id: "68", name: "Lâm Đồng" },
+];
+
 export async function getCities(force = false): Promise<City[]> {
   if (!force && citiesCache) return citiesCache;
   try {
-    const { data } = await realApiClient.get<BeProvince[]>("/reference/provinces");
-    citiesCache = (data ?? []).map((p) => ({ id: String(p.code), name: p.name }));
+    // Timeout dài hơn mặc định: payload tỉnh/huyện lớn, Render free-tier chậm.
+    const { data } = await realApiClient.get<BeProvince[]>("/reference/provinces", {
+      timeout: 30000,
+    });
+    const mapped = (data ?? []).map((p) => ({ id: String(p.code), name: p.name }));
+    // Nếu BE trả rỗng/hỏng → dùng fallback tĩnh để dropdown không trống.
+    citiesCache = mapped.length > 0 ? mapped : STATIC_CITIES;
     return citiesCache;
   } catch {
-    citiesCache = [];
-    return citiesCache;
+    // KHÔNG cache fallback (để lần sau thử lại BE thật khi Render hồi).
+    return STATIC_CITIES;
   }
 }
 
