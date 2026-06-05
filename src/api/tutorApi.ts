@@ -107,11 +107,53 @@ function searchParams(filter?: Partial<TutorFilter>): Record<string, string | nu
 }
 
 async function fetchAllTutors(size = 200): Promise<TutorProfile[]> {
-  const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
-    "/tutors/tutors",
-    { params: { page: 1, size } },
+  try {
+    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+      "/tutors/tutors",
+      { params: { page: 1, size } },
+    );
+    return (data.data ?? []).map(mapTutor);
+  } catch {
+    // BE /tutors/tutors trả 500 khi danh sách chứa bản ghi gia sư lỗi (vài record
+    // rác null-field làm sập serialization NGUYÊN trang). Né bằng cách lấy từng
+    // item (size=1): bản ghi nào serialize được thì giữ, bản ghi 500 thì bỏ qua
+    // → /tutors vẫn hiện đủ gia sư hợp lệ thay vì rỗng. Không sửa được BE nên đây
+    // là cách FE chịu lỗi duy nhất.
+    return fetchTutorsPerItem(size);
+  }
+}
+
+// Phân trang size=1 để cô lập bản ghi gia sư lỗi (BE 500 theo từng record xấu).
+async function fetchTutorsPerItem(max: number): Promise<TutorProfile[]> {
+  let first: BePageResponse<BeTutorDetail>;
+  try {
+    first = (
+      await realApiClient.get<BePageResponse<BeTutorDetail>>("/tutors/tutors", {
+        params: { page: 1, size: 1 },
+      })
+    ).data;
+  } catch {
+    return []; // ngay cả 1 item cũng lỗi → coi như không có dữ liệu
+  }
+  const total = Math.min(first.totalElements ?? 0, max);
+  const firstTutor = first.data?.[0];
+  if (total <= 1) return firstTutor ? [mapTutor(firstTutor)] : [];
+
+  // Với size=1, page N = gia sư thứ N. Lấy song song các trang còn lại, nuốt 500.
+  const rest = await Promise.all(
+    Array.from({ length: total - 1 }, (_, i) =>
+      realApiClient
+        .get<BePageResponse<BeTutorDetail>>("/tutors/tutors", {
+          params: { page: i + 2, size: 1 },
+        })
+        .then((r) => r.data.data?.[0])
+        .catch(() => undefined),
+    ),
   );
-  return (data.data ?? []).map(mapTutor);
+
+  return [firstTutor, ...rest]
+    .filter((t): t is BeTutorDetail => Boolean(t))
+    .map(mapTutor);
 }
 
 // Lọc client-side khi `/tutors/search` của BE lỗi (Render hay 500 endpoint search).
