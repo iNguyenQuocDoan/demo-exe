@@ -8,7 +8,11 @@ import { NextRequest } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
-const BE_ORIGIN = process.env.NEXT_PUBLIC_BE_ORIGIN ?? "http://localhost:8080";
+// Mặc định trỏ BE Render đang chạy. Đặt NEXT_PUBLIC_BE_ORIGIN trong .env.local
+// để override (vd http://localhost:8080 khi chạy Spring Boot local). Trước đây
+// default là localhost:8080 → máy nào thiếu env (clone về, .env.local bị gitignore)
+// sẽ ECONNREFUSED → 502 "Bad Gateway (proxy)" ngay tức thì khi login.
+const BE_ORIGIN = process.env.NEXT_PUBLIC_BE_ORIGIN ?? "https://liflow-be.onrender.com";
 
 // Header không được forward (hop-by-hop / sẽ tự tính lại)
 const STRIP_REQ = new Set(["host", "connection", "content-length", "accept-encoding"]);
