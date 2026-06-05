@@ -25,8 +25,21 @@ realApiClient.interceptors.request.use(async (config) => {
 
 realApiClient.interceptors.response.use(
   (res) => res,
-  (err) => {
-    if (err?.response?.status === 401 && typeof window !== "undefined") {
+  async (err) => {
+    const config = err?.config as
+      | (import("axios").InternalAxiosRequestConfig & { __retried?: boolean })
+      | undefined;
+    const status = err?.response?.status as number | undefined;
+    const isGet = (config?.method ?? "get").toLowerCase() === "get";
+    // Render free-tier hay 500/đứt kết nối tạm thời cho endpoint nặng (JOIN) —
+    // retry GET 1 lần (idempotent) khi network-error HOẶC 5xx. Không retry POST/PUT.
+    const retriable = !err.response || (status !== undefined && status >= 500);
+    if (config && isGet && retriable && !config.__retried) {
+      config.__retried = true;
+      await new Promise((r) => setTimeout(r, 600));
+      return realApiClient(config);
+    }
+    if (status === 401 && typeof window !== "undefined") {
       localStorage.removeItem("auth_token");
       localStorage.removeItem("auth_user");
     }

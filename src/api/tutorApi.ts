@@ -1,4 +1,5 @@
 import { realApiClient } from "@/lib/realApiClient";
+import { getSubjectMap } from "@/api/referenceApi";
 import type {
   FreeSlot,
   Review,
@@ -84,38 +85,78 @@ function bePageToFe(
 }
 
 // ── Public API ───────────────────────────────────────────────────────────────
+function isSearch(filter?: Partial<TutorFilter>): boolean {
+  return (
+    !!filter?.subjectId ||
+    !!filter?.cityId ||
+    !!filter?.districtId ||
+    (filter?.minPrice ?? 0) > 0 ||
+    (filter?.maxPrice ?? 0) > 0
+  );
+}
+
+function searchParams(filter?: Partial<TutorFilter>): Record<string, string | number | undefined> {
+  const params: Record<string, string | number | undefined> = {};
+  if (filter?.subjectId) params.subject = filter.subjectId;
+  if (filter?.cityId || filter?.districtId) {
+    params.address = [filter.cityId, filter.districtId].filter(Boolean).join(" ");
+  }
+  if (filter?.minPrice) params.minPrice = filter.minPrice;
+  if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
+  return params;
+}
+
+async function fetchAllTutors(size = 200): Promise<TutorProfile[]> {
+  const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+    "/tutors/tutors",
+    { params: { page: 1, size } },
+  );
+  return (data.data ?? []).map(mapTutor);
+}
+
+// Lọc client-side khi `/tutors/search` của BE lỗi (Render hay 500 endpoint search).
+// Lưu ý: lọc được theo MÔN (id/tên) + KHOẢNG GIÁ; KHÔNG lọc được khu vực vì
+// TutorDetailResponse sau mapTutor không còn city/district.
+async function clientFilterTutors(
+  all: TutorProfile[],
+  filter?: Partial<TutorFilter>,
+): Promise<TutorProfile[]> {
+  if (!filter) return all;
+  let subjectName: string | undefined;
+  if (filter.subjectId) {
+    const map = await getSubjectMap().catch(() => ({} as Record<string, string>));
+    subjectName = map[filter.subjectId];
+  }
+  return all.filter((t) => {
+    if (filter.subjectId) {
+      const hit =
+        t.subjects.includes(filter.subjectId) ||
+        (subjectName ? t.subjects.includes(subjectName) : false);
+      if (!hit) return false;
+    }
+    if (filter.minPrice && t.pricePerHour < filter.minPrice) return false;
+    if (filter.maxPrice && t.pricePerHour > filter.maxPrice) return false;
+    return true;
+  });
+}
+
 export async function getTutors(
   filter?: Partial<TutorFilter>,
 ): Promise<TutorProfile[]> {
   try {
-    // BE phân biệt list vs search: có subject/address/gender/price → /search; else → /tutors/tutors
-    const hasSearch =
-      !!filter?.subjectId ||
-      !!filter?.cityId ||
-      !!filter?.districtId ||
-      (filter?.minPrice ?? 0) > 0 ||
-      (filter?.maxPrice ?? 0) > 0;
-
-    const params: Record<string, string | number | undefined> = {
-      page: 1,
-      size: 100,
-    };
-    let url = "/tutors/tutors";
-
-    if (hasSearch) {
-      url = "/tutors/search";
-      if (filter?.subjectId) params.subject = filter.subjectId;
-      if (filter?.cityId || filter?.districtId) {
-        params.address = [filter.cityId, filter.districtId].filter(Boolean).join(" ");
+    if (isSearch(filter)) {
+      try {
+        const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+          "/tutors/search",
+          { params: { page: 1, size: 100, ...searchParams(filter) } },
+        );
+        return (data.data ?? []).map(mapTutor);
+      } catch {
+        // /tutors/search lỗi (Render) → lấy danh sách đầy đủ rồi lọc client-side.
+        return clientFilterTutors(await fetchAllTutors(), filter);
       }
-      if (filter?.minPrice) params.minPrice = filter.minPrice;
-      if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
     }
-
-    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(url, {
-      params,
-    });
-    return (data.data ?? []).map(mapTutor);
+    return await fetchAllTutors(100);
   } catch {
     return [];
   }
@@ -125,38 +166,40 @@ export async function getTutorsPaginated(
   filter?: Partial<TutorFilter>,
   pagination?: PaginationParams,
 ): Promise<{ tutors: TutorProfile[]; pagination: PaginationMeta }> {
+  const page = pagination?.page ?? 1;
+  const limit = pagination?.limit ?? 10;
   try {
-    const hasSearch =
-      !!filter?.subjectId ||
-      !!filter?.cityId ||
-      !!filter?.districtId ||
-      (filter?.minPrice ?? 0) > 0 ||
-      (filter?.maxPrice ?? 0) > 0;
-
-    const params: Record<string, string | number | undefined> = {
-      page: pagination?.page ?? 1,
-      size: pagination?.limit ?? 10,
-    };
-    let url = "/tutors/tutors";
-
-    if (hasSearch) {
-      url = "/tutors/search";
-      if (filter?.subjectId) params.subject = filter.subjectId;
-      if (filter?.cityId || filter?.districtId) {
-        params.address = [filter.cityId, filter.districtId].filter(Boolean).join(" ");
+    if (isSearch(filter)) {
+      try {
+        const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+          "/tutors/search",
+          { params: { page, size: limit, ...searchParams(filter) } },
+        );
+        return bePageToFe(data);
+      } catch {
+        // Fallback: lấy toàn bộ, lọc + phân trang client-side.
+        const filtered = await clientFilterTutors(await fetchAllTutors(200), filter);
+        const start = (page - 1) * limit;
+        return {
+          tutors: filtered.slice(start, start + limit),
+          pagination: {
+            page,
+            limit,
+            total: filtered.length,
+            totalPages: Math.max(1, Math.ceil(filtered.length / limit)),
+          },
+        };
       }
-      if (filter?.minPrice) params.minPrice = filter.minPrice;
-      if (filter?.maxPrice) params.maxPrice = filter.maxPrice;
     }
-
-    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(url, {
-      params,
-    });
+    const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
+      "/tutors/tutors",
+      { params: { page, size: limit } },
+    );
     return bePageToFe(data);
   } catch {
     return {
       tutors: [],
-      pagination: { page: 1, limit: pagination?.limit ?? 10, total: 0, totalPages: 0 },
+      pagination: { page: 1, limit, total: 0, totalPages: 0 },
     };
   }
 }
