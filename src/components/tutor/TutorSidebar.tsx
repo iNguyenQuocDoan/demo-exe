@@ -22,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout as firebaseLogout } from "@/api/authApi";
+import { NotificationPanel } from "@/components/shared/NotificationPanel";
 import { cn } from "@/lib/utils";
 
 const NAV_ITEMS = [
@@ -150,15 +151,18 @@ export function TutorSidebar() {
             <span className="text-xs font-normal text-muted-foreground">Gia sư</span>
           </span>
         </Link>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="p-2"
-          onClick={() => setMobileOpen(true)}
-          aria-label="Mở menu"
-        >
-          <Menu className="h-5 w-5" />
-        </Button>
+        <div className="flex items-center gap-1">
+          <NotificationPanel />
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-2"
+            onClick={() => setMobileOpen(true)}
+            aria-label="Mở menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
+        </div>
       </div>
 
       {mobileOpen && (
