@@ -1,5 +1,6 @@
 import { AdminRoute } from "@/components/layout/RouteGuards";
 import { AdminSidebar } from "@/components/admin/AdminSidebar";
+import { DashboardTopbar } from "@/components/layout/DashboardTopbar";
 
 export default function AdminDashboardLayout({
   children,
@@ -14,6 +15,7 @@ export default function AdminDashboardLayout({
           data-scroll-root
           className="flex flex-1 flex-col overflow-auto lg:ml-60"
         >
+          <DashboardTopbar />
           {children}
         </main>
       </div>
