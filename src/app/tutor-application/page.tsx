@@ -1,48 +1,65 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { AlertCircle, CheckCircle2, Clock3, FileText, RefreshCcw, XCircle } from "lucide-react";
-import { getTutorApplication, getTutorApplicationByUserId } from "@/api/tutorApplicationApi";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Clock3,
+  FileText,
+  RefreshCcw,
+  XCircle,
+} from "lucide-react";
+import { getMyTutorProfile, type BeTutorDetail, type TutorVerificationStatus } from "@/api/tutorApi";
 import { getMe } from "@/api/authApi";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { TutorApplicationStatus } from "@/types";
 
-const STATUS_META: Record<TutorApplicationStatus, { title: string; desc: string; icon: typeof Clock3; tone: string }> = {
-  Submitted: {
-    title: "Hồ sơ đã được gửi",
+// Map verificationStatus (backend field) → UI meta
+const STATUS_META: Record<
+  TutorVerificationStatus,
+  {
+    title: string;
+    desc: string;
+    icon: typeof Clock3;
+    tone: string;
+  }
+> = {
+  NOT_VERIFIED: {
+    title: "Chưa xác minh",
+    desc: "Bạn chưa gửi hoặc chưa hoàn thiện hồ sơ đăng ký làm gia sư.",
+    icon: AlertCircle,
+    tone: "text-slate-500",
+  },
+  PENDING: {
+    title: "Hồ sơ đang chờ admin duyệt",
     desc: "Hệ thống đã tiếp nhận hồ sơ của bạn. Admin sẽ xem xét trong 1-3 ngày làm việc.",
     icon: Clock3,
     tone: "text-sky-600",
   },
-  Reviewing: {
-    title: "Đang được xem xét",
-    desc: "Hồ sơ đang trong quá trình kiểm duyệt và đối chiếu thông tin.",
-    icon: FileText,
-    tone: "text-amber-600",
-  },
-  Approved: {
-    title: "Hồ sơ được phê duyệt",
-    desc: "Chúc mừng! Tài khoản của bạn đã có quyền gia sư. Nhấn nút bên dưới để vào dashboard.",
+  APPROVED: {
+    title: "Hồ sơ gia sư đã được duyệt ✓",
+    desc: "Chúc mừng! Hồ sơ của bạn đã được phê duyệt. Bạn có thể hoạt động với tư cách gia sư.",
     icon: CheckCircle2,
     tone: "text-emerald-600",
   },
-  Rejected: {
-    title: "Hồ sơ chưa đạt",
-    desc: "Hồ sơ cần cập nhật lại theo ghi chú admin trước khi gửi lại.",
+  REJECTED: {
+    title: "Hồ sơ bị từ chối",
+    desc: "Hồ sơ của bạn chưa đạt yêu cầu. Xem lý do bên dưới và cập nhật lại hồ sơ.",
     icon: XCircle,
     tone: "text-destructive",
   },
-  ReSubmit: {
-    title: "Cần bổ sung thông tin",
-    desc: "Admin yêu cầu bổ sung tài liệu/dữ liệu để tiếp tục xét duyệt.",
-    icon: RefreshCcw,
-    tone: "text-orange-600",
-  },
+};
+
+// Fallback nếu verificationStatus không thuộc enum
+const UNKNOWN_META = {
+  title: "Chưa có trạng thái hồ sơ",
+  desc: "Hồ sơ chưa được khởi tạo hoặc đang cập nhật.",
+  icon: FileText,
+  tone: "text-muted-foreground",
 };
 
 export default function TutorApplicationStatusPage() {
@@ -50,33 +67,21 @@ export default function TutorApplicationStatusPage() {
   const { user, isLoading, login: storeLogin } = useAuthStore();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [application, setApplication] = useState<Awaited<ReturnType<typeof getTutorApplication>>>(null);
+  const [profile, setProfile] = useState<BeTutorDetail | null>(null);
+
+  const loadProfile = useCallback(async () => {
+    setLoading(true);
+    const data = await getMyTutorProfile();
+    setProfile(data);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     if (isLoading || !user) return;
+    void loadProfile();
+  }, [isLoading, user, loadProfile]);
 
-    let mounted = true;
-    setLoading(true);
-
-    const load = async () => {
-      if (user.tutorApplicationId) {
-        const data = await getTutorApplication(user.tutorApplicationId);
-        if (mounted) setApplication(data);
-      } else {
-        const data = await getTutorApplicationByUserId();
-        if (mounted) setApplication(data);
-      }
-      if (mounted) setLoading(false);
-    };
-
-    void load();
-
-    return () => {
-      mounted = false;
-    };
-  }, [isLoading, user]);
-
-  // When approved: fetch fresh user from backend, update store + cookie, then navigate
+  // Khi APPROVED: fetch user mới từ BE, cập nhật store + cookie, chuyển trang
   const handleEnterTutorDashboard = async () => {
     setRefreshing(true);
     try {
@@ -94,10 +99,6 @@ export default function TutorApplicationStatusPage() {
     }
   };
 
-  const status = useMemo(() => application?.status ?? "Submitted", [application?.status]);
-  const meta = STATUS_META[status];
-  const StatusIcon = meta.icon;
-
   if (isLoading || loading) {
     return (
       <main className="min-h-dvh bg-[var(--bg-app)]">
@@ -111,17 +112,16 @@ export default function TutorApplicationStatusPage() {
     );
   }
 
-
-  return (
-    <main className="min-h-dvh bg-[var(--bg-app)]">
-      <section className="section-space-tight">
-        <div className="site-container max-w-3xl space-y-5">
-          <header className="surface-card p-5 sm:p-6">
-            <h1 className="text-2xl font-bold text-foreground">Trạng thái hồ sơ gia sư</h1>
-            <p className="text-sm text-muted-foreground">Theo dõi quá trình duyệt hồ sơ và cập nhật khi cần.</p>
-          </header>
-
-          {!application ? (
+  // Không có profile → chưa nộp hồ sơ lần nào
+  if (!profile) {
+    return (
+      <main className="min-h-dvh bg-[var(--bg-app)]">
+        <section className="section-space-tight">
+          <div className="site-container max-w-3xl space-y-5">
+            <header className="surface-card p-5 sm:p-6">
+              <h1 className="text-2xl font-bold text-foreground">Trạng thái hồ sơ gia sư</h1>
+              <p className="text-sm text-muted-foreground">Theo dõi quá trình duyệt hồ sơ và cập nhật khi cần.</p>
+            </header>
             <Card className="surface-card">
               <CardContent className="p-8 text-center">
                 <AlertCircle className="mx-auto h-10 w-10 text-muted-foreground/40" />
@@ -132,72 +132,111 @@ export default function TutorApplicationStatusPage() {
                 </Button>
               </CardContent>
             </Card>
-          ) : (
-            <Card className="surface-card">
-              <CardContent className="p-6 sm:p-8">
-                <div className="flex items-start gap-3">
-                  <div className="rounded-xl bg-muted p-3">
-                    <StatusIcon className={`h-6 w-6 ${meta.tone}`} />
-                  </div>
-                  <div>
-                    <h2 className={`text-xl font-bold ${meta.tone}`}>{meta.title}</h2>
-                    <p className="mt-1 text-sm text-muted-foreground">{meta.desc}</p>
-                  </div>
+          </div>
+        </section>
+      </main>
+    );
+  }
+
+  // verificationStatus từ backend
+  const verStatus: TutorVerificationStatus = profile.verificationStatus ?? "NOT_VERIFIED";
+  const meta = STATUS_META[verStatus] ?? UNKNOWN_META;
+  const StatusIcon = meta.icon;
+
+  return (
+    <main className="min-h-dvh bg-[var(--bg-app)]">
+      <section className="section-space-tight">
+        <div className="site-container max-w-3xl space-y-5">
+          <header className="surface-card p-5 sm:p-6">
+            <h1 className="text-2xl font-bold text-foreground">Trạng thái hồ sơ gia sư</h1>
+            <p className="text-sm text-muted-foreground">Theo dõi quá trình duyệt hồ sơ và cập nhật khi cần.</p>
+          </header>
+
+          <Card className="surface-card">
+            <CardContent className="p-6 sm:p-8">
+              {/* Status banner */}
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-muted p-3">
+                  <StatusIcon className={`h-6 w-6 ${meta.tone}`} />
                 </div>
-
-                <div className="mt-6 grid gap-3 rounded-xl border border-border p-4 text-sm sm:grid-cols-2">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Mã hồ sơ</p>
-                    <p className="font-mono text-foreground">{application.id}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Ngày gửi</p>
-                    <p className="text-foreground">{new Date(application.submittedAt).toLocaleString("vi-VN")}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Trạng thái</p>
-                    <p className="text-foreground">{application.status}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Người duyệt</p>
-                    <p className="text-foreground">{application.reviewedBy ?? "Chưa có"}</p>
-                  </div>
+                <div>
+                  <h2 className={`text-xl font-bold ${meta.tone}`}>{meta.title}</h2>
+                  <p className="mt-1 text-sm text-muted-foreground">{meta.desc}</p>
                 </div>
+              </div>
 
-                {application.adminNotes && (
-                  <div className="mt-4 rounded-xl border border-warning/30 bg-warning/5 p-4 text-sm text-foreground">
-                    <p className="font-semibold">Ghi chú admin</p>
-                    <p className="mt-1 text-muted-foreground">{application.adminNotes}</p>
-                  </div>
-                )}
+              {/* Profile info */}
+              <div className="mt-6 grid gap-3 rounded-xl border border-border p-4 text-sm sm:grid-cols-2">
+                <div>
+                  <p className="text-xs text-muted-foreground">Họ tên</p>
+                  <p className="font-medium text-foreground">{profile.fullName ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Email</p>
+                  <p className="text-foreground">{profile.email ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Trạng thái xác minh</p>
+                  <p className={`font-semibold ${meta.tone}`}>{verStatus}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Trình độ học vấn</p>
+                  <p className="text-foreground">{profile.academicLevel ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Chuyên ngành</p>
+                  <p className="text-foreground">{profile.major ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs text-muted-foreground">Kinh nghiệm</p>
+                  <p className="text-foreground">
+                    {profile.experience != null ? `${profile.experience} năm` : "—"}
+                  </p>
+                </div>
+              </div>
 
-                {application.rejectionReason && (
-                  <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
-                    <p className="font-semibold text-destructive">Lý do từ chối</p>
-                    <p className="mt-1 text-muted-foreground">{application.rejectionReason}</p>
-                  </div>
-                )}
+              {/* Rejection reason — bắt buộc hiển thị nếu bị từ chối */}
+              {verStatus === "REJECTED" && profile.rejectionReason && (
+                <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 p-4 text-sm text-foreground">
+                  <p className="font-semibold text-destructive">Lý do từ chối</p>
+                  <p className="mt-1 text-muted-foreground">{profile.rejectionReason}</p>
+                </div>
+              )}
 
-                <div className="mt-6 flex flex-wrap gap-2">
-                  {(status === "Rejected" || status === "ReSubmit") && (
-                    <Button asChild>
-                      <Link href="/apply-tutor?resubmit=true">Cập nhật hồ sơ</Link>
-                    </Button>
-                  )}
-
-                  {status === "Approved" && (
-                    <Button onClick={handleEnterTutorDashboard} loading={refreshing}>
-                      Vào dashboard gia sư
-                    </Button>
-                  )}
-
-                  <Button asChild variant="outline">
-                    <Link href="/dashboard/tutor-candidate">Quay lại dashboard</Link>
+              {/* Actions */}
+              <div className="mt-6 flex flex-wrap gap-2">
+                {(verStatus === "REJECTED" || verStatus === "NOT_VERIFIED") && (
+                  <Button asChild>
+                    <Link href="/apply-tutor">
+                      {verStatus === "REJECTED" ? (
+                        <><RefreshCcw className="h-4 w-4 mr-1.5" /> Cập nhật & Gửi lại hồ sơ</>
+                      ) : (
+                        "Đăng ký làm gia sư"
+                      )}
+                    </Link>
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                )}
+
+                {verStatus === "PENDING" && (
+                  <Button asChild variant="outline">
+                    <Link href="/apply-tutor">
+                      <FileText className="h-4 w-4 mr-1.5" /> Xem / Cập nhật hồ sơ
+                    </Link>
+                  </Button>
+                )}
+
+                {verStatus === "APPROVED" && (
+                  <Button onClick={handleEnterTutorDashboard} loading={refreshing}>
+                    Vào dashboard gia sư
+                  </Button>
+                )}
+
+                <Button asChild variant="outline">
+                  <Link href="/dashboard/parent">Quay lại dashboard</Link>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </section>
     </main>

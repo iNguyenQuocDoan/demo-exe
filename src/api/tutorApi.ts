@@ -10,13 +10,17 @@ import type {
 } from "@/types";
 
 // ── BE shapes ────────────────────────────────────────────────────────────────
-interface BeTutorDetail {
+export type TutorVerificationStatus = "NOT_VERIFIED" | "PENDING" | "APPROVED" | "REJECTED";
+
+export interface BeTutorDetail {
   id: string;
   email?: string;
   fullName?: string;
   phoneNumber?: string;
   gender?: string;
-  address?: string;
+  city?: string;
+  district?: string;
+  detail?: string;
   dob?: string;
   avatarUrl?: string;
   description?: string;
@@ -28,6 +32,8 @@ interface BeTutorDetail {
   hourlyRate?: number;
   subjects?: string[];
   certificateUrls?: string[];
+  verificationStatus?: TutorVerificationStatus;
+  rejectionReason?: string;
 }
 
 interface BePageResponse<T> {
@@ -259,6 +265,33 @@ export async function getTutorById(id: string): Promise<TutorProfile | null> {
   }
 }
 
+// ── GET /api/tutors/my-profile — hồ sơ tutor của user đang đăng nhập ─────────
+// Parent dùng API này để xem trạng thái hồ sơ đăng ký tutor.
+export async function getMyTutorProfile(): Promise<BeTutorDetail | null> {
+  try {
+    const { data } = await realApiClient.get<BeApiResponse<BeTutorDetail>>(
+      "/tutors/my-profile",
+    );
+    return data?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
+// ── GET /api/tutors/pending/{id} — Admin xem chi tiết hồ sơ chờ duyệt ────────
+export async function getPendingTutorDetail(
+  id: string,
+): Promise<BeTutorDetail | null> {
+  try {
+    const { data } = await realApiClient.get<BeApiResponse<BeTutorDetail>>(
+      `/tutors/pending/${id}`,
+    );
+    return data?.data ?? null;
+  } catch {
+    return null;
+  }
+}
+
 interface BeSlotResponse {
   id: string;
   startTime: string; // ISO date-time
@@ -365,14 +398,69 @@ export async function getReviews(tutorId: string): Promise<Review[]> {
   }
 }
 
-// BE: PUT /api/tutors/tutor/profile (multipart) — data + optional certificate files
-export async function updateTutorProfile(
-  _id: string,
-  updates: Partial<TutorProfile> & { certificateFiles?: File[] },
+// ── UpdateTutorProfileRequest (theo Swagger BE) ───────────────────────────────
+// Chỉ 7 fields — KHÔNG gồm fullName/phoneNumber/gender/city/district/dob/detail
+// (những field đó thuộc PUT /api/users/profile)
+export interface UpdateTutorProfilePayload {
+  description?: string;
+  hourlyRate?: number;
+  experience?: number;      // int32
+  academicLevelId?: number; // int64 — numeric ID, KHÔNG phải tên string
+  major?: string;
+  education?: string;
+  subjectIds?: number[];    // int64[] — numeric IDs, KHÔNG phải tên string
+}
+
+// ── UpdateProfileRequest (theo Swagger BE) — dùng cho PUT /api/users/profile ─
+export interface UpdateUserProfilePayload {
+  fullName?: string;
+  phoneNumber?: string;
+  gender?: string;          // MALE | FEMALE | OTHER
+  city?: string;            // province code string
+  district?: string;        // district code string
+  detail?: string;
+  dob?: string;             // format: date (YYYY-MM-DD)
+}
+
+// BE: PUT /api/users/profile (multipart JSON blob) — cập nhật thông tin cá nhân
+export async function updateUserProfile(
+  payload: UpdateUserProfilePayload,
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const form = new FormData();
-    const payload: Record<string, unknown> = {};
+    form.append(
+      "data",
+      new Blob([JSON.stringify(payload)], { type: "application/json" }),
+    );
+    await realApiClient.put("/users/profile", form);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string; error?: string } } })?.response?.data
+        ?.message ??
+      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      "Không thể cập nhật thông tin cá nhân";
+    return { ok: false, error: msg };
+  }
+}
+
+// BE: PUT /api/tutors/tutor/profile (multipart) — cập nhật hồ sơ tutor
+// Chỉ gửi đúng UpdateTutorProfileRequest fields: description, hourlyRate, experience,
+// academicLevelId (số), major, education, subjectIds (mảng số) + certificate files
+export async function updateTutorProfile(
+  _id: string,
+  updates: Partial<TutorProfile> & {
+    certificateFiles?: File[];
+    // Đúng field names từ BE Swagger:
+    academicLevelId?: number; // int64 ID
+    subjectIds?: number[];    // int64[] IDs
+    major?: string;
+  },
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    const form = new FormData();
+    // Chỉ map đúng 7 fields của UpdateTutorProfileRequest
+    const payload: UpdateTutorProfilePayload = {};
     if (updates.bio != null) payload.description = updates.bio;
     if (updates.pricePerHour != null) payload.hourlyRate = updates.pricePerHour;
     if (updates.experience != null) {
@@ -380,6 +468,11 @@ export async function updateTutorProfile(
       if (!Number.isNaN(n)) payload.experience = n;
     }
     if (updates.education != null) payload.education = updates.education;
+    if (updates.major != null) payload.major = updates.major;
+    if (updates.academicLevelId != null) payload.academicLevelId = updates.academicLevelId;
+    if (updates.subjectIds != null && updates.subjectIds.length > 0) {
+      payload.subjectIds = updates.subjectIds;
+    }
     form.append(
       "data",
       new Blob([JSON.stringify(payload)], { type: "application/json" }),
@@ -394,7 +487,7 @@ export async function updateTutorProfile(
       (err as { response?: { data?: { message?: string; error?: string } } })?.response?.data
         ?.message ??
       (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
-      "Không thể cập nhật hồ sơ";
+      "Không thể cập nhật hồ sơ gia sư";
     return { ok: false, error: msg };
   }
 }
@@ -431,7 +524,7 @@ export async function rejectTutor(
 // BE: GET /api/tutors/pending (ADMIN)
 export async function getPendingTutors(
   pagination?: PaginationParams,
-): Promise<{ tutors: TutorProfile[]; pagination: PaginationMeta }> {
+): Promise<{ tutors: BeTutorDetail[]; pagination: PaginationMeta }> {
   try {
     const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
       "/tutors/pending",
@@ -442,7 +535,15 @@ export async function getPendingTutors(
         },
       },
     );
-    return bePageToFe(data);
+    return {
+      tutors: data.data ?? [],
+      pagination: {
+        page: data.currentPage ?? 1,
+        limit: data.pageSize ?? (pagination?.limit ?? 10),
+        total: data.totalElements ?? 0,
+        totalPages: data.totalPages ?? 0,
+      },
+    };
   } catch {
     return {
       tutors: [],

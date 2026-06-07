@@ -139,10 +139,10 @@ export default function TutorProfilePage() {
         body: form,
       });
       const data = await res.json() as { ok: boolean; url?: string; secure_url?: string };
-      if (data.ok && profile) {
+      if (data.ok) {
         const url = data.url ?? data.secure_url ?? "";
         setAvatarUrl(url);
-        await updateTutorProfile(profile.id, { avatarUrl: url });
+        // avatarUrl không thuộc UpdateTutorProfileRequest — không gọi updateTutorProfile
       }
     } finally {
       setAvatarUploading(false);
@@ -150,25 +150,24 @@ export default function TutorProfilePage() {
   };
 
   const handleRemoveAvatar = async () => {
-    if (!profile) return;
     setAvatarUrl("");
-    await updateTutorProfile(profile.id, { avatarUrl: "" });
+    // avatarUrl không thuộc UpdateTutorProfileRequest — không cần gọi API
   };
 
   const handleSave = async () => {
     if (!profile) return;
     setError("");
     setSaving(true);
+    // Map subject string IDs → numeric IDs (BE yêu cầu int64 array)
+    const numericSubjectIds = subjects
+      .map((s) => Number(s))
+      .filter((n) => !isNaN(n) && n > 0);
     const result = await updateTutorProfile(profile.id, {
       bio,
       experience,
       education,
       pricePerHour,
-      teachingMode,
-      subjects,
-      grades,
-      serviceAreas: { cityId, districtIds },
-      avatarUrl,
+      subjectIds: numericSubjectIds,
     });
     setSaving(false);
     if (result.ok) {
