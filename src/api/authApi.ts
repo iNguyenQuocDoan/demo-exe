@@ -31,7 +31,7 @@ function mapBeRoleToFe(beRole: string | undefined): UserRole {
     case "ADMIN":
       return "admin";
     default:
-      return "parent";
+      return "guest";
   }
 }
 
@@ -93,18 +93,23 @@ export async function register(data: {
   fullName: string;
   email: string;
   password: string;
+  /** "PARENT" | "TUTOR" — gửi thẳng lên BE, không cần mapping */
   role?: string;
   phone?: string;
 }): Promise<{ ok: boolean; user?: User; error?: string }> {
   try {
-    // BE yêu cầu phoneNumber @NotBlank; FE form hiện chưa thu — dùng placeholder
+    // Số điện thoại từ form; fallback để tránh lỗi @NotBlank của BE
     const phoneNumber = data.phone?.trim() || "0000000000";
+    // role đã ở dạng "PARENT" / "TUTOR" từ FE, mapFeRoleToBe vẫn giữ để an toàn
+    const beRole = ["PARENT", "TUTOR", "ADMIN"].includes((data.role ?? "").toUpperCase())
+      ? data.role!.toUpperCase()
+      : mapFeRoleToBe(data.role);
     await realApiClient.post("/auth/register", {
       email: data.email,
       password: data.password,
       fullName: data.fullName,
       phoneNumber,
-      role: mapFeRoleToBe(data.role),
+      role: beRole,
     });
     return await login(data.email, data.password);
   } catch (err) {

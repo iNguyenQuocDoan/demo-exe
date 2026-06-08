@@ -5,15 +5,19 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
+  ArrowRight,
   Mail,
   Lock,
   User,
+  Phone,
   AlertCircle,
   Eye,
   EyeOff,
   BookOpen,
   Users,
   Wallet,
+  CheckCircle2,
+  GraduationCap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -42,16 +46,77 @@ const REGISTER_BENEFITS = [
   },
 ];
 
+type Role = "PARENT" | "TUTOR";
+
+const ROLE_OPTIONS: Array<{
+  role: Role;
+  icon: typeof Users;
+  label: string;
+  description: string;
+  features: string[];
+  gradient: string;
+  accentColor: string;
+  badge?: string;
+}> = [
+  {
+    role: "PARENT",
+    icon: Users,
+    label: "Phụ huynh",
+    description: "Tìm kiếm và đặt lịch với gia sư phù hợp cho con em",
+    features: [
+      "Tìm gia sư theo môn học & khu vực",
+      "Xem lịch trống và đặt buổi học",
+      "Thanh toán an toàn qua ví LIFLOW",
+      "Đánh giá và nhận xét gia sư",
+    ],
+    gradient: "from-blue-500 to-cyan-500",
+    accentColor: "blue",
+  },
+  {
+    role: "TUTOR",
+    icon: GraduationCap,
+    label: "Gia sư",
+    description: "Tạo hồ sơ và nhận học sinh từ hàng nghìn phụ huynh",
+    features: [
+      "Tạo hồ sơ & tải bằng cấp xác thực",
+      "Thiết lập lịch dạy & mức học phí",
+      "Nhận yêu cầu từ phụ huynh",
+      "Quản lý thu nhập minh bạch",
+    ],
+    gradient: "from-purple-500 to-pink-500",
+    accentColor: "purple",
+    badge: "Cần admin duyệt hồ sơ",
+  },
+];
+
 function RegisterForm() {
   const router = useRouter();
   const { login: storeLogin } = useAuthStore();
 
+  // Step 1: choose role, Step 2: fill info
+  const [step, setStep] = useState<1 | 2>(1);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [showPw, setShowPw] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+
+  const handleRoleSelect = (role: Role) => {
+    setSelectedRole(role);
+  };
+
+  const handleNextStep = () => {
+    if (!selectedRole) {
+      setError("Vui lòng chọn vai trò của bạn.");
+      return;
+    }
+    setError("");
+    setStep(2);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,21 +125,37 @@ function RegisterForm() {
       setError("Vui lòng nhập họ và tên.");
       return;
     }
+    if (!phone.trim() || phone.trim().length < 9) {
+      setError("Vui lòng nhập số điện thoại hợp lệ.");
+      return;
+    }
     if (password.length < 6) {
       setError("Mật khẩu phải có ít nhất 6 ký tự.");
       return;
     }
+    if (!selectedRole) {
+      setStep(1);
+      return;
+    }
+
     setLoading(true);
     const result = await register({
       fullName: fullName.trim(),
       email,
       password,
-      role: "guest",
+      phone: phone.trim(),
+      role: selectedRole, // gửi "PARENT" hoặc "TUTOR" lên BE
     });
     setLoading(false);
+
     if (result.ok && result.user) {
       storeLogin(result.user);
-      router.push("/auth/select-role");
+      // Nếu là tutor → đến trang nộp hồ sơ; nếu là parent → đến dashboard
+      if (selectedRole === "TUTOR") {
+        router.push("/apply-tutor");
+      } else {
+        router.push("/dashboard/parent");
+      }
     } else {
       setError(result.error ?? "Đăng ký thất bại.");
     }
@@ -99,116 +180,299 @@ function RegisterForm() {
           </Link>
 
           <div className="mx-auto w-full max-w-md">
-            <div className="mb-7 space-y-1.5">
-              <h1
-                className="text-3xl font-bold tracking-tight text-foreground"
-                style={{ letterSpacing: "-0.02em" }}
-              >
-                Tạo tài khoản
-              </h1>
-              <p className="text-sm text-muted-foreground">
-                Tham gia cộng đồng LIFLOW — miễn phí đăng ký
-              </p>
+            {/* Step indicator */}
+            <div className="mb-6 flex items-center gap-3">
+              <div className="flex items-center gap-2">
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                    step === 1
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                      : "bg-primary/20 text-primary"
+                  }`}
+                >
+                  {step > 1 ? <CheckCircle2 className="h-4 w-4" /> : "1"}
+                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    step === 1 ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Chọn vai trò
+                </span>
+              </div>
+              <div className="h-px flex-1 bg-border" />
+              <div className="flex items-center gap-2">
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold transition-all ${
+                    step === 2
+                      ? "bg-primary text-primary-foreground shadow-md shadow-primary/30"
+                      : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  2
+                </div>
+                <span
+                  className={`text-sm font-medium ${
+                    step === 2 ? "text-foreground" : "text-muted-foreground"
+                  }`}
+                >
+                  Thông tin tài khoản
+                </span>
+              </div>
             </div>
 
-            <div className="mb-6 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3">
-              <p className="text-xs leading-relaxed text-muted-foreground">
-                Sau khi đăng ký, bạn sẽ chọn vai trò{" "}
-                <strong className="text-foreground">Phụ huynh</strong> hoặc{" "}
-                <strong className="text-foreground">Gia sư</strong> để bắt đầu.
-              </p>
-            </div>
-
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Họ và tên
-                </label>
-                <div className="relative">
-                  <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Nguyễn Văn A"
-                    className="pl-9"
-                    value={fullName}
-                    onChange={(e) => setFullName(e.target.value)}
-                    autoComplete="name"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type="email"
-                    placeholder="your.email@example.com"
-                    className="pl-9"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    autoComplete="email"
-                    required
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <label className="text-sm font-medium text-foreground">
-                  Mật khẩu
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    type={showPw ? "text" : "password"}
-                    placeholder="Tối thiểu 6 ký tự"
-                    className="pl-9 pr-10"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="new-password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPw((v) => !v)}
-                    tabIndex={-1}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+            {/* ── STEP 1: Chọn vai trò ── */}
+            {step === 1 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="mb-6 space-y-1.5">
+                  <h1
+                    className="text-3xl font-bold tracking-tight text-foreground"
+                    style={{ letterSpacing: "-0.02em" }}
                   >
-                    {showPw ? (
-                      <EyeOff className="h-4 w-4" />
-                    ) : (
-                      <Eye className="h-4 w-4" />
-                    )}
-                  </button>
+                    Bạn là ai?
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Chọn vai trò phù hợp để bắt đầu hành trình của bạn
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {ROLE_OPTIONS.map(({ role, icon: Icon, label, description, features, gradient, badge }) => (
+                    <button
+                      key={role}
+                      type="button"
+                      onClick={() => handleRoleSelect(role)}
+                      className={`relative w-full rounded-2xl border-2 p-5 text-left transition-all duration-200 ${
+                        selectedRole === role
+                          ? "border-primary bg-primary/5 shadow-lg shadow-primary/15"
+                          : "border-border bg-card hover:border-primary/40 hover:shadow-md hover:bg-muted/30"
+                      }`}
+                    >
+                      {selectedRole === role && (
+                        <div className="absolute top-4 right-4">
+                          <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary">
+                            <CheckCircle2 className="h-3.5 w-3.5 text-primary-foreground" />
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${gradient} shadow-md`}
+                        >
+                          <Icon className="h-6 w-6 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="text-base font-bold text-foreground">{label}</h3>
+                            {badge && (
+                              <span className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[10px] font-medium text-amber-700">
+                                {badge}
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-xs text-muted-foreground mb-3">{description}</p>
+                          <ul className="space-y-1">
+                            {features.map((f, i) => (
+                              <li key={i} className="flex items-center gap-2 text-xs text-muted-foreground">
+                                <div className="h-1.5 w-1.5 rounded-full bg-primary shrink-0" />
+                                {f}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+
+                {error && (
+                  <div className="mt-4 flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                    <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+                  </div>
+                )}
+
+                <Button
+                  type="button"
+                  onClick={handleNextStep}
+                  disabled={!selectedRole}
+                  className="mt-5 h-11 w-full text-base font-semibold"
+                >
+                  Tiếp tục
+                  <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+
+                <div className="mt-5 text-center text-sm text-muted-foreground">
+                  Đã có tài khoản?{" "}
+                  <Link
+                    href="/auth/login"
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    Đăng nhập
+                  </Link>
                 </div>
               </div>
+            )}
 
-              {error && (
-                <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
-                  <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+            {/* ── STEP 2: Điền thông tin ── */}
+            {step === 2 && (
+              <div className="animate-in fade-in slide-in-from-right-4 duration-300">
+                <div className="mb-6 space-y-1.5">
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => { setStep(1); setError(""); }}
+                      className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                    >
+                      <ArrowLeft className="h-3.5 w-3.5" />
+                      Quay lại
+                    </button>
+                    {selectedRole && (
+                      <span
+                        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold text-white ${
+                          selectedRole === "PARENT"
+                            ? "bg-gradient-to-r from-blue-500 to-cyan-500"
+                            : "bg-gradient-to-r from-purple-500 to-pink-500"
+                        }`}
+                      >
+                        {selectedRole === "PARENT" ? (
+                          <Users className="h-3 w-3" />
+                        ) : (
+                          <GraduationCap className="h-3 w-3" />
+                        )}
+                        {selectedRole === "PARENT" ? "Phụ huynh" : "Gia sư"}
+                      </span>
+                    )}
+                  </div>
+                  <h1
+                    className="text-3xl font-bold tracking-tight text-foreground"
+                    style={{ letterSpacing: "-0.02em" }}
+                  >
+                    Tạo tài khoản
+                  </h1>
+                  <p className="text-sm text-muted-foreground">
+                    Điền thông tin để hoàn tất đăng ký
+                  </p>
                 </div>
-              )}
 
-              <Button
-                type="submit"
-                className="h-11 w-full text-base font-semibold"
-                loading={loading}
-              >
-                Đăng ký tài khoản
-              </Button>
-            </form>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Họ và tên <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Nguyễn Văn A"
+                        className="pl-9"
+                        value={fullName}
+                        onChange={(e) => setFullName(e.target.value)}
+                        autoComplete="name"
+                        required
+                      />
+                    </div>
+                  </div>
 
-            <div className="mt-6 text-center text-sm text-muted-foreground">
-              Đã có tài khoản?{" "}
-              <Link
-                href="/auth/login"
-                className="font-semibold text-primary hover:underline"
-              >
-                Đăng nhập
-              </Link>
-            </div>
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Email <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="email"
+                        placeholder="your.email@example.com"
+                        className="pl-9"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        autoComplete="email"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Số điện thoại <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="tel"
+                        placeholder="0901234567"
+                        className="pl-9"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        autoComplete="tel"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium text-foreground">
+                      Mật khẩu <span className="text-destructive">*</span>
+                    </label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type={showPw ? "text" : "password"}
+                        placeholder="Tối thiểu 6 ký tự"
+                        className="pl-9 pr-10"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        autoComplete="new-password"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPw((v) => !v)}
+                        tabIndex={-1}
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-foreground"
+                      >
+                        {showPw ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </button>
+                    </div>
+                  </div>
+
+                  {error && (
+                    <div className="flex items-center gap-2 rounded-lg bg-destructive/10 px-3 py-2.5 text-sm text-destructive">
+                      <AlertCircle className="h-4 w-4 shrink-0" /> {error}
+                    </div>
+                  )}
+
+                  {selectedRole === "TUTOR" && (
+                    <div className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3">
+                      <p className="text-xs leading-relaxed text-amber-800">
+                        <strong>Lưu ý gia sư:</strong> Sau khi đăng ký, bạn cần hoàn thành hồ sơ và tải bằng cấp. Admin sẽ xét duyệt trước khi tài khoản hoạt động.
+                      </p>
+                    </div>
+                  )}
+
+                  <Button
+                    type="submit"
+                    className="h-11 w-full text-base font-semibold"
+                    loading={loading}
+                  >
+                    {selectedRole === "TUTOR" ? "Đăng ký & Điền hồ sơ gia sư" : "Đăng ký tài khoản"}
+                  </Button>
+                </form>
+
+                <div className="mt-5 text-center text-sm text-muted-foreground">
+                  Đã có tài khoản?{" "}
+                  <Link
+                    href="/auth/login"
+                    className="font-semibold text-primary hover:underline"
+                  >
+                    Đăng nhập
+                  </Link>
+                </div>
+              </div>
+            )}
 
             <p className="mt-8 text-center text-xs text-muted-foreground">
               <Link
