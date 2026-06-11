@@ -1,6 +1,6 @@
-import { initializeApp, getApps } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, type FirebaseApp } from "firebase/app";
+import { getAuth, type Auth } from "firebase/auth";
+import { getFirestore, type Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey:            process.env.NEXT_PUBLIC_FIREBASE_API_KEY            ?? "",
@@ -11,9 +11,28 @@ const firebaseConfig = {
   appId:             process.env.NEXT_PUBLIC_FIREBASE_APP_ID             ?? "",
 };
 
-// Singleton: avoid re-initializing in hot-reload
-const app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+let app: FirebaseApp | undefined;
+let auth: Auth = null as any;
+let db: Firestore = null as any;
 
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+const isConfigValid = 
+  firebaseConfig.apiKey && 
+  firebaseConfig.apiKey !== "your_firebase_api_key" && 
+  !firebaseConfig.apiKey.startsWith("your-");
+
+if (isConfigValid) {
+  try {
+    app = getApps().length ? getApps()[0] : initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (err) {
+    console.error("Firebase initialization failed:", err);
+  }
+} else {
+  if (typeof window !== "undefined") {
+    console.warn("Cấu hình Firebase (chat) bị thiếu hoặc không hợp lệ. Vui lòng thiết lập biến môi trường trong file .env để sử dụng tính năng chat.");
+  }
+}
+
+export { app, auth, db };
 export default app;

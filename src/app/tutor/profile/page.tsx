@@ -14,23 +14,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChangePasswordCard } from "@/components/shared/ChangePasswordCard";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { City, District, Subject, TeachingMode, TutorProfile } from "@/types";
+import { MultiSelect } from "@/components/ui/multi-select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-const DEFAULT_GRADES = [
-  "Lop 1",
-  "Lop 2",
-  "Lop 3",
-  "Lop 4",
-  "Lop 5",
-  "Lop 6",
-  "Lop 7",
-  "Lop 8",
-  "Lop 9",
-  "Lop 10",
-  "Lop 11",
-  "Lop 12",
-  "Luyen thi THPT",
-  "Luyen thi Dai hoc",
-];
+
 
 function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
@@ -52,18 +39,15 @@ export default function TutorProfilePage() {
   const [experience, setExperience] = useState("");
   const [education, setEducation] = useState("");
   const [pricePerHour, setPricePerHour] = useState(150000);
-  const [teachingMode] = useState<TeachingMode>("OFFLINE");
+  const [teachingMode, setTeachingMode] = useState<string>("OFFLINE");
   const [subjects, setSubjects] = useState<string[]>([]);
-  const [grades, setGrades] = useState<string[]>([]);
   const [cityId, setCityId] = useState("");
   const [districtIds, setDistrictIds] = useState<string[]>([]);
   const [subjectOptions, setSubjectOptions] = useState<Subject[]>([]);
   const [cityOptions, setCityOptions] = useState<City[]>([]);
   const [districtOptions, setDistrictOptions] = useState<District[]>([]);
 
-  const gradeOptions = subjectOptions.length
-    ? Array.from(new Set(subjectOptions.flatMap((subject) => subject.grades ?? [])))
-    : DEFAULT_GRADES;
+
 
   useEffect(() => {
     let active = true;
@@ -95,7 +79,6 @@ export default function TutorProfilePage() {
         setPricePerHour(p.pricePerHour ?? 150000);
         // teachingMode is always OFFLINE
         setSubjects(p.subjects ?? []);
-        setGrades(p.grades ?? []);
         setCityId(p.serviceAreas?.cityId ?? "");
         setDistrictIds(p.serviceAreas?.districtIds ?? []);
         setAvatarUrl(p.avatarUrl ?? "");
@@ -116,8 +99,7 @@ export default function TutorProfilePage() {
       setDistrictOptions(districtsData);
       const validIds = new Set(districtsData.map((district) => district.id));
       setDistrictIds((prev) => {
-        const kept = prev.filter((districtId) => validIds.has(districtId));
-        return kept.length > 0 ? kept : districtsData.map((d) => d.id);
+        return prev.filter((districtId) => validIds.has(districtId));
       });
     });
 
@@ -337,47 +319,34 @@ export default function TutorProfilePage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-base">
                 <BookOpen className="h-4 w-4 text-primary" />
-                Môn dạy & Cấp độ
+                Môn dạy & Hình thức dạy
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-5">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium">Môn dạy</label>
-                <div className="flex flex-wrap gap-2">
-                  {subjectOptions.map((s) => (
-                    <Badge
-                      key={s.id}
-                      variant={subjects.includes(s.id) ? "default" : "outline"}
-                      className="cursor-pointer select-none text-sm px-3 py-1"
-                      onClick={() => setSubjects(toggle(subjects, s.id))}
-                    >
-                      {s.name}
-                    </Badge>
-                  ))}
-                </div>
+                <MultiSelect
+                  options={subjectOptions.map((s) => ({ value: s.id, label: s.name }))}
+                  selectedValues={subjects}
+                  onChange={setSubjects}
+                  placeholder="Chọn môn dạy"
+                  searchPlaceholder="Tìm kiếm môn dạy..."
+                  emptyMessage="Không tìm thấy môn dạy nào."
+                />
               </div>
 
-              <div className="space-y-2">
-                <label className="text-sm font-medium">Khối lớp</label>
-                <div className="flex flex-wrap gap-2">
-                  {gradeOptions.map((g) => (
-                    <Badge
-                      key={g}
-                      variant={grades.includes(g) ? "default" : "outline"}
-                      className="cursor-pointer select-none text-xs px-2.5 py-1"
-                      onClick={() => setGrades(toggle(grades, g))}
-                    >
-                      {g}
-                    </Badge>
-                  ))}
-                </div>
-              </div>
-
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-sm font-medium">Hình thức dạy</label>
-                <div className="inline-flex items-center gap-2 rounded-lg border border-primary/30 bg-primary/5 px-4 py-2 text-sm font-medium text-primary">
-                  Trực tiếp (tại nhà học sinh)
-                </div>
+                <Select value={teachingMode} onValueChange={setTeachingMode}>
+                  <SelectTrigger className="w-full sm:max-w-xs">
+                    <SelectValue placeholder="Chọn hình thức dạy" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="ONLINE">Online</SelectItem>
+                    <SelectItem value="OFFLINE">Trực tiếp tại nhà học sinh</SelectItem>
+                    <SelectItem value="AT_TUTOR_HOME">Tại nhà gia sư</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </CardContent>
           </Card>
@@ -409,41 +378,57 @@ export default function TutorProfilePage() {
                 </p>
               </div>
 
-              <div className="space-y-3 border-t border-border pt-4">
+              <div className="space-y-4 border-t border-border pt-4">
                 <label className="text-sm font-medium flex items-center gap-1">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
                   Khu vực dạy
                 </label>
-                <div className="flex gap-2">
-                  {cityOptions.map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => { setCityId(c.id); setDistrictIds([]); }}
-                      className={`rounded-lg border px-4 py-2 text-sm font-medium transition-colors ${
-                        cityId === c.id
-                          ? "border-primary bg-primary/5 text-primary"
-                          : "border-border text-muted-foreground hover:border-primary/50"
-                      }`}
+
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <div className="space-y-1.5">
+                    <label className="text-sm font-medium">Tỉnh / Thành phố</label>
+                    <Select
+                      value={cityId}
+                      onValueChange={(val) => {
+                        setCityId(val);
+                        setDistrictIds([]);
+                      }}
                     >
-                      {c.name}
-                    </button>
-                  ))}
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Chọn Tỉnh / Thành phố" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {cityOptions.map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  {cityId && (
+                    <div className="space-y-1.5">
+                      <label className="text-sm font-medium">Quận / Huyện</label>
+                      <MultiSelect
+                        options={districtOptions.map((d) => ({
+                          value: d.id,
+                          label: d.name,
+                        }))}
+                        selectedValues={districtIds}
+                        onChange={setDistrictIds}
+                        placeholder="Chọn Quận / Huyện"
+                        searchPlaceholder="Tìm kiếm Quận / Huyện..."
+                        emptyMessage="Không tìm thấy Quận / Huyện nào."
+                      />
+                    </div>
+                  )}
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {districtOptions.map((d) => (
-                    <Badge
-                      key={d.id}
-                      variant={districtIds.includes(d.id) ? "default" : "outline"}
-                      className="cursor-pointer select-none text-sm px-3 py-1"
-                      onClick={() => setDistrictIds(toggle(districtIds, d.id))}
-                    >
-                      {d.name}
-                    </Badge>
-                  ))}
-                </div>
+
                 {districtIds.length > 0 && (
-                  <p className="text-xs text-muted-foreground">Đã chọn {districtIds.length} khu vực</p>
+                  <p className="text-xs text-muted-foreground">
+                    Đã chọn {districtIds.length} khu vực
+                  </p>
                 )}
               </div>
             </CardContent>

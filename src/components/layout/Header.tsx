@@ -295,7 +295,7 @@ export function Header() {
                       )}
 
                       {user.role === "parent" && (
-                        <DropdownItem href="/parent/reports" icon={<Flag className="h-4 w-4 text-destructive" />} onClick={() => setUserMenuOpen(false)}>
+                        <DropdownItem href="/my-disputes" icon={<Flag className="h-4 w-4 text-destructive" />} onClick={() => setUserMenuOpen(false)}>
                           Báo cáo tranh chấp
                         </DropdownItem>
                       )}

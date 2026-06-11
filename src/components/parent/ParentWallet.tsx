@@ -294,31 +294,88 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
             </div>
           ) : (
             <div className="space-y-3">
-              {transactions.map((tx, idx) => {
-                const typeMeta = TRANSACTION_TYPE_META[tx.type];
-                const Icon = typeMeta?.icon ?? Wallet;
-                const amt = txDisplay(tx.type, tx.amount);
-                return (
-                  <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Icon className={`h-4 w-4 ${amt.colorClass}`} />
-                      <div>
-                        <p className="font-medium text-sm">{typeMeta?.label ?? tx.type}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {new Date(tx.createdAt).toLocaleString("vi-VN")}
+              {[...transactions]
+                .sort(
+                  (a, b) =>
+                    new Date(b.createdAt).getTime() -
+                    new Date(a.createdAt).getTime()
+                )
+                .map((tx, idx) => {
+                  const typeMeta = TRANSACTION_TYPE_META[tx.type];
+                  const Icon = typeMeta?.icon ?? Wallet;
+
+                  // 1. Xác định label giao dịch theo yêu cầu
+                  let label = "";
+                  if (tx.type === "REFUND" || tx.amount > 0) {
+                    label = tx.description || "Hoàn tiền";
+                  } else if (tx.type === "DEPOSIT") {
+                    label = "Nạp tiền";
+                  } else if (tx.type === "BOOKING_CHARGE") { // BE PAYMENT
+                    label = tx.description || "Thanh toán học phí";
+                  } else if (tx.type === "WITHDRAW") {
+                    label = "Rút tiền";
+                  } else {
+                    label = typeMeta?.label ?? tx.type;
+                  }
+
+                  // 2. Xác định dấu (+/-) và màu sắc theo loại giao dịch & giá trị tiền
+                  const isPositive =
+                    tx.type === "REFUND" || tx.type === "DEPOSIT" || tx.amount > 0;
+                  const isNegative = tx.type === "WITHDRAW" || tx.amount < 0;
+
+                  let sign = "";
+                  let amtColorClass = "text-foreground";
+
+                  if (isPositive) {
+                    sign = "+";
+                    amtColorClass = "text-green-600";
+                  } else if (isNegative) {
+                    sign = "-";
+                    amtColorClass =
+                      tx.type === "WITHDRAW" ? "text-red-600" : "text-orange-600";
+                  } else {
+                    sign = tx.amount > 0 ? "+" : tx.amount < 0 ? "-" : "";
+                    amtColorClass =
+                      tx.amount > 0
+                        ? "text-green-600"
+                        : tx.amount < 0
+                        ? "text-orange-600"
+                        : "text-foreground";
+                  }
+
+                  const displayAmt = `${sign}${Math.abs(tx.amount).toLocaleString(
+                    "vi-VN"
+                  )} VNĐ`;
+
+                  return (
+                    <div
+                      key={idx}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-3">
+                        <Icon className={`h-4 w-4 ${amtColorClass}`} />
+                        <div>
+                          <p className="font-medium text-sm">{label}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(tx.createdAt).toLocaleString("vi-VN")}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="text-right space-y-1">
+                        <p className={`font-semibold ${amtColorClass}`}>
+                          {displayAmt}
                         </p>
+                        <StatusBadge
+                          registry={TRANSACTION_STATUS_META}
+                          value={tx.status}
+                          showIcon={false}
+                          className="text-xs"
+                        />
                       </div>
                     </div>
-
-                    <div className="text-right space-y-1">
-                      <p className={`font-semibold ${amt.colorClass}`}>
-                        {amt.sign}{amt.value.toLocaleString("vi-VN")} VNĐ
-                      </p>
-                      <StatusBadge registry={TRANSACTION_STATUS_META} value={tx.status} showIcon={false} className="text-xs" />
-                    </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
             </div>
           )}
         </CardContent>

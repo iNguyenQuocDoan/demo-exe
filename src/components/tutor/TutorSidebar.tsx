@@ -28,7 +28,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/dashboard/tutor", icon: LayoutDashboard, label: "Tổng quan" },
   { href: "/tutor/calendar", icon: CalendarDays, label: "Lịch của tôi" },
-  { href: "/tutor/reports", icon: Flag, label: "Báo cáo tranh chấp" },
+  { href: "/my-disputes", icon: Flag, label: "Báo cáo tranh chấp" },
   { href: "/tutor/analytics", icon: BarChart2, label: "Analytics" },
   { href: "/tutor/reviews", icon: Star, label: "Đánh giá" },
   { href: "/tutor/chats", icon: MessageSquare, label: "Tin nhắn" },

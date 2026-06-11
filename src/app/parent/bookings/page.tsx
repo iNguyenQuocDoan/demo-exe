@@ -15,6 +15,8 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { ReviewModal } from "@/components/booking/ReviewModal";
+import { ReportDisputeModal } from "@/components/booking/ReportDisputeModal";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { getBookings, cancelBooking, completeBooking } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
@@ -73,6 +75,7 @@ export default function ParentBookingsPage() {
   const [cancelReason, setCancelReason] = useState("");
   const [search, setSearch] = useState("");
   const [reviewTarget, setReviewTarget] = useState<Booking | null>(null);
+  const [disputeTarget, setDisputeTarget] = useState<Booking | null>(null);
 
   const parentId = user?.id ?? null;
 
@@ -340,6 +343,17 @@ export default function ParentBookingsPage() {
                             Đánh giá
                           </Button>
                         )}
+                        {["Confirmed", "InProgress", "TutorCompleted", "ParentCompleted", "Completed"].includes(booking.status) && (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="gap-1.5 border-destructive/30 text-destructive hover:bg-destructive/5"
+                            onClick={() => setDisputeTarget(booking)}
+                          >
+                            <AlertTriangle className="h-3.5 w-3.5" />
+                            Khiếu nại
+                          </Button>
+                        )}
                         {canCancel && (
                           <Button
                             size="sm"
@@ -370,6 +384,17 @@ export default function ParentBookingsPage() {
         tutorId={reviewTarget?.tutorId ?? ""}
         tutorName={reviewTarget ? tutorNameMap[reviewTarget.tutorId] : undefined}
         onClose={() => setReviewTarget(null)}
+      />
+
+      <ReportDisputeModal
+        bookingId={disputeTarget?.id ?? ""}
+        open={!!disputeTarget}
+        onClose={() => setDisputeTarget(null)}
+        onSuccess={() => {
+          toast.success("Đã gửi khiếu nại. Vui lòng chờ phản hồi.");
+          if (parentId) void loadData(parentId);
+          router.push("/my-disputes");
+        }}
       />
 
       {/* Cancel confirmation dialog */}

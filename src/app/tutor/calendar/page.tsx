@@ -18,8 +18,10 @@ import { formatCurrency } from "@/lib/utils";
 import {
   getBookings, acceptBooking, cancelBooking,
   startBooking, tutorCompleteBooking,
+  createTutorSlot, convertTimeToHHMMSS,
 } from "@/api/bookingApi";
 import { getTutorAllSlots } from "@/api/tutorApi";
+import { toast } from "sonner";
 import { getUserContactMap, type UserContact } from "@/api/referenceApi";
 import { getOrCreateConversation } from "@/api/chatApi";
 import { ScheduleCalendar } from "@/components/tutor/ScheduleCalendar";
@@ -309,6 +311,63 @@ export default function TutorCalendarPage() {
   const [bookingSubTab, setBookingSubTab]     = useState("pending");
   const [search, setSearch]                   = useState("");
 
+  // Add tutor slot states
+  const [showAddSlotModal, setShowAddSlotModal] = useState(false);
+  const [slotStartDate, setSlotStartDate]       = useState("");
+  const [slotStartTime, setSlotStartTime]       = useState("08:00");
+  const [slotEndTime, setSlotEndTime]           = useState("10:00");
+  const [slotWeeks, setSlotWeeks]               = useState(1);
+  const [submittingSlot, setSubmittingSlot]     = useState(false);
+  const [slotError, setSlotError]               = useState("");
+
+  const handleAddSlot = async () => {
+    if (!slotStartDate) {
+      setSlotError("Vui lòng chọn ngày bắt đầu.");
+      return;
+    }
+    if (!slotStartTime || !slotEndTime) {
+      setSlotError("Vui lòng điền đầy đủ giờ bắt đầu và giờ kết thúc.");
+      return;
+    }
+    const [startH, startM] = slotStartTime.split(":").map(Number);
+    const [endH, endM] = slotEndTime.split(":").map(Number);
+    if (startH > endH || (startH === endH && startM >= endM)) {
+      setSlotError("Giờ kết thúc phải lớn hơn giờ bắt đầu.");
+      return;
+    }
+    if (slotWeeks < 1) {
+      setSlotError("Số tuần áp dụng phải lớn hơn hoặc bằng 1.");
+      return;
+    }
+
+    setSlotError("");
+    setSubmittingSlot(true);
+    try {
+      const res = await createTutorSlot({
+        startTime: convertTimeToHHMMSS(slotStartTime),
+        endTime: convertTimeToHHMMSS(slotEndTime),
+        startDate: slotStartDate,
+        numberOfWeeks: Number(slotWeeks),
+      });
+
+      if (res.ok) {
+        toast.success("Thêm lịch trống thành công!");
+        setShowAddSlotModal(false);
+        setSlotStartDate("");
+        setSlotStartTime("08:00");
+        setSlotEndTime("10:00");
+        setSlotWeeks(1);
+        if (tutorId) void load(tutorId, true);
+      } else {
+        setSlotError(res.error ?? "Không thể tạo lịch trống. Vui lòng kiểm tra thời gian hoặc thử lại.");
+      }
+    } catch (err: any) {
+      setSlotError(err?.message ?? "Không thể tạo lịch trống. Vui lòng thử lại.");
+    } finally {
+      setSubmittingSlot(false);
+    }
+  };
+
   const mainTab = searchParams.get("tab") ?? "bookings";
   const setMainTab = (tab: string) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -533,7 +592,16 @@ export default function TutorCalendarPage() {
                     <h2 className="text-lg font-bold tracking-tight text-foreground">Lịch dạy của tôi</h2>
                     <p className="mt-1 text-sm text-muted-foreground">Quản lý và theo dõi các buổi học sắp tới</p>
                   </div>
-                  <div className="flex gap-3">
+                  <div className="flex items-center gap-3">
+                    {user?.role === "tutor" && (
+                      <Button
+                        size="sm"
+                        onClick={() => setShowAddSlotModal(true)}
+                        className="btn-shimmer font-semibold shadow-sm px-4"
+                      >
+                        + Thêm lịch trống
+                      </Button>
+                    )}
                     <div className="surface-card flex flex-col items-center px-4 py-2 min-w-20">
                       <span className="text-2xl font-bold text-primary">{upcomingCount}</span>
                       <span className="text-xs text-muted-foreground mt-0.5">Sắp tới</span>
@@ -562,6 +630,111 @@ export default function TutorCalendarPage() {
           </Tabs>
         </div>
       </section>
+
+      {/* Modal Thêm lịch trống cho Gia sư */}
+      {showAddSlotModal && (
+        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center sm:p-4 animate-fade-in">
+          {/* Backdrop */}
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setShowAddSlotModal(false)} />
+          
+          {/* Modal Panel */}
+          <div className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-border bg-card shadow-2xl flex flex-col max-h-[92dvh] z-10 animate-scale-in">
+            {/* Header */}
+            <div className="flex items-center gap-3 border-b border-border px-5 py-4 shrink-0">
+              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 shrink-0">
+                <CalendarDays className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h2 className="text-base font-semibold text-foreground">Thêm lịch trống dạy học</h2>
+                <p className="text-xs text-muted-foreground">Tạo khung giờ trống để phụ huynh đặt lịch</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddSlotModal(false)}
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+              >
+                <XCircle className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="overflow-y-auto flex-1 p-5 space-y-4">
+              {/* Start Date */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Ngày bắt đầu <span className="text-destructive">*</span></label>
+                <input
+                  type="date"
+                  value={slotStartDate}
+                  min={new Date().toISOString().split("T")[0]}
+                  onChange={(e) => setSlotStartDate(e.target.value)}
+                  className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                />
+              </div>
+
+              {/* Start Time & End Time */}
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Giờ bắt đầu <span className="text-destructive">*</span></label>
+                  <input
+                    type="time"
+                    value={slotStartTime}
+                    onChange={(e) => setSlotStartTime(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-xs font-bold text-muted-foreground uppercase">Giờ kết thúc <span className="text-destructive">*</span></label>
+                  <input
+                    type="time"
+                    value={slotEndTime}
+                    onChange={(e) => setSlotEndTime(e.target.value)}
+                    className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  />
+                </div>
+              </div>
+
+              {/* Number of Weeks */}
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-muted-foreground uppercase">Số tuần áp dụng (Tuần lặp) <span className="text-destructive">*</span></label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="number"
+                    min="1"
+                    max="12"
+                    value={slotWeeks}
+                    onChange={(e) => setSlotWeeks(Math.max(1, Number(e.target.value)))}
+                    className="w-24 rounded-xl border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-foreground"
+                  />
+                  <span className="text-xs text-muted-foreground">Tuần lặp lại hàng tuần</span>
+                </div>
+              </div>
+
+              {/* Error Alert */}
+              {slotError && (
+                <div className="flex items-start gap-2 rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3">
+                  <AlertCircle className="h-4 w-4 text-destructive mt-0.5 shrink-0" />
+                  <p className="text-xs text-destructive">{slotError}</p>
+                </div>
+              )}
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-end gap-2 border-t border-border px-5 py-4 shrink-0">
+              <Button variant="outline" size="sm" onClick={() => setShowAddSlotModal(false)} disabled={submittingSlot}>
+                Hủy
+              </Button>
+              <Button
+                size="sm"
+                loading={submittingSlot}
+                onClick={() => void handleAddSlot()}
+                disabled={submittingSlot}
+              >
+                Lưu lịch trống
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 }

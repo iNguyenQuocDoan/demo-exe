@@ -262,29 +262,75 @@ export const cancelBooking = (
 ) => bookingAction(id, "cancel");
 
 // BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
-//   { startTime: "HH:mm:ss" (LocalTime), endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
-// Tạo slot lặp lại hàng tuần từ startDate, trong numberOfWeeks tuần.
-export async function createTutorSlots(input: {
-  startTime: string; // "HH:mm:ss" hoặc "HH:mm"
+//   { startTime: "HH:mm:ss", endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
+export type CreateTutorSlotRequest = {
+  startTime: string;
   endTime: string;
-  startDate: string; // "yyyy-MM-dd"
-  numberOfWeeks?: number;
-}): Promise<{ ok: boolean; error?: string }> {
-  const toLocalTime = (t: string) => (t.length === 5 ? `${t}:00` : t); // "HH:mm" → "HH:mm:ss"
+  startDate: string;
+  numberOfWeeks: number;
+};
+
+export function convertTimeToHHMMSS(timeStr: string): string {
+  if (!timeStr) return "00:00:00";
+  
+  let trimmed = timeStr.trim().toUpperCase();
+  
+  const isPM = trimmed.includes("PM");
+  const isAM = trimmed.includes("AM");
+  
+  if (isPM || isAM) {
+    trimmed = trimmed.replace("AM", "").replace("PM", "").trim();
+    const parts = trimmed.split(":");
+    let hour = Number(parts[0]);
+    const minute = parts[1] || "00";
+    
+    if (isPM && hour < 12) {
+      hour += 12;
+    }
+    if (isAM && hour === 12) {
+      hour = 0;
+    }
+    
+    const formattedHour = String(hour).padStart(2, "0");
+    const formattedMinute = String(minute).padStart(2, "0");
+    return `${formattedHour}:${formattedMinute}:00`;
+  }
+  
+  const parts = trimmed.split(":");
+  const hour = String(Number(parts[0]) || 0).padStart(2, "0");
+  const minute = String(Number(parts[1]) || 0).padStart(2, "0");
+  const second = parts[2] ? String(Number(parts[2]) || 0).padStart(2, "0") : "00";
+  
+  return `${hour}:${minute}:${second}`;
+}
+
+export async function createTutorSlot(
+  payload: CreateTutorSlotRequest
+): Promise<{ ok: boolean; error?: string }> {
+  console.log("createTutorSlot payload:", payload);
   try {
-    await realApiClient.post("/bookings/slots", {
-      startTime: toLocalTime(input.startTime),
-      endTime: toLocalTime(input.endTime),
-      startDate: input.startDate,
-      numberOfWeeks: input.numberOfWeeks ?? 1,
-    });
+    await realApiClient.post("/bookings/slots", payload);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
       (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-      "Không thể tạo slot";
+      "Không thể tạo lịch trống. Vui lòng kiểm tra thời gian hoặc thử lại.";
     return { ok: false, error: msg };
   }
+}
+
+export async function createTutorSlots(input: {
+  startTime: string;
+  endTime: string;
+  startDate: string;
+  numberOfWeeks?: number;
+}): Promise<{ ok: boolean; error?: string }> {
+  return createTutorSlot({
+    startTime: convertTimeToHHMMSS(input.startTime),
+    endTime: convertTimeToHHMMSS(input.endTime),
+    startDate: input.startDate,
+    numberOfWeeks: input.numberOfWeeks ?? 1,
+  });
 }
 
 // ── Series: BE chưa có endpoint định kỳ ──────────────────────────────────────
