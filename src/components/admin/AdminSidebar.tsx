@@ -17,6 +17,7 @@ import {
   Shield,
   Users,
   X,
+  Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ const NAV_ITEMS = [
   { href: "/dashboard/admin", icon: LayoutDashboard, label: "Tổng quan" },
   { href: "/admin/applications", icon: GraduationCap, label: "Hồ sơ ứng tuyển" },
   { href: "/admin/payments", icon: CreditCard, label: "Thanh toán" },
+  { href: "/admin/withdrawals", icon: Wallet, label: "Rút tiền" },
   { href: "/admin/bookings", icon: BookOpen, label: "Booking" },
   { href: "/admin/disputes", icon: Flag, label: "Tranh chấp", badgeKey: "disputes" as const },
   { href: "/admin/users", icon: Users, label: "Người dùng" },

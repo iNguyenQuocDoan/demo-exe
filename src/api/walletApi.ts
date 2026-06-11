@@ -141,23 +141,20 @@ export async function rejectDeposit(
 }
 
 // BE: POST /api/wallet/withdraw
-export async function createWithdrawRequest(input: {
-  userId?: string;
+export async function createWithdrawRequest(payload: {
   amount: number;
-  bankInfo: WithdrawRequest["bankInfo"];
-}): Promise<{ ok: boolean; requestId?: string; error?: string }> {
+  bankName: string;
+  bankAccountNumber: string;
+  bankAccountName: string;
+}): Promise<{ ok: boolean; error?: string }> {
   try {
-    await realApiClient.post("/wallet/withdraw", {
-      amount: input.amount,
-      bankName: input.bankInfo.bankName,
-      bankAccountNumber: input.bankInfo.accountNumber,
-      bankAccountName: input.bankInfo.accountName,
-    });
+    await realApiClient.post("/wallet/withdraw", payload);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
-      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-      "Không thể tạo yêu cầu rút tiền.";
+      (err as { response?: { data?: { message?: string; error?: string } } })?.response?.data?.message ??
+      (err as { response?: { data?: { error?: string } } })?.response?.data?.error ??
+      "Không thể gửi yêu cầu rút tiền.";
     return { ok: false, error: msg };
   }
 }
@@ -265,6 +262,68 @@ export async function chargeHeldFunds(): Promise<{ ok: boolean; error?: string }
 export async function releaseHeldFunds(): Promise<{ ok: boolean; error?: string }> {
   return { ok: true };
 }
+
+export async function getWalletMe(): Promise<Wallet> {
+  return getWallet();
+}
+
+export async function getWalletTransactions(limit = 100): Promise<Transaction[]> {
+  return getTransactions(limit);
+}
+
+export async function getPendingWithdrawRequests(page = 1, size = 10): Promise<{
+  currentPage: number;
+  totalPages: number;
+  pageSize: number;
+  totalElements: number;
+  data: WithdrawRequest[];
+}> {
+  const { data } = await realApiClient.get<BePage<BeWithdrawResponse>>(
+    "/wallet/withdraw/pending",
+    { params: { page, size } }
+  );
+
+  const mappedData: WithdrawRequest[] = (data?.data ?? []).map((w) => ({
+    id: String(w.id),
+    userId: String(w.userId),
+    userName: w.userFullName,
+    userEmail: w.userEmail,
+    amount: w.amount,
+    bankInfo: {
+      bankName: w.bankName ?? "",
+      accountNumber: w.bankAccountNumber ?? "",
+      accountName: w.bankAccountName ?? "",
+    },
+    status: mapWithdrawStatus(w.status),
+    rejectedReason: w.adminNote || undefined,
+    createdAt: w.createdAt,
+  }));
+
+  return {
+    currentPage: data.currentPage ?? page,
+    totalPages: data.totalPages ?? 1,
+    pageSize: data.pageSize ?? size,
+    totalElements: data.totalElements ?? 0,
+    data: mappedData,
+  };
+}
+
+export async function processWithdrawRequest(
+  id: string,
+  payload: { approve: boolean; adminNote: string }
+): Promise<{ ok: boolean; error?: string }> {
+  try {
+    await realApiClient.post(`/wallet/withdraw/${id}/process`, payload);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể xử lý yêu cầu rút tiền.";
+    return { ok: false, error: msg };
+  }
+}
+
 export async function getBookingHoldsForUser(): Promise<BookingHold[]> {
   return [];
 }
+

@@ -112,9 +112,10 @@ export function ParentWallet() {
 
     setSubmittingWithdraw(true);
     const result = await createWithdrawRequest({
-      userId: user!.id,
       amount: Number(withdrawAmount),
-      bankInfo: { bankName, accountNumber, accountName },
+      bankName: bankName.trim(),
+      bankAccountNumber: accountNumber.trim(),
+      bankAccountName: accountName.trim().toUpperCase(),
     });
 
     if (result.ok) {

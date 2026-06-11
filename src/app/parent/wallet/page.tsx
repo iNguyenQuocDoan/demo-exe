@@ -9,6 +9,7 @@ import {
   createWithdrawRequest,
 } from "@/api/walletApi";
 import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 import type { Transaction, PaymentMethod } from "@/types";
 
 export default function ParentWalletPage() {
@@ -69,15 +70,21 @@ export default function ParentWalletPage() {
   const handleWithdraw = async (
     amount: number,
     bankInfo: { bankName: string; accountNumber: string; accountName: string },
-  ) => {
-    if (!user) return;
+  ): Promise<{ ok: boolean }> => {
+    if (!user) return { ok: false };
     const result = await createWithdrawRequest({
-      userId: user.id,
-      amount,
-      bankInfo,
+      amount: Number(amount),
+      bankName: bankInfo.bankName.trim(),
+      bankAccountNumber: bankInfo.accountNumber.trim(),
+      bankAccountName: bankInfo.accountName.trim().toUpperCase(),
     });
     if (result.ok) {
+      toast.success("Đã gửi yêu cầu rút tiền. Vui lòng chờ admin xử lý.");
       await loadData();
+      return { ok: true };
+    } else {
+      toast.error(result.error ?? "Không thể gửi yêu cầu rút tiền.");
+      return { ok: false };
     }
   };
 

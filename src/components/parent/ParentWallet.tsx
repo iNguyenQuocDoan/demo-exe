@@ -22,7 +22,7 @@ interface ParentWalletProps {
   frozenBalance?: number;
   transactions?: Transaction[];
   onDeposit?: (amount: number, method: PaymentMethod) => Promise<void>;
-  onWithdraw?: (amount: number, bankInfo: BankInfo) => Promise<void>;
+  onWithdraw?: (amount: number, bankInfo: BankInfo) => Promise<{ ok: boolean } | undefined>;
 }
 
 export function ParentWallet({ userId, balance, frozenBalance = 0, transactions = [], onDeposit, onWithdraw }: ParentWalletProps) {
@@ -55,27 +55,33 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
   };
 
   const handleWithdraw = async () => {
-    if (withdrawAmount < 50000) {
-      alert("Số tiền rút tối thiểu là 50,000 VNĐ");
+    if (!withdrawAmount || withdrawAmount <= 0) {
+      alert("Số tiền rút phải lớn hơn 0 VNĐ");
       return;
     }
     
     if (withdrawAmount > balance) {
-      alert("Số dư không đủ!");
+      alert("Số dư khả dụng không đủ!");
       return;
     }
     
-    if (!bankInfo.bankName || !bankInfo.accountNumber || !bankInfo.accountName) {
+    if (!bankInfo.bankName.trim() || !bankInfo.accountNumber.trim() || !bankInfo.accountName.trim()) {
       alert("Vui lòng điền đầy đủ thông tin ngân hàng!");
       return;
     }
     
     setLoading(true);
     try {
-      await onWithdraw?.(withdrawAmount, bankInfo);
-      setShowWithdraw(false);
-      setWithdrawAmount(0);
-      setBankInfo({ bankName: "", accountNumber: "", accountName: "" });
+      const res = await onWithdraw?.(withdrawAmount, {
+        bankName: bankInfo.bankName.trim(),
+        accountNumber: bankInfo.accountNumber.trim(),
+        accountName: bankInfo.accountName.trim().toUpperCase()
+      });
+      if (res?.ok) {
+        setShowWithdraw(false);
+        setWithdrawAmount(0);
+        setBankInfo({ bankName: "", accountNumber: "", accountName: "" });
+      }
     } finally {
       setLoading(false);
     }
@@ -252,7 +258,7 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
               <label className="text-sm font-medium">Tên chủ tài khoản</label>
               <Input
                 value={bankInfo.accountName}
-                onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value })}
+                onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })}
                 placeholder="NGUYEN VAN A"
               />
             </div>

@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { TRANSACTION_TYPE_META, TRANSACTION_STATUS_META, txDisplay } from "@/lib/statusMeta";
 import { useAuthStore } from "@/store/useAuthStore";
+import { toast } from "sonner";
 import type { Transaction } from "@/types";
 
 export default function TutorWalletPage() {
@@ -46,19 +47,34 @@ export default function TutorWalletPage() {
   }, [isLoading, loadData, user]);
 
   const handleWithdraw = async () => {
-    if (withdrawAmount < 50000) { alert("Số tiền rút tối thiểu là 50,000 VNĐ"); return; }
-    if (withdrawAmount > balance) { alert("Số dư không đủ!"); return; }
-    if (!bankInfo.bankName || !bankInfo.accountNumber || !bankInfo.accountName) {
-      alert("Vui lòng điền đầy đủ thông tin ngân hàng!"); return;
+    if (!withdrawAmount || withdrawAmount <= 0) {
+      toast.error("Số tiền rút phải lớn hơn 0 VNĐ");
+      return;
+    }
+    if (withdrawAmount > balance) {
+      toast.error("Số dư khả dụng không đủ!");
+      return;
+    }
+    if (!bankInfo.bankName.trim() || !bankInfo.accountNumber.trim() || !bankInfo.accountName.trim()) {
+      toast.error("Vui lòng điền đầy đủ thông tin ngân hàng!");
+      return;
     }
     setSubmitting(true);
     try {
-      const result = await createWithdrawRequest({ userId: user!.id, amount: withdrawAmount, bankInfo });
+      const result = await createWithdrawRequest({
+        amount: Number(withdrawAmount),
+        bankName: bankInfo.bankName.trim(),
+        bankAccountNumber: bankInfo.accountNumber.trim(),
+        bankAccountName: bankInfo.accountName.trim().toUpperCase(),
+      });
       if (result.ok) {
+        toast.success("Đã gửi yêu cầu rút tiền. Vui lòng chờ admin xử lý.");
         setShowWithdraw(false);
         setWithdrawAmount(0);
         setBankInfo({ bankName: "", accountNumber: "", accountName: "" });
         await loadData();
+      } else {
+        toast.error(result.error ?? "Không thể gửi yêu cầu rút tiền.");
       }
     } finally {
       setSubmitting(false);
@@ -172,7 +188,7 @@ export default function TutorWalletPage() {
                   <label className="text-sm font-medium">Tên chủ tài khoản</label>
                   <Input
                     value={bankInfo.accountName}
-                    onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value })}
+                    onChange={(e) => setBankInfo({ ...bankInfo, accountName: e.target.value.toUpperCase() })}
                     placeholder="NGUYEN VAN A"
                   />
                 </div>
