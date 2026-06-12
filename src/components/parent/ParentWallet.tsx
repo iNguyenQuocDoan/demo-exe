@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Wallet, Plus, ArrowUpCircle, Clock, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -21,15 +21,15 @@ interface ParentWalletProps {
   /** Tiền đang bị giữ (escrow) cho booking chưa hoàn tất — BE `frozenBalance`. */
   frozenBalance?: number;
   transactions?: Transaction[];
-  onDeposit?: (amount: number, method: PaymentMethod) => Promise<void>;
+  onDeposit?: (amount: number) => Promise<{ ok: boolean } | undefined>;
   onWithdraw?: (amount: number, bankInfo: BankInfo) => Promise<{ ok: boolean } | undefined>;
+  defaultOpenDeposit?: boolean;
 }
 
-export function ParentWallet({ userId, balance, frozenBalance = 0, transactions = [], onDeposit, onWithdraw }: ParentWalletProps) {
+export function ParentWallet({ userId, balance, frozenBalance = 0, transactions = [], onDeposit, onWithdraw, defaultOpenDeposit = false }: ParentWalletProps) {
   const [showDeposit, setShowDeposit] = useState(false);
   const [showWithdraw, setShowWithdraw] = useState(false);
   const [depositAmount, setDepositAmount] = useState(100000);
-  const [depositMethod, setDepositMethod] = useState<PaymentMethod>("BANK_TRANSFER");
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [bankInfo, setBankInfo] = useState({
     bankName: "",
@@ -37,20 +37,37 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
     accountName: "",
   });
   const [loading, setLoading] = useState(false);
+  const [depositLoading, setDepositLoading] = useState(false);
+
+  useEffect(() => {
+    if (defaultOpenDeposit) {
+      setShowDeposit(true);
+    }
+  }, [defaultOpenDeposit]);
 
   const handleDeposit = async () => {
-    if (depositAmount < 10000) {
-      alert("Số tiền nạp tối thiểu là 10,000 VNĐ");
+    if (!depositAmount || Number(depositAmount) <= 0) {
+      alert("Vui lòng nhập số tiền hợp lệ");
+      return;
+    }
+    if (Number(depositAmount) < 2000) {
+      alert("Số tiền nạp tối thiểu là 2,000 VNĐ");
+      return;
+    }
+    if (!Number.isInteger(Number(depositAmount))) {
+      alert("Số tiền nạp phải là số nguyên");
       return;
     }
     
-    setLoading(true);
+    setDepositLoading(true);
     try {
-      await onDeposit?.(depositAmount, depositMethod);
-      setShowDeposit(false);
-      setDepositAmount(100000);
+      const res = await onDeposit?.(Number(depositAmount));
+      if (res?.ok) {
+        setShowDeposit(false);
+        setDepositAmount(100000);
+      }
     } finally {
-      setLoading(false);
+      setDepositLoading(false);
     }
   };
 
@@ -150,7 +167,7 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
                 type="number"
                 value={depositAmount}
                 onChange={(e) => setDepositAmount(Number(e.target.value))}
-                min={10000}
+                min={2000}
                 step={10000}
               />
               <div className="flex flex-wrap gap-2 mt-2">
@@ -167,46 +184,18 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
               </div>
             </div>
             
-            <div>
-              <label className="text-sm font-medium mb-2 block">Phương thức thanh toán</label>
-              <div className="space-y-2">
-                {[
-                  { value: "BANK_TRANSFER", label: "Chuyển khoản ngân hàng" },
-                  { value: "MOMO", label: "Ví MoMo" },
-                  { value: "VNPAY", label: "VNPay" },
-                  { value: "ZALOPAY", label: "ZaloPay" },
-                ].map(method => (
-                  <label key={method.value} className="flex items-center gap-2 p-3 border rounded-lg cursor-pointer hover:bg-muted">
-                    <input
-                      type="radio"
-                      name="depositMethod"
-                      checked={depositMethod === method.value}
-                      onChange={() => setDepositMethod(method.value as PaymentMethod)}
-                    />
-                    <span className="text-sm">{method.label}</span>
-                  </label>
-                ))}
-              </div>
+            <div className="bg-muted/40 border border-border/60 rounded-xl p-4 text-sm space-y-1">
+              <p className="font-semibold text-foreground">Phương thức thanh toán:</p>
+              <p className="text-xs text-muted-foreground">
+                Thanh toán an toàn qua cổng **PayOS** (hỗ trợ chuyển khoản nhanh 24/7 bằng quét mã QR ngân hàng hoặc thẻ ATM nội địa).
+              </p>
             </div>
             
-            {depositMethod === "BANK_TRANSFER" && (
-              <div className="bg-muted/50 rounded-lg p-4 text-sm">
-                <p className="font-semibold mb-2">Thông tin chuyển khoản:</p>
-                <p>Ngân hàng: <strong>Vietcombank</strong></p>
-                <p>Số tài khoản: <strong>1234567890</strong></p>
-                <p>Chủ tài khoản: <strong>CONG TY GIASUHUB</strong></p>
-                <p className="mt-2">Nội dung: <strong className="text-primary">NAP {userId}</strong></p>
-                <p className="text-xs text-muted-foreground mt-2">
-                  * Sau khi chuyển khoản, vui lòng chờ 5-15 phút để hệ thống xác nhận
-                </p>
-              </div>
-            )}
-            
             <div className="flex gap-2">
-              <Button onClick={handleDeposit} loading={loading} className="flex-1">
-                Xác nhận nạp {depositAmount.toLocaleString("vi-VN")} VNĐ
+              <Button onClick={handleDeposit} loading={depositLoading} disabled={depositLoading} className="flex-1">
+                {depositLoading ? "Đang tạo link thanh toán..." : `Tiếp tục thanh toán ${Number(depositAmount).toLocaleString("vi-VN")} VNĐ`}
               </Button>
-              <Button variant="outline" onClick={() => setShowDeposit(false)}>
+              <Button variant="outline" onClick={() => setShowDeposit(false)} disabled={depositLoading}>
                 Hủy
               </Button>
             </div>

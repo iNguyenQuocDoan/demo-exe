@@ -327,3 +327,12 @@ export async function getBookingHoldsForUser(): Promise<BookingHold[]> {
   return [];
 }
 
+export async function createPayOSPaymentLink(amount: number): Promise<{ paymentUrl: string; success: boolean }> {
+  const { data } = await realApiClient.post<{ paymentUrl: string; success: boolean }>(
+    "/wallet/create-link",
+    null,
+    { params: { amount } }
+  );
+  return data;
+}
+

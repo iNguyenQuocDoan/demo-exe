@@ -5,12 +5,12 @@ import { useAuthStore } from "@/store/useAuthStore";
 import {
   getWallet,
   getTransactions,
-  createDepositRequest,
   createWithdrawRequest,
+  createPayOSPaymentLink,
 } from "@/api/walletApi";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import type { Transaction, PaymentMethod } from "@/types";
+import type { Transaction } from "@/types";
 
 export default function ParentWalletPage() {
   const { user, isLoading } = useAuthStore();
@@ -19,6 +19,7 @@ export default function ParentWalletPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [depositSucceeded, setDepositSucceeded] = useState(false);
+  const [defaultOpenDeposit, setDefaultOpenDeposit] = useState(false);
 
   const loadData = useCallback(async () => {
     setLoading(true);
@@ -40,31 +41,38 @@ export default function ParentWalletPage() {
     void loadData();
   }, [isLoading, loadData, user]);
 
-  // Hiện banner khi vừa nạp tiền thành công (redirect từ /payment/vnpay-return).
+  // Hiện banner khi vừa nạp tiền thành công (redirect từ /payment/vnpay-return hoặc /payment/success).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const params = new URLSearchParams(window.location.search);
     if (params.get("deposit") === "success") {
       setDepositSucceeded(true);
-      // Xoá query param khỏi URL để reload không hiện lại banner.
+      window.history.replaceState(null, "", window.location.pathname);
+    } else if (params.get("deposit") === "open") {
+      setDefaultOpenDeposit(true);
       window.history.replaceState(null, "", window.location.pathname);
     }
   }, []);
 
-  const handleDeposit = async (amount: number, method: PaymentMethod) => {
-    if (!user) return;
-    const result = await createDepositRequest({
-      userId: user.id,
-      amount,
-      paymentMethod: method,
-    });
-    if (result.ok && result.redirectUrl) {
-      // BE trả URL cổng thanh toán VNPay → phải chuyển hướng người dùng sang đó để trả tiền.
-      window.location.href = result.redirectUrl;
-      return;
+  const handleDeposit = async (amount: number): Promise<{ ok: boolean }> => {
+    if (!user) return { ok: false };
+    try {
+      const result = await createPayOSPaymentLink(amount);
+      if (result.success && result.paymentUrl) {
+        window.location.href = result.paymentUrl;
+        return { ok: true };
+      } else {
+        toast.error("Không nhận được link thanh toán từ PayOS.");
+        return { ok: false };
+      }
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.message ??
+        err.response?.data?.error ??
+        "Không thể tạo link thanh toán PayOS.";
+      toast.error(msg);
+      return { ok: false };
     }
-    alert(result.error ?? "Không thể khởi tạo nạp tiền. Vui lòng thử lại.");
-    await loadData();
   };
 
   const handleWithdraw = async (
@@ -128,6 +136,7 @@ export default function ParentWalletPage() {
         transactions={transactions}
         onDeposit={handleDeposit}
         onWithdraw={handleWithdraw}
+        defaultOpenDeposit={defaultOpenDeposit}
       />
     </div>
   );
