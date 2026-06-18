@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
@@ -29,7 +29,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseBeDate, formatVietnamShortDate } from "@/lib/utils";
 import type { FreeSlot, Review, TutorProfile } from "@/types";
 import { format } from "date-fns";
 
@@ -69,8 +69,8 @@ export default function TutorDetailPage() {
       const busy = bookings
         .filter((b) => b.status === "Confirmed" || b.status === "Pending" || b.status === "InProgress")
         .map((b) => ({
-          date: format(new Date(b.startAt), "yyyy-MM-dd"),
-          startTime: format(new Date(b.startAt), "HH:mm"),
+          date: format(parseBeDate(b.startAt), "yyyy-MM-dd"),
+          startTime: format(parseBeDate(b.startAt), "HH:mm"),
         }));
       setBusySlots(busy);
       setLoading(false);
@@ -266,7 +266,7 @@ export default function TutorDetailPage() {
                           </div>
                           <p className="text-sm text-muted-foreground">{review.comment}</p>
                           <p className="mt-1 text-xs text-muted-foreground/80">
-                            {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                            {formatVietnamShortDate(review.createdAt)}
                           </p>
                         </div>
                       ))

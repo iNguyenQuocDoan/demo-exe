@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { AlertCircle, AlertTriangle, Calendar, CheckCircle2, Repeat2 } from "lucide-react";
@@ -16,7 +16,7 @@ import { createSeries, previewSeries } from "@/api/bookingApi";
 import { getFeeConfig } from "@/api/referenceApi";
 import { computeFeeBreakdown } from "@/lib/business/rules";
 import { useAuthStore } from "@/store/useAuthStore";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, parseBeDate } from "@/lib/utils";
 import type { FeeConfig, TutorProfile } from "@/types";
 import { format } from "date-fns";
 
@@ -256,10 +256,10 @@ export function RecurringModal({ tutor, onClose }: Props) {
                 <div key={index} className="flex items-center justify-between px-4 py-2.5 text-sm">
                   <div className="flex items-center gap-2">
                     <Calendar className="h-3.5 w-3.5 text-primary" />
-                    <span className="font-medium">{format(new Date(session.startAt), "EEE, dd/MM/yyyy")}</span>
+                    <span className="font-medium">{format(parseBeDate(session.startAt), "EEE, dd/MM/yyyy")}</span>
                   </div>
                   <span className="text-muted-foreground">
-                    {format(new Date(session.startAt), "HH:mm")} - {format(new Date(session.endAt), "HH:mm")}
+                    {format(parseBeDate(session.startAt), "HH:mm")} - {format(parseBeDate(session.endAt), "HH:mm")}
                   </span>
                 </div>
               ))}
@@ -318,7 +318,7 @@ export function RecurringModal({ tutor, onClose }: Props) {
               <div className="max-h-36 w-full space-y-1 overflow-y-auto rounded-xl border border-destructive/30 bg-destructive/5 p-3 text-xs">
                 {conflicts.map((item, index) => (
                   <div key={index} className="text-destructive">
-                    {format(new Date(item), "EEE dd/MM/yyyy HH:mm")}
+                    {format(parseBeDate(item), "EEE dd/MM/yyyy HH:mm")}
                   </div>
                 ))}
               </div>

@@ -14,7 +14,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuthStore } from "@/store/useAuthStore";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatVietnamDateTime, formatVietnamDate, formatVietnamTime, parseBeDate } from "@/lib/utils";
 import {
   getBookings, acceptBooking, cancelBooking,
   startBooking, tutorCompleteBooking,
@@ -26,6 +26,7 @@ import { getUserContactMap, type UserContact } from "@/api/referenceApi";
 import { getOrCreateConversation } from "@/api/chatApi";
 import { ScheduleCalendar } from "@/components/tutor/ScheduleCalendar";
 import { AvailabilityManager } from "@/components/tutor/AvailabilityManager";
+import { UploadEvidenceModal } from "@/components/booking/UploadEvidenceModal";
 import type { Booking, CalendarEvent } from "@/types";
 
 /* ─── helpers ─────────────────────────────────────────────────────────────── */
@@ -134,8 +135,8 @@ function BookingCard({
   // Trạng thái lấy thẳng từ BE (InProgress là status thật sau khi gia sư bấm "Bắt đầu").
   const effectiveStatus: Booking["status"] = booking.status;
   const showContact   = ["Confirmed", "InProgress"].includes(effectiveStatus);
-  const start         = new Date(booking.startAt);
-  const end           = new Date(booking.endAt);
+  const start         = parseBeDate(booking.startAt);
+  const end           = parseBeDate(booking.endAt);
   const durationMin   = Math.round((end.getTime() - start.getTime()) / 60000);
   const { label, variant } = STATUS_CONFIG[effectiveStatus] ?? { label: effectiveStatus, variant: "default" as const };
   const busy = actionLoadingId === booking.id;
@@ -187,13 +188,13 @@ function BookingCard({
           <div className="flex items-center gap-3 text-sm text-muted-foreground flex-wrap">
             <span className="flex items-center gap-1">
               <Calendar className="h-3.5 w-3.5" />
-              {start.toLocaleDateString("vi-VN", { weekday: "short", day: "2-digit", month: "2-digit", year: "numeric" })}
+              {formatVietnamDate(booking.startAt)}
             </span>
             <span className="flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" />
-              {start.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+              {formatVietnamTime(booking.startAt)}
               {" – "}
-              {end.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+              {formatVietnamTime(booking.endAt)}
               <span className="text-muted-foreground/60 ml-0.5">({durationMin} phút)</span>
             </span>
           </div>
@@ -310,6 +311,7 @@ export default function TutorCalendarPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [bookingSubTab, setBookingSubTab]     = useState("pending");
   const [search, setSearch]                   = useState("");
+  const [uploadTarget, setUploadTarget]       = useState<{ id: string; type: "start" | "complete" } | null>(null);
 
   // Add tutor slot states
   const [showAddSlotModal, setShowAddSlotModal] = useState(false);
@@ -427,20 +429,14 @@ export default function TutorCalendarPage() {
     if (!res.ok) { alert(res.error ?? "Không thể hủy buổi học"); return; }
     await load(tutorId, true);
   });
-  // Bắt đầu buổi học → PUT /bookings/{id}/start (BE chuyển sang InProgress).
-  const handleStart = (id: string) => withLoading(id, async () => {
-    const res = await startBooking(id);
-    if (!res.ok) { alert(res.error ?? "Không thể bắt đầu buổi học"); return; }
-    if (tutorId) await load(tutorId, true);
-  });
-  // Gia sư xác nhận hoàn thành → POST /bookings/{id}/tutor-complete (KHÔNG dùng /complete
-  // vì endpoint đó chỉ dành cho PARENT). Sau đó phụ huynh mới xác nhận để giải ngân.
-  const handleComplete = (id: string) => withLoading(id, async () => {
-    const res = await tutorCompleteBooking(id);
-    if (!res.ok) { alert(res.error ?? "Không thể hoàn thành buổi học"); return; }
-    if (tutorId) await load(tutorId, true);
-    setBookingSubTab("completed");
-  });
+  // Bắt đầu buổi học → mở modal upload ảnh bằng chứng
+  const handleStart = (id: string) => {
+    setUploadTarget({ id, type: "start" });
+  };
+  // Gia sư xác nhận hoàn thành → mở modal upload ảnh bằng chứng
+  const handleComplete = (id: string) => {
+    setUploadTarget({ id, type: "complete" });
+  };
   const handleChat = useCallback(async (booking: Booking) => {
     if (!user) return;
     const parentName = parentContactMap[booking.parentId]?.name ?? booking.parentId;
@@ -734,6 +730,22 @@ export default function TutorCalendarPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal Upload bằng chứng học tập cho Gia sư */}
+      {uploadTarget && (
+        <UploadEvidenceModal
+          bookingId={uploadTarget.id}
+          type={uploadTarget.type}
+          open={!!uploadTarget}
+          onClose={() => setUploadTarget(null)}
+          onSuccess={async () => {
+            if (tutorId) await load(tutorId, true);
+            if (uploadTarget.type === "complete") {
+              setBookingSubTab("completed");
+            }
+          }}
+        />
       )}
     </main>
   );

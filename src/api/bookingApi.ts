@@ -235,13 +235,67 @@ async function bookingAction(
   }
 }
 
+export interface BookingDetail extends Booking {
+  bookingId: string;
+  startTime: string;
+  endTime: string;
+  totalPrice: number;
+  startImageUrl?: string | null;
+  endImageUrl?: string | null;
+  startCheckInTime?: string | null;
+  endCheckInTime?: string | null;
+  penaltyAmount?: number | null;
+  lateMinutes?: number | null;
+  parentConfirmed?: boolean;
+  tutorConfirmed?: boolean;
+  createdAt: string;
+  completedAt?: string | null;
+  message?: string | null;
+  late?: boolean;
+  parentName?: string;
+}
+
+export async function getBookingDetail(bookingId: string): Promise<BookingDetail> {
+  const { data } = await realApiClient.get<any>(`/bookings/${bookingId}`);
+  return {
+    ...data,
+    id: data.bookingId,
+    type: "NORMAL",
+    parentId: "",
+    tutorId: "",
+    tutorName: data.tutorName,
+    parentName: data.parentName,
+    startAt: data.startTime,
+    endAt: data.endTime,
+    baseAmount: data.totalPrice,
+    totalAmount: data.totalPrice,
+    status: mapBeStatus(data.status),
+    teachingMode: "OFFLINE",
+    startImageUrl: data.startImageUrl,
+    endImageUrl: data.endImageUrl,
+    startCheckInTime: data.startCheckInTime,
+    endCheckInTime: data.endCheckInTime,
+    penaltyAmount: data.penaltyAmount,
+    lateMinutes: data.lateMinutes,
+    parentConfirmed: data.parentConfirmed,
+    tutorConfirmed: data.tutorConfirmed,
+    createdAt: data.createdAt,
+    completedAt: data.completedAt,
+    message: data.message,
+    late: data.late,
+  };
+}
+
 export const acceptBooking = (id: string) => bookingAction(id, "accept");
 export const rejectBooking = (id: string) => bookingAction(id, "reject");
+
 // Gia sư bắt đầu buổi học → BE chuyển trạng thái sang InProgress.
-// LƯU Ý: endpoint này là PUT (khác accept/complete dùng POST).
-export const startBooking = async (id: string): Promise<{ ok: boolean; error?: string }> => {
+// LƯU Ý: endpoint này là PUT, yêu cầu file minh chứng bắt đầu buổi học.
+export const startBooking = async (id: string, file: File): Promise<{ ok: boolean; error?: string }> => {
   try {
-    await realApiClient.put(`/bookings/${id}/start`);
+    const formData = new FormData();
+    formData.append("file", file);
+    await realApiClient.put(`/bookings/${id}/start`, formData);
     return { ok: true };
   } catch (err: unknown) {
     const msg =
@@ -250,11 +304,26 @@ export const startBooking = async (id: string): Promise<{ ok: boolean; error?: s
     return { ok: false, error: msg };
   }
 };
+
 // Phụ huynh xác nhận hoàn thành (POST /bookings/{id}/complete)
 export const completeBooking = (id: string) => bookingAction(id, "complete");
+
 // Gia sư xác nhận hoàn thành (POST /bookings/{id}/tutor-complete).
-// LƯU Ý BE: chỉ hoàn thành được buổi đã qua giờ học (buổi tương lai → 500).
-export const tutorCompleteBooking = (id: string) => bookingAction(id, "tutor-complete");
+// Yêu cầu file minh chứng hoàn thành.
+export const tutorCompleteBooking = async (id: string, file: File): Promise<{ ok: boolean; error?: string }> => {
+  try {
+    const formData = new FormData();
+    formData.append("file", file);
+    await realApiClient.post(`/bookings/${id}/tutor-complete`, formData);
+    return { ok: true };
+  } catch (err: unknown) {
+    const msg =
+      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      "Không thể báo cáo hoàn thành buổi học";
+    return { ok: false, error: msg };
+  }
+};
+
 export const cancelBooking = (
   id: string,
   _cancelBy?: string,

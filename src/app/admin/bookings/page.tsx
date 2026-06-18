@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatVietnamDateTime } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { Booking, BookingStatus } from "@/types";
 {/* nội dung comment */ }
@@ -165,7 +165,7 @@ export default function AdminBookingsPage() {
                       </div>
                       <div>
                         <p className="font-semibold text-foreground">{formatCurrency(item.totalAmount)}</p>
-                        <p className="text-xs text-muted-foreground">{new Date(item.startAt).toLocaleString("vi-VN")}</p>
+                        <p className="text-xs text-muted-foreground">{formatVietnamDateTime(item.startAt)}</p>
                       </div>
                     </div>
                   </article>

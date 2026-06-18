@@ -24,7 +24,7 @@ import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatVietnamDateTime, formatVietnamTime, formatVietnamShortDate, formatVietnamDayMonth } from "@/lib/utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { Booking, Review, ScheduleSeries } from "@/types";
 
@@ -315,7 +315,7 @@ export default function TutorDashboard() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(booking.startAt).toLocaleString("vi-VN")} · {formatCurrency(booking.totalAmount)}
+                          {formatVietnamDateTime(booking.startAt)} · {formatCurrency(booking.totalAmount)}
                         </p>
                       </div>
                       <div className="flex shrink-0 gap-2">
@@ -372,10 +372,10 @@ export default function TutorDashboard() {
                     <article key={booking.id} className="flex items-center gap-3 px-5 py-3">
                       <div className="flex h-10 w-12 shrink-0 flex-col items-center justify-center rounded-xl bg-success/10 text-center">
                         <span className="text-[10px] font-medium leading-tight text-success">
-                          {new Date(booking.startAt).toLocaleDateString("vi-VN", { day: "numeric", month: "short" })}
+                          {formatVietnamDayMonth(booking.startAt)}
                         </span>
                         <span className="text-xs font-bold leading-tight text-success">
-                          {new Date(booking.startAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                          {formatVietnamTime(booking.startAt)}
                         </span>
                       </div>
                       <div className="min-w-0 flex-1">
@@ -438,7 +438,7 @@ export default function TutorDashboard() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">
-                            {new Date(review.createdAt).toLocaleDateString("vi-VN")}
+                            {formatVietnamShortDate(review.createdAt)}
                           </span>
                           {!review.tutorReply ? (
                             <Badge variant="warning">Chưa phản hồi</Badge>

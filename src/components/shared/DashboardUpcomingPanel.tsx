@@ -29,11 +29,12 @@ function isTomorrow(dateStr: string) {
 function formatEventDate(dateStr: string) {
   if (isToday(dateStr)) return "Hôm nay";
   if (isTomorrow(dateStr)) return "Ngày mai";
-  return new Date(dateStr + "T00:00:00").toLocaleDateString("vi-VN", {
+  return new Intl.DateTimeFormat("vi-VN", {
+    timeZone: "Asia/Ho_Chi_Minh",
     weekday: "short",
     day: "numeric",
     month: "short",
-  });
+  }).format(new Date(dateStr + "T00:00:00"));
 }
 
 /**

@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { useNotificationStore } from "@/store/useNotificationStore";
 import { useAuthStore } from "@/store/useAuthStore";
 import type { NotificationType } from "@/types";
-import { cn } from "@/lib/utils";
+import { cn, parseBeDate } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 import { vi } from "date-fns/locale";
 
@@ -19,6 +19,42 @@ function notifIcon(type: NotificationType) {
   if (type.startsWith("report")) return <Flag className="h-4 w-4 text-destructive" />;
   if (type.startsWith("application")) return <UserCheck className="h-4 w-4 text-blue-500" />;
   return <Bell className="h-4 w-4 text-muted-foreground" />;
+}
+
+function formatNotificationTime(dateStr: string): string {
+  try {
+    const date = parseBeDate(dateStr);
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    // Xử lý khi thông báo mới dưới 60 giây hoặc do lệch clock hệ thống nhẹ
+    if (diffInSeconds < 60) {
+      return "Vừa xong";
+    }
+    if (diffInSeconds < 3600) {
+      const mins = Math.floor(diffInSeconds / 60);
+      return `${mins} phút trước`;
+    }
+    if (diffInSeconds < 86400) {
+      const hours = Math.floor(diffInSeconds / 3600);
+      return `${hours} giờ trước`;
+    }
+    
+    // Nếu khoảng cách lớn hơn 7 ngày, trả về thời gian tuyệt đối dd/MM/yyyy HH:mm
+    if (diffInSeconds > 7 * 86400) {
+      const pad = (n: number) => String(n).padStart(2, "0");
+      return `${pad(date.getDate())}/${pad(date.getMonth() + 1)}/${date.getFullYear()} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+    }
+
+    return formatDistanceToNow(date, { addSuffix: true, locale: vi });
+  } catch {
+    try {
+      const d = new Date(dateStr);
+      return d.toLocaleString("vi-VN");
+    } catch {
+      return "—";
+    }
+  }
 }
 
 export function NotificationPanel() {
@@ -37,6 +73,13 @@ export function NotificationPanel() {
     const id = setInterval(() => fetch(), 30_000);
     return () => clearInterval(id);
   }, [user, fetch]);
+
+  // Refetch notifications and unread count immediately when dropdown is opened
+  useEffect(() => {
+    if (open && user) {
+      void fetch();
+    }
+  }, [open, user, fetch]);
 
   useEffect(() => {
     function onOutside(e: MouseEvent) {
@@ -152,7 +195,7 @@ export function NotificationPanel() {
                         </div>
                         <p className="mt-0.5 text-xs text-muted-foreground line-clamp-2">{n.message}</p>
                         <p className="mt-1 text-[10px] text-muted-foreground/70">
-                          {formatDistanceToNow(new Date(n.createdAt), { addSuffix: true, locale: vi })}
+                          {formatNotificationTime(n.createdAt)}
                         </p>
                       </div>
                     </div>

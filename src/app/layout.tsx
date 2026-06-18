@@ -84,7 +84,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" className={bodyFont.variable}>
+    <html lang="vi" className={bodyFont.variable} suppressHydrationWarning>
       <body className="antialiased min-h-screen flex flex-col">
         <JsonLd data={[organizationJsonLd(), webSiteJsonLd()]} />
         <AuthProvider>

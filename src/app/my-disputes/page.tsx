@@ -12,6 +12,8 @@ import {
   MessageSquare,
   XCircle,
   Search,
+  Image as ImageIcon,
+  X,
 } from "lucide-react";
 import { getMyDisputes, replyDispute, type DisputeItem } from "@/api/feedbackApi";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -20,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { toast } from "sonner";
+import { formatVietnamDateTime } from "@/lib/utils";
 
 const STATUS_META: Record<string, {
   label: string;
@@ -51,8 +54,13 @@ export default function MyDisputesPage() {
   // State modal phản hồi
   const [replyTarget, setReplyTarget] = useState<DisputeItem | null>(null);
   const [replyText, setReplyText] = useState("");
+  const [replyFile, setReplyFile] = useState<File | null>(null);
+  const [replyFilePreview, setReplyFilePreview] = useState<string>("");
   const [submittingReply, setSubmittingReply] = useState(false);
   const [replyError, setReplyError] = useState("");
+
+  // State phóng to ảnh
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
   
   // Bộ lọc tìm kiếm
   const [searchQuery, setSearchQuery] = useState("");
@@ -68,7 +76,7 @@ export default function MyDisputesPage() {
       );
       setDisputes(sorted);
     } catch (err: any) {
-      setError(err?.message ?? "Không thể tải danh sách tranh chấp.");
+      setError(err?.message ?? "Không thể tải danh sách khiếu nại.");
     }
   };
 
@@ -109,6 +117,34 @@ export default function MyDisputesPage() {
     });
   }, [disputes, searchQuery, statusFilter]);
 
+  const handleReplyFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = e.target.files?.[0];
+    if (!selected) return;
+
+    if (!selected.type.startsWith("image/")) {
+      setReplyError("Chỉ chấp nhận file định dạng hình ảnh.");
+      return;
+    }
+
+    if (selected.size > 5 * 1024 * 1024) {
+      setReplyError("Kích thước file ảnh không được vượt quá 5MB.");
+      return;
+    }
+
+    setReplyError("");
+    setReplyFile(selected);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setReplyFilePreview(reader.result as string);
+    };
+    reader.readAsDataURL(selected);
+  };
+
+  const handleRemoveReplyFile = () => {
+    setReplyFile(null);
+    setReplyFilePreview("");
+  };
+
   // Xử lý gửi phản hồi
   const handleSendReply = async () => {
     if (!replyTarget) return;
@@ -125,10 +161,16 @@ export default function MyDisputesPage() {
     setReplyError("");
     setSubmittingReply(true);
     try {
-      await replyDispute(replyTarget.id, trimmedReply);
+      await replyDispute(
+        replyTarget.id,
+        trimmedReply,
+        replyFile ?? undefined
+      );
       toast.success("Gửi phản hồi thành công!");
       setReplyTarget(null);
       setReplyText("");
+      setReplyFile(null);
+      setReplyFilePreview("");
       // Tải lại danh sách
       await loadDisputes();
     } catch (err: any) {
@@ -266,15 +308,20 @@ export default function MyDisputesPage() {
               {filteredDisputes.map((item) => {
                 const statusDetails = getStatusDetails(item.status);
                 const isTutor = user?.role === "tutor";
-                const canReply = isTutor && !item.responderReply && statusDetails === STATUS_META.PENDING;
+                const isParent = user?.role === "parent";
+                const isPending = statusDetails === STATUS_META.PENDING;
+                const hasNoReply = !item.responderReply;
+
+                const isTutorTarget = item.type === "PARENT_TO_TUTOR" || !item.type;
+                const isParentTarget = item.type === "TUTOR_TO_PARENT";
+
+                const canReply = isPending && hasNoReply && (
+                  (isTutor && isTutorTarget) ||
+                  (isParent && isParentTarget)
+                );
                 
-                const createdDate = new Date(item.createdAt).toLocaleDateString("vi-VN", {
-                  day: "2-digit",
-                  month: "2-digit",
-                  year: "numeric",
-                  hour: "2-digit",
-                  minute: "2-digit"
-                });
+                const createdDate = formatVietnamDateTime(item.createdAt);
+                const responderLabel = item.type === "TUTOR_TO_PARENT" ? "Phụ huynh" : "Gia sư";
 
                 return (
                   <article
@@ -320,7 +367,7 @@ export default function MyDisputesPage() {
                     {/* Responder reply */}
                     {item.responderReply ? (
                       <div className="space-y-1 pl-4 border-l-2 border-primary/40">
-                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Phản hồi của Gia sư:</h4>
+                        <h4 className="text-xs font-bold text-primary uppercase tracking-wider">Phản hồi của {responderLabel}:</h4>
                         <p className="text-sm text-foreground whitespace-pre-wrap leading-relaxed bg-primary/5 p-3 rounded-lg border border-primary/10">
                           {item.responderReply}
                         </p>
@@ -329,9 +376,45 @@ export default function MyDisputesPage() {
                       !canReply && (
                         <div className="text-xs text-muted-foreground italic flex items-center gap-1.5 bg-muted/40 p-2.5 rounded-lg border border-border/30">
                           <Clock className="h-3.5 w-3.5" />
-                          Chưa có phản hồi từ gia sư.
+                          Chưa có phản hồi từ {responderLabel.toLowerCase()}.
                         </div>
                       )
+                    )}
+
+                    {/* Evidence Images */}
+                    {(item.evidenceSendUrl || item.evidenceReplyUrl) && (
+                      <div className="grid grid-cols-2 gap-3 pt-1">
+                        {item.evidenceSendUrl && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-muted-foreground block uppercase">Ảnh bằng chứng khiếu nại:</span>
+                            <div
+                              onClick={() => setPreviewImage(item.evidenceSendUrl!)}
+                              className="relative aspect-video max-w-[200px] border border-border rounded-lg overflow-hidden group cursor-pointer hover:border-primary/50 transition-all shadow-sm bg-muted/20"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={item.evidenceSendUrl} alt="Bằng chứng gửi" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="text-white text-[10px] font-medium bg-black/50 px-1.5 py-0.5 rounded">Xem</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                        {item.evidenceReplyUrl && (
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-muted-foreground block uppercase">Ảnh bằng chứng phản hồi:</span>
+                            <div
+                              onClick={() => setPreviewImage(item.evidenceReplyUrl!)}
+                              className="relative aspect-video max-w-[200px] border border-border rounded-lg overflow-hidden group cursor-pointer hover:border-primary/50 transition-all shadow-sm bg-muted/20"
+                            >
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img src={item.evidenceReplyUrl} alt="Bằng chứng nhận" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                              <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                                <span className="text-white text-[10px] font-medium bg-black/50 px-1.5 py-0.5 rounded">Xem</span>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* Actions */}
@@ -349,6 +432,8 @@ export default function MyDisputesPage() {
                           onClick={() => {
                             setReplyTarget(item);
                             setReplyText("");
+                            setReplyFile(null);
+                            setReplyFilePreview("");
                             setReplyError("");
                           }}
                         >
@@ -392,7 +477,7 @@ export default function MyDisputesPage() {
             {/* Body */}
             <div className="overflow-y-auto flex-1 p-5 space-y-4">
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-muted-foreground uppercase">Nội dung khiếu nại của Phụ huynh:</p>
+                <p className="text-xs font-semibold text-muted-foreground uppercase">Nội dung khiếu nại của {replyTarget.type === "TUTOR_TO_PARENT" ? "Gia sư" : "Phụ huynh"}:</p>
                 <p className="text-sm bg-muted/50 p-3 rounded-lg border border-border/50 text-foreground italic whitespace-pre-wrap max-h-32 overflow-y-auto leading-relaxed">
                   {replyTarget.reason}
                 </p>
@@ -406,13 +491,45 @@ export default function MyDisputesPage() {
                   value={replyText}
                   onChange={(e) => setReplyText(e.target.value)}
                   placeholder="Nhập nội dung phản hồi để làm rõ sự việc (tối thiểu 5 ký tự)..."
-                  className="w-full min-h-28 rounded-xl border border-border bg-background px-4 py-3 text-sm resize-none outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
+                  className="w-full min-h-24 rounded-xl border border-border bg-background px-4 py-3 text-sm resize-none outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all placeholder:text-muted-foreground"
                   maxLength={1000}
                 />
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Tối thiểu 5 ký tự</span>
                   <span>{replyText.trim().length}/1000</span>
                 </div>
+              </div>
+
+              {/* Evidence Upload for Reply */}
+              <div className="space-y-2">
+                <label className="text-sm font-medium text-foreground block">
+                  Hình ảnh bằng chứng phản hồi (Tùy chọn)
+                </label>
+                {replyFilePreview ? (
+                  <div className="relative aspect-video border border-border rounded-xl overflow-hidden group shadow-sm">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={replyFilePreview} alt="Bằng chứng phản hồi" className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveReplyFile}
+                      className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow-sm"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center border border-dashed border-border rounded-xl p-4 cursor-pointer hover:bg-muted/30 hover:border-primary/50 transition-all text-center">
+                    <ImageIcon className="h-6 w-6 text-muted-foreground/40 mb-1" />
+                    <span className="text-xs font-semibold text-foreground">Nhấp để chọn ảnh bằng chứng phản hồi</span>
+                    <span className="text-[10px] text-muted-foreground mt-0.5">Hỗ trợ định dạng hình ảnh tối đa 5MB</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleReplyFileChange}
+                      className="hidden"
+                    />
+                  </label>
+                )}
               </div>
 
               {replyError && (
@@ -438,6 +555,26 @@ export default function MyDisputesPage() {
                 Gửi phản hồi
               </Button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Large Image Preview Modal */}
+      {previewImage && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setPreviewImage(null)} />
+          <div className="relative max-w-2xl w-full aspect-video rounded-xl overflow-hidden z-10 border border-border bg-card shadow-2xl flex flex-col">
+            <div className="absolute top-3 right-3 z-20">
+              <button
+                type="button"
+                onClick={() => setPreviewImage(null)}
+                className="flex h-8 w-8 items-center justify-center rounded-lg bg-black/60 text-white hover:bg-black/80 transition-colors"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={previewImage} alt="Ảnh bằng chứng lớn" className="w-full h-full object-contain bg-black" />
           </div>
         </div>
       )}

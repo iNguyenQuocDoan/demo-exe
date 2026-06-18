@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { formatCurrency } from "@/lib/utils";
+import { formatCurrency, formatVietnamDateTime } from "@/lib/utils";
 import { StatusBadge } from "@/components/shared/StatusBadge";
 import { bookingStatusMeta } from "@/lib/statusMeta";
 import { useAuthStore } from "@/store/useAuthStore";
@@ -296,7 +296,7 @@ export default function ParentBookingsPage() {
                           )}
                         </div>
                         <p className="text-xs text-muted-foreground">
-                          {new Date(booking.startAt).toLocaleString("vi-VN")} -{" "}
+                          {formatVietnamDateTime(booking.startAt)} -{" "}
                           {formatCurrency(booking.totalAmount)}
                         </p>
                         {booking.status === "Cancelled" && booking.reason && (
