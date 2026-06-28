@@ -120,7 +120,7 @@ export default function ParentBookingDetailPage() {
   const canComplete = booking.status === "InProgress" || booking.status === "TutorCompleted";
   const canReport = ["Confirmed", "InProgress", "TutorCompleted", "ParentCompleted", "Completed"].includes(booking.status);
 
-  const chatHref = `/parent/chats?convId=${buildConvId(booking.parentId, booking.tutorId)}&bookingId=${booking.id}`;
+  const chatHref = `/messages?partnerId=${booking.tutorId}`;
 
   const startDate = formatVietnamDate(booking.startAt);
   const startTime = formatVietnamTime(booking.startAt);

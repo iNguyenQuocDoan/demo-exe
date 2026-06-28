@@ -14,6 +14,11 @@ export type TutorVerificationStatus = "NOT_VERIFIED" | "PENDING" | "APPROVED" | 
 
 export interface BeTutorDetail {
   id: string;
+  userId?: string; // UUID của user thật liên kết với profile này
+  accountId?: string; // Trường thay thế nếu BE dùng accountId
+  user?: {
+    id: string;
+  };
   email?: string;
   fullName?: string;
   phoneNumber?: string;
@@ -60,6 +65,7 @@ function avatarFallback(id: string): string {
 function mapTutor(be: BeTutorDetail): TutorProfile {
   return {
     id: be.id,
+    userId: be.userId || be.accountId || be.user?.id,
     fullName: be.fullName ?? "",
     avatarUrl: be.avatarUrl || avatarFallback(be.id),
     bio: be.description ?? "",

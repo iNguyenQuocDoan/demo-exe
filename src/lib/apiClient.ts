@@ -1,7 +1,7 @@
 import axios from "axios";
 import { isMock } from "./isMock";
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://liflow-be.onrender.com/api";
 
 export const apiClient = axios.create({
   baseURL: BASE_URL,

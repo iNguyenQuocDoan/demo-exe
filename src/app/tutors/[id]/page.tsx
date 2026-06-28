@@ -22,7 +22,7 @@ import { tutorJsonLd, breadcrumbJsonLd } from "@/lib/seo";
 import { getBookings } from "@/api/bookingApi";
 import { AvailabilityCalendar } from "@/components/shared/AvailabilityCalendar";
 import { BookingModal } from "@/components/shared/BookingModal";
-import { ChatModal } from "@/components/shared/ChatModal";
+
 import { RecurringModal } from "@/components/shared/RecurringModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,11 +31,13 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { formatCurrency, parseBeDate, formatVietnamShortDate } from "@/lib/utils";
 import type { FreeSlot, Review, TutorProfile } from "@/types";
+import { useAuthStore } from "@/store/useAuthStore";
 import { format } from "date-fns";
 
 export default function TutorDetailPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
+  const { user } = useAuthStore();
 
   const [tutor, setTutor] = useState<TutorProfile | null>(null);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -48,6 +50,16 @@ export default function TutorDetailPage() {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [recurringOpen, setRecurringOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
+
+  const handleChatClick = () => {
+    if (!tutor) return;
+    if (!user) {
+      router.push(`/auth/login?redirect=/tutors/${tutor.id}`);
+      return;
+    }
+    // BE xác nhận trường id trong details API chính là userId của tutor.
+    router.push(`/messages?partnerId=${tutor.id}`);
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -301,8 +313,8 @@ export default function TutorDetailPage() {
                   <Button className="w-full gap-2" variant="outline" onClick={() => setRecurringOpen(true)}>
                     <Repeat2 className="h-4 w-4" /> Đặt lịch định kỳ
                   </Button>
-                  <Button className="w-full gap-2" variant="secondary" onClick={() => setChatOpen(true)}>
-                    <MessageSquare className="h-4 w-4" /> Chat với gia sư
+                  <Button className="w-full gap-2" variant="secondary" onClick={handleChatClick}>
+                    <MessageSquare className="h-4 w-4" /> Nhắn tin
                   </Button>
                 </div>
               </CardContent>
@@ -339,7 +351,7 @@ export default function TutorDetailPage() {
       )}
 
       {recurringOpen && <RecurringModal tutor={tutor} onClose={() => setRecurringOpen(false)} />}
-      {chatOpen && <ChatModal tutor={tutor} onClose={() => setChatOpen(false)} />}
+
     </main>
   );
 }

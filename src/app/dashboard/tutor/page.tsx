@@ -510,7 +510,7 @@ export default function TutorDashboard() {
               { href: "/tutor/schedule",    icon: CalendarDays,  label: "Lịch dạy",     color: "text-primary",     bg: "bg-primary/10" },
               { href: "/tutor/bookings",    icon: BookOpen,      label: "Booking",       color: "text-blue-600",    bg: "bg-blue-50" },
               { href: "/tutor/availability",icon: Clock3,        label: "Lịch trống",    color: "text-success",     bg: "bg-success/10" },
-              { href: "/tutor/chats",       icon: MessageSquare, label: "Tin nhắn",      color: "text-violet-600",  bg: "bg-violet-50" },
+              { href: "/messages",          icon: MessageSquare, label: "Tin nhắn",      color: "text-violet-600",  bg: "bg-violet-50" },
               { href: "/tutor/wallet",      icon: Wallet,        label: "Ví thu nhập",   color: "text-emerald-600", bg: "bg-emerald-50" },
               { href: "/tutor/profile",     icon: UserPen,       label: "Hồ sơ",         color: "text-amber-600",   bg: "bg-amber-50" },
             ].map(({ href, icon: Icon, label, color, bg }) => (

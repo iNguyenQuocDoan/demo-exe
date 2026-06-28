@@ -31,7 +31,7 @@ const NAV_ITEMS = [
   { href: "/my-disputes", icon: Flag, label: "Báo cáo tranh chấp" },
   { href: "/tutor/analytics", icon: BarChart2, label: "Analytics" },
   { href: "/tutor/reviews", icon: Star, label: "Đánh giá" },
-  { href: "/tutor/chats", icon: MessageSquare, label: "Tin nhắn" },
+  { href: "/messages", icon: MessageSquare, label: "Tin nhắn" },
   { href: "/tutor/wallet", icon: Wallet, label: "Ví của tôi" },
   { href: "/tutor/profile", icon: User, label: "Hồ sơ" },
 ];

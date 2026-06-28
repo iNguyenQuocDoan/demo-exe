@@ -20,7 +20,7 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { getBookings, cancelBooking, completeBooking } from "@/api/bookingApi";
 import { getTutorNameMap } from "@/api/referenceApi";
-import { getOrCreateConversation } from "@/api/chatApi";
+
 import { getBookingHoldsForUser } from "@/api/walletApi";
 import type { BookingHold } from "@/types";
 import { PageAnimations } from "@/components/animations/PageAnimations";
@@ -143,9 +143,7 @@ export default function ParentBookingsPage() {
 
   const handleChat = async (booking: Booking) => {
     if (!user) return;
-    const tutorName = tutorNameMap[booking.tutorId] ?? booking.tutorId;
-    const conv = await getOrCreateConversation(user.id, booking.tutorId, user.fullName, tutorName);
-    router.push(`/parent/chats?convId=${conv.id}&bookingId=${booking.id}`);
+    router.push(`/messages?partnerId=${booking.tutorId}`);
   };
 
   const handleConfirmComplete = async (id: string) => {

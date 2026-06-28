@@ -23,7 +23,7 @@ import {
 import { getTutorAllSlots } from "@/api/tutorApi";
 import { toast } from "sonner";
 import { getUserContactMap, type UserContact } from "@/api/referenceApi";
-import { getOrCreateConversation } from "@/api/chatApi";
+
 import { ScheduleCalendar } from "@/components/tutor/ScheduleCalendar";
 import { AvailabilityManager } from "@/components/tutor/AvailabilityManager";
 import { UploadEvidenceModal } from "@/components/booking/UploadEvidenceModal";
@@ -439,10 +439,8 @@ export default function TutorCalendarPage() {
   };
   const handleChat = useCallback(async (booking: Booking) => {
     if (!user) return;
-    const parentName = parentContactMap[booking.parentId]?.name ?? booking.parentId;
-    const conv = await getOrCreateConversation(booking.parentId, booking.tutorId, parentName, user.fullName);
-    router.push(`/tutor/chats?convId=${conv.id}&bookingId=${booking.id}`);
-  }, [parentContactMap, user, router]);
+    router.push(`/messages?partnerId=${booking.parentId}`);
+  }, [user, router]);
 
   // calendar handlers
   const handleCalAccept = async (id: string) => { await acceptBooking(id); if (tutorId) void load(tutorId, true); };

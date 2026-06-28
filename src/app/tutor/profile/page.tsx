@@ -113,7 +113,7 @@ export default function TutorProfilePage() {
     try {
       const form = new FormData();
       form.append("file", file);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:5000/api";
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://liflow-be.onrender.com/api";
       const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
       const res = await fetch(`${apiUrl}/uploads/image?folder=avatars`, {
         method: "POST",

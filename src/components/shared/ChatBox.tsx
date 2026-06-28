@@ -1,6 +1,6 @@
-﻿"use client";
+"use client";
 import React, { useEffect, useRef, useState } from "react";
-import Image from "next/image";
+import NextImage from "next/image";
 import { Send, Wifi, WifiOff, Loader2 } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,11 @@ interface Props {
 }
 
 export function ChatBox({ convId, currentUser, otherName, bookingContext }: Props) {
-  const { messages, send, isConnected, isLoading } = useChat({ convId, currentUser });
+  // Phân tích partnerId từ convId cũ (dạng parentId_tutorId) để tương thích ngược
+  const parts = convId?.split("_") ?? [];
+  const partnerId = currentUser.role === "parent" ? parts[1] : parts[0];
+
+  const { messages, send, isConnected, isLoading } = useChat(partnerId || convId);
   const [input, setInput] = useState("");
   const [sending, setSending] = useState(false);
   const messagesRef = useRef<HTMLDivElement>(null);
@@ -31,10 +35,7 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
   useEffect(() => {
     const el = messagesRef.current;
     if (!el) return;
-    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
-    if (distanceFromBottom < 120) {
-      el.scrollTop = el.scrollHeight;
-    }
+    el.scrollTop = el.scrollHeight;
   }, [messages]);
 
   const handleSend = async () => {
@@ -113,18 +114,19 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
         ) : (
           messages.map((msg) => {
             const isMine = msg.senderId === currentUser.id;
+            const senderName = isMine ? currentUser.fullName : otherName;
             return (
               <div key={msg.id} className={cn("flex gap-2", isMine ? "flex-row-reverse" : "flex-row")}>
-                <Image
+                <NextImage
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${msg.senderId}`}
-                  alt={msg.senderName}
+                  alt={senderName}
                   width={28}
                   height={28}
                   unoptimized
                   className="h-7 w-7 shrink-0 rounded-full border border-[hsl(214_32%_91%)]"
                 />
                 <div className={cn("flex flex-col gap-0.5", isMine ? "items-end" : "items-start")}>
-                  <span className="text-xs text-[hsl(215_16%_47%)]">{msg.senderName}</span>
+                  <span className="text-xs text-[hsl(215_16%_47%)]">{senderName}</span>
                   <div
                     className={cn(
                       "max-w-[240px] break-words rounded-2xl px-4 py-2 text-sm",
@@ -134,6 +136,9 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
                     )}
                   >
                     {msg.content}
+                    {msg.status === "sending" && (
+                      <span className="ml-1 text-[10px] text-white/70 italic">(đang gửi)</span>
+                    )}
                   </div>
                   <span className="text-[10px] text-[hsl(215_16%_60%)]">
                     {new Date(msg.createdAt).toLocaleTimeString("vi-VN", {
@@ -148,22 +153,26 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
         )}
       </div>
 
-      <div className="flex items-end gap-2 border-t border-[hsl(214_32%_91%)] p-3">
-        <textarea
-          className="min-h-[40px] max-h-[120px] flex-1 resize-none rounded-xl border border-[hsl(214_32%_91%)] px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[hsl(221_83%_53%)]"
-          placeholder="Nhập tin nhắn... (Enter để gửi)"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-          onKeyDown={handleKeyDown}
-          rows={1}
-        />
-        <button
-          onClick={() => void handleSend()}
-          disabled={!input.trim() || sending}
-          className="h-10 w-10 shrink-0 rounded-xl bg-[hsl(221_83%_53%)] text-white transition-colors hover:bg-[hsl(221_83%_43%)] disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          {sending ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : <Send className="mx-auto h-4 w-4" />}
-        </button>
+      <div className="border-t border-[hsl(214_32%_91%)] p-3">
+        <div className="flex gap-2">
+          <textarea
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={handleKeyDown}
+            placeholder={isConnected ? "Nhập tin nhắn..." : "Mất kết nối..."}
+            disabled={!isConnected}
+            rows={1}
+            className="flex-1 resize-none rounded-xl border border-[hsl(214_32%_91%)] bg-white px-3 py-2 text-sm text-[hsl(222_47%_11%)] placeholder-[hsl(215_16%_57%)] outline-none focus:border-[hsl(221_83%_53%)] focus:ring-1 focus:ring-[hsl(221_83%_53%)] disabled:bg-muted"
+          />
+          <button
+            type="button"
+            onClick={handleSend}
+            disabled={!input.trim() || sending || !isConnected}
+            className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(221_83%_53%)] text-white hover:bg-[hsl(221_83%_45%)] disabled:bg-[hsl(215_16%_90%)] disabled:text-[hsl(215_16%_60%)] cursor-pointer"
+          >
+            <Send className="h-4 w-4" />
+          </button>
+        </div>
       </div>
     </div>
   );

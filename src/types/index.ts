@@ -182,6 +182,7 @@ export interface ServiceArea {
 
 export interface TutorProfile {
   id: string;
+  userId?: string; // UUID của user thật dùng để chat
   fullName: string;
   avatarUrl: string;
   bio: string;
