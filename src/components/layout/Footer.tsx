@@ -144,7 +144,7 @@ export function Footer() {
               </li>
               <li>
                 <Link
-                  href="/#policy"
+                  href="/policy"
                   className="hover:text-white transition-colors"
                 >
                   Điều khoản
