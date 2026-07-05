@@ -348,78 +348,9 @@ export default function PolicyPage() {
               <p>
                 Phụ huynh/học viên thanh toán theo mức học phí được hiển thị trên Liflow tại thời điểm đặt lịch. Khoản phí dịch vụ 10% không được thu thêm từ phụ huynh/học viên, trừ khi Liflow có thông báo riêng và hiển thị rõ trước khi thanh toán.
               </p>
-
-              {/* Case 1 */}
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm mt-6">
-                <div className="bg-primary/5 px-6 py-4 border-b border-border">
-                  <h3 className="font-semibold text-primary flex items-center gap-2">
-                    <DollarSign className="h-5 w-5" />
-                    Trường hợp 1: Giao dịch bình thường thành công
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">HỌC PHÍ NIÊM YẾT</span>
-                      <span className="text-xl font-bold text-foreground mt-1 block">200.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Học viên thanh toán</span>
-                    </div>
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">TỶ LỆ PHÍ DỊCH VỤ</span>
-                      <span className="text-xl font-bold text-amber-600 dark:text-amber-500 mt-1 block">10%</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Khấu trừ từ học phí</span>
-                    </div>
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">PHÍ DỊCH VỤ LIFLOW</span>
-                      <span className="text-xl font-bold text-foreground mt-1 block">20.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Hệ thống duy trì</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground font-medium block">GIA SƯ THỰC NHẬN</span>
-                      <span className="text-xl font-bold text-success mt-1 block">180.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Chuyển vào tài khoản</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Case 2 */}
               <p className="mt-4">
                 Trường hợp phụ huynh/học viên hủy đơn và gia sư chỉ được nhận một phần học phí theo chính sách hủy đơn, Liflow chỉ thu <strong className="text-foreground">10% trên số tiền thực tế được thanh toán cho gia sư</strong>.
               </p>
-
-              <div className="bg-card border border-border rounded-2xl overflow-hidden shadow-sm mt-4">
-                <div className="bg-amber-50/50 dark:bg-amber-950/10 px-6 py-4 border-b border-border">
-                  <h3 className="font-semibold text-amber-600 dark:text-amber-500 flex items-center gap-2">
-                    <ShieldAlert className="h-5 w-5" />
-                    Trường hợp 2: Hủy đơn & đền bù cho Gia sư
-                  </h3>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6 text-center md:text-left">
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">HỌC PHÍ BAN ĐẦU</span>
-                      <span className="text-xl font-bold text-foreground mt-1 block">200.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Hủy được hoàn 80% (160k)</span>
-                    </div>
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">PHẦN GIA SƯ ĐƯỢC NHẬN (20%)</span>
-                      <span className="text-xl font-bold text-amber-600 dark:text-amber-500 mt-1 block">40.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Bù đắp giữ lịch</span>
-                    </div>
-                    <div className="border-b md:border-b-0 md:border-r border-border pb-4 md:pb-0 pr-4">
-                      <span className="text-xs text-muted-foreground font-medium block">PHÍ DỊCH VỤ LIFLOW (10%)</span>
-                      <span className="text-xl font-bold text-foreground mt-1 block">4.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Thu từ khoản đền bù</span>
-                    </div>
-                    <div>
-                      <span className="text-xs text-muted-foreground font-medium block">GIA SƯ THỰC NHẬN</span>
-                      <span className="text-xl font-bold text-success mt-1 block">36.000đ</span>
-                      <span className="text-xs text-muted-foreground mt-1 block">Chuyển thực tế</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </section>
 
             {/* Section 6 */}
