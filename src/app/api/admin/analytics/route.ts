@@ -16,15 +16,31 @@ const PROJECT_ID =
 
 type Gate = { ok: true } | { ok: false; status: number; error: string };
 
+// fetch có timeout — tránh treo hàm serverless khi BE (Render) cold-start chậm.
+async function fetchWithTimeout(
+  url: string | URL,
+  init: RequestInit,
+  ms: number,
+): Promise<Response> {
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), ms);
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Xác thực caller là admin bằng cách forward JWT tới BE /auth/me.
 async function requireAdmin(req: NextRequest): Promise<Gate> {
   const auth = req.headers.get("authorization");
   if (!auth) return { ok: false, status: 401, error: "Chưa đăng nhập." };
   try {
-    const res = await fetch(`${BE_ORIGIN}/api/auth/me`, {
-      headers: { authorization: auth },
-      cache: "no-store",
-    });
+    const res = await fetchWithTimeout(
+      `${BE_ORIGIN}/api/auth/me`,
+      { headers: { authorization: auth, connection: "close" }, cache: "no-store" },
+      10_000,
+    );
     if (!res.ok) {
       return { ok: false, status: 401, error: "Phiên đăng nhập không hợp lệ." };
     }
@@ -34,8 +50,15 @@ async function requireAdmin(req: NextRequest): Promise<Gate> {
       return { ok: false, status: 403, error: "Chỉ admin mới xem được số liệu này." };
     }
     return { ok: true };
-  } catch {
-    return { ok: false, status: 502, error: "Không xác thực được người dùng." };
+  } catch (err) {
+    const timedOut = (err as Error)?.name === "AbortError";
+    return {
+      ok: false,
+      status: 504,
+      error: timedOut
+        ? "Máy chủ xác thực phản hồi chậm, thử lại sau."
+        : "Không xác thực được người dùng.",
+    };
   }
 }
 
@@ -53,11 +76,25 @@ async function vercelQuery(
   url.searchParams.set("projectId", PROJECT_ID);
   for (const [k, v] of Object.entries(params)) url.searchParams.set(k, v);
 
-  const res = await fetch(url, {
-    headers: { authorization: `Bearer ${token}` },
-    // Cache 5 phút để không gọi Vercel API quá dày khi refresh liên tục.
-    next: { revalidate: 300 },
-  });
+  let res: Response;
+  try {
+    res = await fetchWithTimeout(
+      url,
+      {
+        headers: { authorization: `Bearer ${token}` },
+        // Cache 5 phút để không gọi Vercel API quá dày khi refresh liên tục.
+        next: { revalidate: 300 },
+      },
+      10_000,
+    );
+  } catch (err) {
+    const timedOut = (err as Error)?.name === "AbortError";
+    return {
+      ok: false,
+      status: 504,
+      error: timedOut ? "Vercel API phản hồi chậm." : "Không gọi được Vercel API.",
+    };
+  }
 
   if (!res.ok) {
     let message = `Vercel API ${res.status}`;
