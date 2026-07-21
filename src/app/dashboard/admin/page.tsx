@@ -29,6 +29,7 @@ import { getDepositRequests, getWithdrawRequests } from "@/api/walletApi";
 import { getUserNameMap } from "@/api/referenceApi";
 import { getDashboardStats, type DashboardStats } from "@/api/statsApi";
 import { DashboardPieChart, DashboardBarChart } from "@/components/admin/DashboardCharts";
+import { SiteTrafficCard } from "@/components/admin/SiteTrafficCard";
 import {
   DashboardFilter,
   type TimeFilter,
@@ -330,6 +331,9 @@ export default function AdminDashboardPage() {
               </div>
             </div>
           </header>
+
+          {/* Lượt truy cập website (Vercel Analytics) — chỉ admin */}
+          <SiteTrafficCard />
 
           {/* Charts: Trạng thái booking | Tài chính bar | Phân bổ quỹ */}
           <div className="grid gap-4 lg:grid-cols-2 xl:grid-cols-3">
