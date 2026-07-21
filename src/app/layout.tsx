@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "sonner";
 import "./globals.css";
 import { SiteFrame } from "@/components/layout/SiteFrame";
@@ -92,6 +93,7 @@ export default function RootLayout({
           <SiteFrame>{children}</SiteFrame>
           <Toaster richColors position="top-right" />
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
