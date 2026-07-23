@@ -282,10 +282,13 @@ export async function getTutorById(id: string): Promise<TutorProfile | null> {
 // Parent dùng API này để xem trạng thái hồ sơ đăng ký tutor.
 export async function getMyTutorProfile(): Promise<BeTutorDetail | null> {
   try {
-    const { data } = await realApiClient.get<BeApiResponse<BeTutorDetail>>(
-      "/tutors/my-profile",
-    );
-    return data?.data ?? null;
+    // BE /tutors/my-profile trả RAW TutorDetailResponse (KHÔNG bọc {data} như /details).
+    // data.data ?? data → hỗ trợ cả raw lẫn (phòng khi BE bọc lại) wrapped.
+    const { data } = await realApiClient.get<
+      BeTutorDetail & { data?: BeTutorDetail }
+    >("/tutors/my-profile");
+    const profile = data?.data ?? data;
+    return profile?.id ? profile : null;
   } catch {
     return null;
   }
@@ -296,10 +299,12 @@ export async function getPendingTutorDetail(
   id: string,
 ): Promise<BeTutorDetail | null> {
   try {
-    const { data } = await realApiClient.get<BeApiResponse<BeTutorDetail>>(
-      `/tutors/pending/${id}`,
-    );
-    return data?.data ?? null;
+    // BE /tutors/pending/{id} trả RAW TutorDetailResponse (không bọc {data}).
+    const { data } = await realApiClient.get<
+      BeTutorDetail & { data?: BeTutorDetail }
+    >(`/tutors/pending/${id}`);
+    const profile = data?.data ?? data;
+    return profile?.id ? profile : null;
   } catch {
     return null;
   }

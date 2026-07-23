@@ -27,7 +27,7 @@ export default function SelectRolePage() {
         router.push("/dashboard/tutor");
         break;
       case "admin":
-        router.push("/admin");
+        router.push("/dashboard/admin");
         break;
       default:
         // Nếu chưa có role (guest), về trang đăng ký

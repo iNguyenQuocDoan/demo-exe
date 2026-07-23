@@ -52,10 +52,13 @@ function mapFeRoleToBe(role: string | undefined): string {
 // / REJECTED) → "tutorCandidate": chỉ xem được trạng thái đơn, KHÔNG vào dashboard.
 async function fetchTutorVerificationStatus(): Promise<string | undefined> {
   try {
-    const { data } = await realApiClient.get<{ data?: { verificationStatus?: string } }>(
-      "/tutors/my-profile",
-    );
-    return data?.data?.verificationStatus;
+    // BE /tutors/my-profile trả RAW TutorDetailResponse (KHÔNG bọc {data} như /details).
+    // Đọc thẳng verificationStatus; vẫn fallback data.data phòng BE đổi sang bọc ApiResponse.
+    const { data } = await realApiClient.get<{
+      verificationStatus?: string;
+      data?: { verificationStatus?: string };
+    }>("/tutors/my-profile");
+    return data?.verificationStatus ?? data?.data?.verificationStatus;
   } catch {
     return undefined;
   }

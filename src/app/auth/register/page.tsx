@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { register } from "@/api/authApi";
 import { useAuthStore } from "@/store/useAuthStore";
 import { PublicRoute } from "@/components/layout/RouteGuards";
+import { getDefaultRoute } from "@/lib/permissions";
 
 const REGISTER_HERO_IMAGE =
   "https://images.unsplash.com/photo-1427504494785-3a9ca7044f45?w=1200&q=80&auto=format&fit=crop";
@@ -150,12 +151,13 @@ function RegisterForm() {
 
     if (result.ok && result.user) {
       storeLogin(result.user);
-      // Nếu là tutor → đến trang nộp hồ sơ; nếu là parent → đến dashboard
-      if (selectedRole === "TUTOR") {
-        router.push("/apply-tutor");
-      } else {
-        router.push("/dashboard/parent");
-      }
+      // BẮT BUỘC set cookie auth_role NGAY để proxy (middleware) đọc đúng role.
+      // Thiếu bước này: cookie rỗng → proxy đá tân gia sư về /auth/login; hoặc nếu
+      // còn cookie admin cũ (đã từng login admin) → proxy tưởng admin, đá về
+      // /dashboard/admin. getDefaultRoute đưa gia sư CHƯA duyệt (tutorCandidate) về
+      // /dashboard/tutor-candidate (trang trạng thái đơn), parent → /dashboard/parent.
+      document.cookie = `auth_role=${result.user.role}; path=/; SameSite=Strict; max-age=86400`;
+      router.replace(getDefaultRoute(result.user.role));
     } else {
       setError(result.error ?? "Đăng ký thất bại.");
     }
