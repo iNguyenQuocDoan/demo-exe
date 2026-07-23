@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { usePathname, useRouter } from "next/navigation";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuthStore } from "@/store/useAuthStore";
+import { getDefaultRoute } from "@/lib/permissions";
 import type { UserRole } from "@/types";
 
 function GuardLoading() {
@@ -24,10 +25,8 @@ export function PublicRoute({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (isLoading || !user) return;
-    if (user.role === "admin") router.replace("/dashboard/admin");
-    else if (user.role === "tutor") router.replace("/dashboard/tutor");
-    else if (user.role === "parent") router.replace("/dashboard/parent");
-    else router.replace("/dashboard/guest");
+    // getDefaultRoute gồm tutorCandidate → /dashboard/tutor-candidate (trước đây rơi về guest).
+    router.replace(getDefaultRoute(user.role));
   }, [isLoading, router, user]);
 
   if (isLoading) return <GuardLoading />;
@@ -53,10 +52,7 @@ export function ProtectedRoute({
       return;
     }
     if (allowRoles && !allowRoles.includes(user.role)) {
-      if (user.role === "admin") router.replace("/dashboard/admin");
-      else if (user.role === "tutor") router.replace("/dashboard/tutor");
-      else if (user.role === "parent") router.replace("/dashboard/parent");
-      else router.replace("/");
+      router.replace(getDefaultRoute(user.role));
     }
   }, [allowRoles, isLoading, pathname, router, user]);
 

@@ -7,7 +7,7 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   Menu, X, User, LogOut, LayoutDashboard,
   ChevronDown, Shield, Users, BookOpen, UserCheck, CalendarDays,
-  Flag, Wallet, Clock, ClipboardList, Crown,
+  Flag, Wallet, Clock, ClipboardList,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -257,17 +257,6 @@ export function Header() {
                       {getDashboardLink() && (
                         <DropdownItem href={getDashboardLink()!} icon={<LayoutDashboard className="h-4 w-4 text-primary" />} onClick={() => setUserMenuOpen(false)}>
                           Dashboard
-                        </DropdownItem>
-                      )}
-
-                      {user.role === "parent" && (
-                        <DropdownItem
-                          href="/parent/subscription"
-                          icon={<Crown className="h-4 w-4 text-amber-500" />}
-                          onClick={() => setUserMenuOpen(false)}
-                          className="text-amber-700 dark:text-amber-400 bg-amber-50 hover:bg-amber-100 dark:bg-amber-950/30 dark:hover:bg-amber-950/50"
-                        >
-                          Nâng cấp Premium
                         </DropdownItem>
                       )}
 

@@ -5,7 +5,6 @@ import Link from "next/link";
 import {
   AlertTriangle,
   ArrowRight,
-  BarChart3,
   BookOpen,
   CheckCircle2,
   Clock3,
@@ -24,7 +23,7 @@ import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuthStore } from "@/store/useAuthStore";
-import { getAllTutorApplications } from "@/api/tutorApplicationApi";
+import { getPendingTutors, type BeTutorDetail } from "@/api/tutorApi";
 import { getDepositRequests, getWithdrawRequests } from "@/api/walletApi";
 import { getUserNameMap } from "@/api/referenceApi";
 import { getDashboardStats, type DashboardStats } from "@/api/statsApi";
@@ -36,7 +35,6 @@ import {
 } from "@/components/admin/DashboardFilter";
 import type {
   DepositRequest,
-  TutorApplication,
   WithdrawRequest,
 } from "@/types";
 
@@ -71,7 +69,7 @@ export default function AdminDashboardPage() {
   const [loadTrigger, setLoadTrigger] = useState(0);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<DashboardStats | null>(null);
-  const [pendingApps, setPendingApps] = useState<TutorApplication[]>([]);
+  const [pendingApps, setPendingApps] = useState<BeTutorDetail[]>([]);
   const [pendingPayments, setPendingPayments] = useState<PendingPayment[]>([]);
 
   const [timeFilter, setTimeFilter] = useState<TimeFilter>("month");
@@ -84,10 +82,10 @@ export default function AdminDashboardPage() {
       try {
         setLoading(true);
 
-        const [dashboardStats, applications, deposits, withdrawals] =
+        const [dashboardStats, pending, deposits, withdrawals] =
           await Promise.all([
             getDashboardStats({ range: timeFilter }),
-            getAllTutorApplications({ status: "Submitted" }),
+            getPendingTutors({ page: 1, limit: 10 }),
             getDepositRequests({ status: "Pending" }),
             getWithdrawRequests({ status: "Pending" }),
           ]);
@@ -95,7 +93,7 @@ export default function AdminDashboardPage() {
         if (cancelled) return;
 
         setStats(dashboardStats);
-        setPendingApps(applications.slice(0, 3));
+        setPendingApps(pending.tutors.slice(0, 3));
 
         const allPending: Array<DepositRequest | WithdrawRequest> = [
           ...deposits.slice(0, 3),
@@ -270,13 +268,6 @@ export default function AdminDashboardPage() {
       title: "Kiểm duyệt đánh giá",
       description: "Lọc nội dung đánh giá nhạy cảm",
       href: "/admin/reviews",
-      available: true,
-    },
-    {
-      icon: BarChart3,
-      title: "Báo cáo",
-      description: "KPI, doanh thu, conversion",
-      href: "/admin/reports",
       available: true,
     },
     {
@@ -593,8 +584,9 @@ export default function AdminDashboardPage() {
                         </p>
                         <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                           <Clock3 className="h-3 w-3" />
-                          {application.submittedAt.slice(0, 10)} —{" "}
-                          {application.subjects?.join(", ") ?? "—"}
+                          {(application.subjects?.length ?? 0) > 0
+                            ? application.subjects!.join(", ")
+                            : "Chờ duyệt hồ sơ"}
                         </p>
                       </div>
                       <div className="flex gap-1.5">

@@ -4,7 +4,6 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import {
-  BarChart3,
   BookOpen,
   CreditCard,
   FileText,
@@ -23,7 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuthStore } from "@/store/useAuthStore";
 import { logout as firebaseLogout } from "@/api/authApi";
-import { getReports } from "@/api/reportApi";
+import { getPendingDisputes } from "@/api/feedbackApi";
 import { NotificationPanel } from "@/components/shared/NotificationPanel";
 import { cn } from "@/lib/utils";
 
@@ -36,7 +35,6 @@ const NAV_ITEMS = [
   { href: "/admin/disputes", icon: Flag, label: "Tranh chấp", badgeKey: "disputes" as const },
   { href: "/admin/users", icon: Users, label: "Người dùng" },
   { href: "/admin/reviews", icon: FileText, label: "Đánh giá" },
-  { href: "/admin/reports", icon: BarChart3, label: "Báo cáo" },
   { href: "/admin/settings", icon: Settings, label: "Cài đặt" },
 ];
 
@@ -47,8 +45,8 @@ function SidebarContent({ onNav }: { onNav?: () => void }) {
   const [pendingDisputes, setPendingDisputes] = useState(0);
 
   useEffect(() => {
-    getReports({ status: "Pending" })
-      .then((r) => setPendingDisputes(r.total))
+    getPendingDisputes()
+      .then((list) => setPendingDisputes(list.length))
       .catch(() => {});
   }, [pathname]); // re-check when navigating
 

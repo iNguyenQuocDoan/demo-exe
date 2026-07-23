@@ -19,7 +19,6 @@ import { getBookings, cancelBooking, acceptBooking, getSeries, acceptSeries } fr
 import { getTutorNameMap } from "@/api/referenceApi";
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { KpiCardCompact } from "@/components/shared/KpiCardCompact";
-import { SubscriptionBanner } from "@/components/shared/SubscriptionBanner";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -152,9 +151,9 @@ export default function ParentDashboard() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="sm" className="gap-1.5 text-destructive border-destructive/30 hover:bg-destructive/5">
-                <Link href="/parent/reports">
+                <Link href="/my-disputes">
                   <Flag className="h-3.5 w-3.5" />
-                  Báo cáo
+                  Khiếu nại
                 </Link>
               </Button>
               <Button asChild size="sm" className="gap-1.5">
@@ -165,9 +164,6 @@ export default function ParentDashboard() {
               </Button>
             </div>
           </div>
-
-          {/* ── Subscription banner ───────────────────────────── */}
-          <SubscriptionBanner />
 
           {/* ── KPI row ────────────────────────────────────────── */}
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">

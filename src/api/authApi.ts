@@ -46,8 +46,29 @@ function mapFeRoleToBe(role: string | undefined): string {
   }
 }
 
-function mapUser(be: BeUserResponse): User {
-  const role = mapBeRoleToFe(be.role);
+// BE chỉ có role TUTOR — gồm CẢ gia sư chưa được admin duyệt. Ta phân biệt bằng
+// verificationStatus của hồ sơ (/tutors/my-profile): chỉ APPROVED mới là "tutor"
+// thật (được vào dashboard gia sư). Các trạng thái còn lại (NOT_VERIFIED / PENDING
+// / REJECTED) → "tutorCandidate": chỉ xem được trạng thái đơn, KHÔNG vào dashboard.
+async function fetchTutorVerificationStatus(): Promise<string | undefined> {
+  try {
+    const { data } = await realApiClient.get<{ data?: { verificationStatus?: string } }>(
+      "/tutors/my-profile",
+    );
+    return data?.data?.verificationStatus;
+  } catch {
+    return undefined;
+  }
+}
+
+async function resolveUser(be: BeUserResponse): Promise<User> {
+  let role = mapBeRoleToFe(be.role);
+  if (role === "tutor") {
+    const status = await fetchTutorVerificationStatus();
+    // Chưa chắc chắn APPROVED (kể cả khi gọi lỗi) → giữ ở tutorCandidate cho an toàn:
+    // không mở dashboard gia sư khi chưa xác nhận được đã duyệt.
+    if (status !== "APPROVED") role = "tutorCandidate";
+  }
   return {
     id: be.id,
     fullName: be.fullName,
@@ -56,7 +77,7 @@ function mapUser(be: BeUserResponse): User {
     phone: be.phoneNumber,
     address: be.address,
     // BE không trả tutorProfileId riêng — gia sư được đánh khóa theo chính UUID
-    // của user (/tutors/{uuid}/...). Gán để mở khóa dashboard/lịch trống/ví gia sư.
+    // của user (/tutors/{uuid}/...). Chỉ gán khi đã là tutor thật (đã duyệt).
     tutorProfileId: role === "tutor" ? be.id : undefined,
   };
 }
@@ -78,7 +99,7 @@ export async function login(
     });
     setAuthToken(data.accessToken);
     const { data: meRes } = await realApiClient.get<BeUserResponse>("/auth/me");
-    const user = mapUser(meRes);
+    const user = await resolveUser(meRes);
     if (typeof window !== "undefined") {
       localStorage.setItem("auth_user", JSON.stringify(user));
     }
@@ -161,7 +182,7 @@ export async function registerOAuth2(input: {
     );
     setAuthToken(data.data.accessToken);
     const { data: me } = await realApiClient.get<BeUserResponse>("/auth/me");
-    const user = mapUser(me);
+    const user = await resolveUser(me);
     if (typeof window !== "undefined") {
       localStorage.setItem("auth_user", JSON.stringify(user));
     }
@@ -260,7 +281,7 @@ export async function logout(): Promise<void> {
 export async function getMe(): Promise<User | null> {
   try {
     const { data } = await realApiClient.get<BeUserResponse>("/auth/me");
-    return mapUser(data);
+    return await resolveUser(data);
   } catch {
     return null;
   }

@@ -118,29 +118,34 @@ function searchParams(filter?: Partial<TutorFilter>): Record<string, string | nu
   return params;
 }
 
+// Danh sách gia sư đầy đủ = /tutors/search KHÔNG kèm filter. Mọi tiêu chí của
+// /search đều optional → BE chỉ còn lọc role=TUTOR → trả về TẤT CẢ gia sư (giống
+// hệt /tutors/tutors). Dùng /search thay cho /tutors/tutors vì 2 lý do:
+//   1. /tutors/search là endpoint PUBLIC (permitAll ở BE) → khách CHƯA đăng nhập
+//      xem được list mà KHÔNG cần guest-token. Còn /tutors/tutors bắt buộc Bearer
+//      token → guest bị 302 về login (đã kiểm chứng trên BE live).
+//   2. /search null-safe (bỏ qua record có tutorProfile=null) → không 500 vì record
+//      rác, khác /tutors/tutors (map subjects không check null → sập nguyên trang).
 async function fetchAllTutors(size = 200): Promise<TutorProfile[]> {
   try {
     const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
-      "/tutors/tutors",
+      "/tutors/search",
       { params: { page: 1, size } },
     );
     return (data.data ?? []).map(mapTutor);
   } catch {
-    // BE /tutors/tutors trả 500 khi danh sách chứa bản ghi gia sư lỗi (vài record
-    // rác null-field làm sập serialization NGUYÊN trang). Né bằng cách lấy từng
-    // item (size=1): bản ghi nào serialize được thì giữ, bản ghi 500 thì bỏ qua
-    // → /tutors vẫn hiện đủ gia sư hợp lệ thay vì rỗng. Không sửa được BE nên đây
-    // là cách FE chịu lỗi duy nhất.
+    // /search lỗi cấp trang (mất mạng / Render sập) → thử vớt từng item một.
     return fetchTutorsPerItem(size);
   }
 }
 
-// Phân trang size=1 để cô lập bản ghi gia sư lỗi (BE 500 theo từng record xấu).
+// Fallback phòng thủ khi lấy nguyên trang thất bại: lấy từng item (size=1) và nuốt
+// lỗi lẻ, để /tutors vẫn hiện được phần gia sư còn lấy được thay vì rỗng.
 async function fetchTutorsPerItem(max: number): Promise<TutorProfile[]> {
   let first: BePageResponse<BeTutorDetail>;
   try {
     first = (
-      await realApiClient.get<BePageResponse<BeTutorDetail>>("/tutors/tutors", {
+      await realApiClient.get<BePageResponse<BeTutorDetail>>("/tutors/search", {
         params: { page: 1, size: 1 },
       })
     ).data;
@@ -151,11 +156,11 @@ async function fetchTutorsPerItem(max: number): Promise<TutorProfile[]> {
   const firstTutor = first.data?.[0];
   if (total <= 1) return firstTutor ? [mapTutor(firstTutor)] : [];
 
-  // Với size=1, page N = gia sư thứ N. Lấy song song các trang còn lại, nuốt 500.
+  // Với size=1, page N = gia sư thứ N. Lấy song song các trang còn lại, nuốt lỗi lẻ.
   const rest = await Promise.all(
     Array.from({ length: total - 1 }, (_, i) =>
       realApiClient
-        .get<BePageResponse<BeTutorDetail>>("/tutors/tutors", {
+        .get<BePageResponse<BeTutorDetail>>("/tutors/search", {
           params: { page: i + 2, size: 1 },
         })
         .then((r) => r.data.data?.[0])
@@ -197,7 +202,7 @@ async function clientFilterTutors(
 export async function getTutors(
   filter?: Partial<TutorFilter>,
 ): Promise<TutorProfile[]> {
-  // Lưu ý: KHÔNG nuốt lỗi máy chủ ở đây. Nếu BE trả 500 (vd /api/tutors/tutors
+  // Lưu ý: KHÔNG nuốt lỗi máy chủ ở đây. Nếu BE trả 500 (vd /api/tutors/search
   // đang lỗi), ta để lỗi nổi lên để trang /tutors hiện đúng trạng thái "Không thể
   // kết nối máy chủ + Thử lại", thay vì hiểu nhầm thành "không có gia sư nào".
   // BE trả 200 với data rỗng vẫn cho ra [] (đúng nghĩa "không có kết quả").
@@ -246,8 +251,10 @@ export async function getTutorsPaginated(
         };
       }
     }
+    // Danh sách không lọc = /tutors/search rỗng filter (public + null-safe). Xem
+    // ghi chú ở fetchAllTutors về lý do không dùng /tutors/tutors.
     const { data } = await realApiClient.get<BePageResponse<BeTutorDetail>>(
-      "/tutors/tutors",
+      "/tutors/search",
       { params: { page, size: limit } },
     );
     return bePageToFe(data);

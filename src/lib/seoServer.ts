@@ -1,14 +1,13 @@
 // Lấy dữ liệu gia sư phía SERVER cho mục đích SEO (sitemap + generateMetadata).
 // realApiClient chỉ chạy được ở browser (đọc token từ localStorage), nên ở server
-// ta tự đăng nhập guest rồi gọi BE qua fetch. Mọi lỗi đều nuốt → fallback an toàn,
-// build/SSR không bao giờ gãy vì BE chậm (Render cold start) hay sập.
+// ta gọi thẳng BE qua fetch tới các endpoint PUBLIC (/api/tutors/search,
+// /api/tutors/*/details) — không cần đăng nhập. Mọi lỗi đều nuốt → fallback an
+// toàn, build/SSR không bao giờ gãy vì BE chậm (Render cold start) hay sập.
 // Chỉ import file này từ server (sitemap.ts, layout generateMetadata).
 
 const BE_ORIGIN = (
   process.env.NEXT_PUBLIC_BE_ORIGIN ?? "https://liflow-be.onrender.com"
 ).replace(/\/$/, "");
-const GUEST_EMAIL = process.env.NEXT_PUBLIC_GUEST_EMAIL ?? "parent1@tutor.com";
-const GUEST_PASSWORD = process.env.NEXT_PUBLIC_GUEST_PASSWORD ?? "12345";
 
 export interface SeoTutor {
   id: string;
@@ -37,27 +36,6 @@ function withTimeout(ms: number): { signal: AbortSignal; clear: () => void } {
   return { signal: ctrl.signal, clear: () => clearTimeout(id) };
 }
 
-async function guestToken(): Promise<string | null> {
-  const { signal, clear } = withTimeout(8000);
-  try {
-    const res = await fetch(`${BE_ORIGIN}/api/auth/login`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email: GUEST_EMAIL, password: GUEST_PASSWORD }),
-      signal,
-      // Cache token 1h để không login lại mỗi lần render.
-      next: { revalidate: 3600, tags: ["seo-token"] },
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { accessToken?: string };
-    return data?.accessToken ?? null;
-  } catch {
-    return null;
-  } finally {
-    clear();
-  }
-}
-
 function mapTutor(be: BeTutor): SeoTutor {
   return {
     id: be.id,
@@ -72,14 +50,14 @@ function mapTutor(be: BeTutor): SeoTutor {
 
 /** Danh sách gia sư công khai (để sinh URL trong sitemap). Lỗi → []. */
 export async function getTutorsForSeo(): Promise<SeoTutor[]> {
-  const token = await guestToken();
-  if (!token) return [];
+  // /api/tutors/search KHÔNG kèm filter = toàn bộ gia sư, và là endpoint PUBLIC.
+  // → không cần guest-login ở server: sitemap vẫn có URL gia sư kể cả khi BE đổi
+  //   mật khẩu tài khoản demo hay login lỗi. (/tutors/tutors thì bắt buộc token.)
   const { signal, clear } = withTimeout(8000);
   try {
     const res = await fetch(
-      `${BE_ORIGIN}/api/tutors/tutors?page=1&size=200`,
+      `${BE_ORIGIN}/api/tutors/search?page=1&size=200`,
       {
-        headers: { Authorization: `Bearer ${token}` },
         signal,
         next: { revalidate: 3600, tags: ["seo-tutors"] },
       },
@@ -96,12 +74,10 @@ export async function getTutorsForSeo(): Promise<SeoTutor[]> {
 
 /** Chi tiết 1 gia sư (cho generateMetadata trang /tutors/[id]). Lỗi → null. */
 export async function getTutorForSeo(id: string): Promise<SeoTutor | null> {
-  const token = await guestToken();
-  if (!token) return null;
+  // /api/tutors/*/details là endpoint PUBLIC → không cần guest-login ở server.
   const { signal, clear } = withTimeout(8000);
   try {
     const res = await fetch(`${BE_ORIGIN}/api/tutors/${id}/details`, {
-      headers: { Authorization: `Bearer ${token}` },
       signal,
       next: { revalidate: 3600, tags: [`seo-tutor-${id}`] },
     });

@@ -1,8 +1,11 @@
-// BE LIFLOW yêu cầu Bearer token cho cả các endpoint catalog công khai
-// (/tutors/tutors, /common/subjects, /reference/*) → khách chưa đăng nhập bị 302.
-// Để trang công khai (/tutors, chi tiết gia sư) vẫn hiển thị dữ liệu THẬT, ta lấy
-// ngầm một "guest token" bằng tài khoản demo read-only. KHÔNG set session
-// (không lưu auth_user / cookie) nên app vẫn ở trạng thái chưa đăng nhập.
+// Một vài endpoint mà khách CHƯA đăng nhập vẫn cần lại bị BE bắt buộc Bearer token
+// (điển hình: đánh giá gia sư /api/feedback/**). Để các phần đó hiển thị dữ liệu
+// THẬT, ta lấy ngầm một "guest token" bằng tài khoản demo read-only. KHÔNG set
+// session (không lưu auth_user / cookie) nên app vẫn ở trạng thái chưa đăng nhập.
+//
+// LƯU Ý: DANH SÁCH và CHI TIẾT gia sư KHÔNG dùng token này nữa — chúng gọi thẳng
+// endpoint PUBLIC (/api/tutors/search, /api/tutors/*/details, /api/tutors/slots/**)
+// nên xem được kể cả khi guest-login hỏng (vd tài khoản demo bị đổi mật khẩu).
 
 const GUEST_EMAIL = process.env.NEXT_PUBLIC_GUEST_EMAIL ?? "parent1@tutor.com";
 const GUEST_PASSWORD = process.env.NEXT_PUBLIC_GUEST_PASSWORD ?? "12345";

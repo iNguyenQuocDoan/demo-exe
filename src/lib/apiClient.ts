@@ -1,5 +1,4 @@
 import axios from "axios";
-import { isMock } from "./isMock";
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "https://liflow-be.onrender.com/api";
 
@@ -7,47 +6,6 @@ export const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 15000,
 });
-
-// ── Mock adapter ─────────────────────────────────────────────────────────────
-// When NEXT_PUBLIC_USE_MOCK=true, intercept every request and route to mock handlers.
-if (isMock) {
-  apiClient.defaults.adapter = async (config) => {
-    // Lazy-import to avoid loading mock code in production
-    const { routeMockRequest } = await import("@/mock/router");
-    let result;
-    try {
-      result = routeMockRequest({
-        url: config.url,
-        method: config.method,
-        params: config.params,
-        data: config.data,
-      });
-    } catch (err) {
-      // Handler threw — surface as 500 so API catch blocks can inspect it
-      return Promise.reject({
-        response: { status: 500, data: { ok: false, error: String(err) }, headers: {}, config },
-        config,
-        isAxiosError: true,
-      });
-    }
-
-    if (result === null) {
-      // Unhandled route — return empty 200
-      return { data: { ok: true }, status: 200, statusText: "OK", headers: {}, config, request: {} };
-    }
-
-    if (result.status >= 400) {
-      // Reject like a real axios error so catch blocks work
-      return Promise.reject({
-        response: { status: result.status, data: result.data, headers: {}, config },
-        config,
-        isAxiosError: true,
-      });
-    }
-
-    return { data: result.data, status: result.status, statusText: "OK", headers: {}, config, request: {} };
-  };
-}
 
 // ── Real interceptors ─────────────────────────────────────────────────────────
 

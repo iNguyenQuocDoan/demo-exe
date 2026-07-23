@@ -19,6 +19,7 @@ import { Input } from "@/components/ui/input";
 import { login } from "@/api/authApi";
 import { useAuthStore } from "@/store/useAuthStore";
 import { PublicRoute } from "@/components/layout/RouteGuards";
+import { getDefaultRoute } from "@/lib/permissions";
 
 const LOGIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80&auto=format&fit=crop";
@@ -54,15 +55,9 @@ function LoginForm() {
       document.cookie = `auth_role=${result.user.role}; path=/; SameSite=Strict; max-age=86400`;
       const params = new URLSearchParams(window.location.search);
       const next = params.get("next");
-      const dest =
-        next ??
-        (result.user.role === "parent"
-          ? "/dashboard/parent"
-          : result.user.role === "tutor"
-            ? "/dashboard/tutor"
-            : result.user.role === "admin"
-              ? "/dashboard/admin"
-              : "/dashboard/guest");
+      // getDefaultRoute xử lý đủ 5 role (gồm tutorCandidate → /dashboard/tutor-candidate);
+      // trước đây chuỗi ternary thiếu tutorCandidate nên gia sư chưa duyệt bị đá về guest.
+      const dest = next ?? getDefaultRoute(result.user.role);
       router.push(dest);
     } else {
       setError(result.error ?? "Đăng nhập thất bại.");

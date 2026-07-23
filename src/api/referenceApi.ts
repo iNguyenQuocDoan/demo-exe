@@ -1,4 +1,3 @@
-import { apiClient } from "@/lib/apiClient";
 import { realApiClient } from "@/lib/realApiClient";
 import type { City, District, FeeConfig, Subject, TutorProfile } from "@/types";
 
@@ -152,7 +151,7 @@ export async function getAcademicLevels(force = false): Promise<AcademicLevel[]>
 export async function getFeeConfig(force = false): Promise<FeeConfig> {
   if (!force && feeConfigCache) return feeConfigCache;
   try {
-    const { data } = await apiClient.get<{ ok: boolean; data: FeeConfig }>("/reference/fee-config");
+    const { data } = await realApiClient.get<{ ok: boolean; data: FeeConfig }>("/reference/fee-config");
     feeConfigCache = data.data;
     return feeConfigCache;
   } catch {
@@ -164,7 +163,7 @@ export async function updateFeeConfig(
   config: FeeConfig
 ): Promise<{ ok: boolean; data?: FeeConfig; error?: string }> {
   try {
-    const { data } = await apiClient.put<{ ok: boolean; data: FeeConfig }>(
+    const { data } = await realApiClient.put<{ ok: boolean; data: FeeConfig }>(
       "/reference/fee-config",
       config
     );

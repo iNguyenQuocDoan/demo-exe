@@ -1,6 +1,0 @@
-{
-  "feeType": "PERCENT",
-  "feeValue": 10,
-  "whoPays": "PARENT",
-  "appliesToTrial": false
-}
