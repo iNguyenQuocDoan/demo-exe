@@ -18,7 +18,6 @@ import {
   Menu,
   X,
   ArrowUpRight,
-  Scale,
   Gift,
   UserCheck,
 } from "lucide-react";
@@ -135,10 +134,6 @@ export default function PolicyPage() {
         <div className="absolute inset-0 bg-[linear-gradient(to_right,oklch(0.9_0.01_250/0.05)_1px,transparent_1px),linear-gradient(to_bottom,oklch(0.9_0.01_250/0.05)_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
         <Container size="default" className="relative z-10">
           <div className="max-w-3xl">
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary mb-4">
-              <Scale className="h-3.5 w-3.5" />
-              Quy Chế Hoạt Động
-            </div>
             <h1 className="text-3xl md:text-5xl font-extrabold tracking-tight mb-4 text-foreground leading-[1.15]">
               Chính Sách Phí Dịch Vụ, Thanh Toán, Hủy Đơn, Hoàn Tiền và Giải Quyết Khiếu Nại
             </h1>

@@ -25,6 +25,10 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
+  CertificateViewer,
+  certificateFileName,
+} from "@/components/shared/CertificateViewer";
+import {
   getPendingTutorDetail,
   approveTutor,
   rejectTutor,
@@ -66,6 +70,9 @@ export default function AdminApplicationDetailPage() {
   const [busy, setBusy] = useState(false);
   const [actionError, setActionError] = useState("");
   const [successMsg, setSuccessMsg] = useState("");
+
+  // Chỉ số tài liệu đang mở trong modal xem bằng cấp (null = đóng)
+  const [certIndex, setCertIndex] = useState<number | null>(null);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -328,22 +335,38 @@ export default function AdminApplicationDetailPage() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-base">
-                  <Award className="h-4 w-4 text-primary" /> Chứng chỉ
+                  <Award className="h-4 w-4 text-primary" /> Bằng cấp &amp; chứng chỉ
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {profile.certificateUrls!.map((url) => (
-                  <a
-                    key={url}
-                    href={url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm text-primary hover:bg-primary/5 transition-colors"
-                  >
-                    <Award className="h-4 w-4 shrink-0" />
-                    <span className="truncate">{url.split("/").pop() ?? url}</span>
-                  </a>
-                ))}
+              <CardContent>
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Bấm vào tài liệu để xem phóng to trước khi duyệt hồ sơ.
+                </p>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+                  {profile.certificateUrls!.map((url, i) => (
+                    <button
+                      key={url}
+                      type="button"
+                      onClick={() => setCertIndex(i)}
+                      className="group overflow-hidden rounded-lg border border-border text-left transition-colors hover:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+                    >
+                      <div className="flex h-28 items-center justify-center bg-muted/50">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={url}
+                          alt={certificateFileName(url)}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                      </div>
+                      <span className="block truncate px-2 py-1.5 text-xs text-muted-foreground group-hover:text-foreground">
+                        {certificateFileName(url)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           )}
@@ -437,6 +460,13 @@ export default function AdminApplicationDetailPage() {
           </div>
         </div>
       </section>
+
+      <CertificateViewer
+        urls={profile.certificateUrls ?? []}
+        index={certIndex}
+        onIndexChange={setCertIndex}
+        onClose={() => setCertIndex(null)}
+      />
     </main>
   );
 }

@@ -22,7 +22,6 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -53,13 +52,6 @@ export const metadata: Metadata = {
 };
 
 /* ─── Static data ──────────────────────────────────────────────────────────── */
-const HERO_HIGHLIGHTS = [
-  "Gia sư xác thực",
-  "Lịch trống thực tế",
-  "Thanh toán bảo chứng",
-  "Theo dõi tiến độ học",
-];
-
 /* Hero decorative floating dots — animated by GSAP via .ha-floating-shape selector */
 const FLOATING_SHAPES: { top: string; left: string; size: number; color: string }[] = [
   { top: "20%", left: "8%",  size: 6, color: "oklch(0.85 0.18 70 / 0.45)" },
@@ -249,16 +241,6 @@ export default function HomePage() {
           {/* ── Left: Content (col-span-7) ── */}
           <div className="ha-hero flex flex-col gap-4 lg:col-span-7 xl:gap-5">
 
-            {/* Social proof pill */}
-            <div className="ha-hero-badge inline-flex items-center gap-2 self-start rounded-full border border-white/15 bg-white/10 px-4 py-2 text-xs font-semibold text-white/90 shadow-sm shadow-black/10 backdrop-blur-md animate-scale-in">
-              <span className="relative flex h-2 w-2 shrink-0">
-                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
-                <span className="relative inline-flex h-2 w-2 rounded-full bg-amber-300" />
-              </span>
-              <Shield className="h-3.5 w-3.5 text-amber-300" />
-              Nền tảng kết nối gia sư đã xác minh
-            </div>
-
             <HeroHeadline />
 
             {/* Descriptive */}
@@ -271,19 +253,6 @@ export default function HomePage() {
               Lọc theo môn học, khu vực và lịch rảnh thực tế. Xem hồ sơ đã xác minh,
               đặt buổi học và theo dõi tiến độ trong một luồng rõ ràng.
             </p>
-
-            {/* Feature pills */}
-            <div className="flex max-w-2xl flex-wrap gap-2">
-              {HERO_HIGHLIGHTS.map((item) => (
-                <span
-                  key={item}
-                  className="inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-3.5 py-2 text-[0.92rem] font-semibold leading-none text-white/88 backdrop-blur-sm"
-                >
-                  <CheckCircle2 className="h-4 w-4 shrink-0 text-amber-300" />
-                  {item}
-                </span>
-              ))}
-            </div>
 
             {/* CTA buttons */}
             <div className="flex flex-col gap-3 pt-1 sm:flex-row">
@@ -335,8 +304,6 @@ export default function HomePage() {
           {/* ── Right: Hero image (col-span-5, ngang 4/3) ── */}
           <div className="ha-hero-card lg:col-span-5">
             <div className="relative mx-auto w-full max-w-[560px] lg:ml-auto lg:mr-0">
-              <div className="absolute -inset-4 rounded-[2rem] bg-white/8 blur-2xl" />
-
               {/* Frame chứa ảnh (overflow:hidden — chỉ ảnh + overlays) */}
               <div className="hero-image-frame aspect-[3/2]">
                 <Image
@@ -349,43 +316,6 @@ export default function HomePage() {
                 />
                 <div className="absolute inset-0 bg-linear-to-t from-slate-950/72 via-slate-950/10 to-transparent" />
                 <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-transparent to-amber-400/16" />
-              </div>
-
-              {/*
-                Floating cards — sit OUTSIDE the frame so they don't get clipped.
-                Style: white card + colored accent → pops cleanly against dark hero bg.
-                Anchored at image corners, half overlap image / half lòi ra.
-              */}
-              <div className="hero-stat-card hero-stat-card-delay absolute top-4 -right-3 z-20 sm:top-5 sm:-right-4 lg:top-6 lg:-right-5">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-amber-400 to-amber-500 shadow-sm shadow-amber-500/40">
-                    <Shield className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold leading-tight text-slate-900">
-                      Ví bảo đảm
-                    </div>
-                    <div className="mt-0.5 text-[11px] font-medium text-slate-500">
-                      Giữ tiền đến khi học xong
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <div className="hero-stat-card absolute -bottom-4 -left-3 z-20 sm:-bottom-5 sm:-left-5 lg:-bottom-6 lg:-left-6">
-                <div className="flex items-center gap-3">
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-linear-to-br from-primary to-primary/80 shadow-sm shadow-primary/30">
-                    <GraduationCap className="h-5 w-5 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-sm font-bold leading-tight text-slate-900">
-                      Gia sư xác minh
-                    </div>
-                    <div className="mt-0.5 text-[11px] font-medium text-slate-500">
-                      Hồ sơ &amp; bằng cấp được kiểm duyệt
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
@@ -430,9 +360,6 @@ export default function HomePage() {
           ══════════════════════════════════════════════════════════════════════ */}
       <Section id="how-it-works" className="bg-muted/25">
         <div className="text-center mb-12 space-y-3">
-          <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
-            Quy trình
-          </Badge>
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
             Bắt đầu chỉ với{" "}
             <span className="text-gradient-primary">3 bước</span>
@@ -498,9 +425,6 @@ export default function HomePage() {
         <div className="site-container">
           <div className="flex items-end justify-between mb-8">
             <div className="space-y-2">
-              <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
-                Môn học phổ biến
-              </Badge>
               <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">
                 Tìm gia sư theo{" "}
                 <span className="text-gradient-primary">môn học</span>
@@ -544,9 +468,6 @@ export default function HomePage() {
         />
         <div className="space-y-10 relative" style={{ zIndex: 1 }}>
           <RevealOnView variant={fadeLeft} className="max-w-xl space-y-3">
-            <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
-              Nền tảng đáng tin cậy
-            </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
               Thanh toán an toàn.{" "}
               <span className="text-gradient-primary">Gia sư uy tín.</span>
@@ -700,9 +621,6 @@ export default function HomePage() {
         />
         <div className="site-container relative" style={{ zIndex: 1 }}>
           <div className="text-center mb-10 space-y-3">
-            <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">
-              Cam kết của chúng tôi
-            </Badge>
             <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight">
               LIFLOW bảo vệ{" "}
               <span className="text-gradient-primary">trải nghiệm học</span> của bạn
@@ -766,7 +684,6 @@ export default function HomePage() {
         />
         <div className="site-container relative" style={{ zIndex: 1 }}>
           <div className="text-center mb-10 space-y-3">
-            <Badge variant="secondary" className="text-[11px] px-3 font-semibold tracking-widest uppercase">FAQ</Badge>
             <h2 className="text-2xl sm:text-3xl font-bold tracking-tight">Câu hỏi thường gặp</h2>
             <p className="text-muted-foreground text-sm max-w-[48ch] mx-auto">
               Không thấy câu trả lời bạn cần?{" "}
@@ -827,10 +744,6 @@ export default function HomePage() {
         <div className="hero-ambient-light" />
 
         <StaggerGroup className="relative mx-auto max-w-xl flex flex-col items-center gap-5" amount={0.25}>
-          <RevealItem className="inline-flex h-14 w-14 items-center justify-center rounded-2xl"
-            style={{ background: "oklch(1 0 0 / 0.1)", border: "1px solid oklch(1 0 0 / 0.15)" }}>
-            <Shield className="h-7 w-7 text-amber-400/80" />
-          </RevealItem>
           <RevealItem>
             <h2 className="text-3xl font-bold sm:text-4xl text-center" style={{ letterSpacing: "-0.03em" }}>
               <ShinyText

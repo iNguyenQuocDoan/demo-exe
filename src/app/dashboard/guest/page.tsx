@@ -1,6 +1,6 @@
 "use client";
 import { useAuthStore } from "@/store/useAuthStore";
-import { CheckCircle2, GraduationCap, UserCheck, Sparkles } from "lucide-react";
+import { CheckCircle2, GraduationCap, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
@@ -13,9 +13,6 @@ export default function GuestDashboardPage() {
         <div className="max-w-3xl mx-auto">
           {/* Welcome Section */}
           <div className="text-center mb-12 animate-fade-in-up">
-            <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 mb-6 shadow-lg shadow-primary/30">
-              <Sparkles className="h-10 w-10 text-primary-foreground" />
-            </div>
             <h1 className="text-4xl font-bold text-foreground mb-4">
               Chào mừng đến với LIFLOW!
             </h1>

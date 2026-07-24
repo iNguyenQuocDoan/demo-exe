@@ -10,9 +10,6 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  CheckCircle2,
-  Shield,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,9 +22,9 @@ const LOGIN_HERO_IMAGE =
   "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=1200&q=80&auto=format&fit=crop";
 
 const LOGIN_HIGHLIGHTS = [
-  { icon: Shield, text: "Ví bảo đảm — tiền chỉ chuyển khi buổi học hoàn thành" },
-  { icon: CheckCircle2, text: "Gia sư xác thực, đánh giá minh bạch" },
-  { icon: Sparkles, text: "Đặt lịch nhanh, hủy hoàn tiền tự động" },
+  { text: "Ví bảo đảm — tiền chỉ chuyển khi buổi học hoàn thành" },
+  { text: "Gia sư xác thực, đánh giá minh bạch" },
+  { text: "Đặt lịch nhanh, hủy hoàn tiền tự động" },
 ];
 
 function LoginForm() {
@@ -111,13 +108,6 @@ function LoginForm() {
 
             <div className="space-y-7">
               <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/90 backdrop-blur-md">
-                  <span className="relative flex h-1.5 w-1.5">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-amber-300 opacity-70" />
-                    <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-300" />
-                  </span>
-                  Đăng nhập
-                </span>
                 <h2
                   className="text-3xl font-bold leading-tight text-white xl:text-4xl"
                   style={{ letterSpacing: "-0.02em" }}
@@ -130,36 +120,24 @@ function LoginForm() {
                 </p>
               </div>
 
-              <ul className="space-y-3">
-                {LOGIN_HIGHLIGHTS.map(({ icon: Icon, text }) => (
+              <ul className="space-y-2.5">
+                {LOGIN_HIGHLIGHTS.map(({ text }) => (
                   <li
                     key={text}
-                    className="flex items-start gap-3 text-sm text-white/85"
+                    className="text-sm leading-relaxed text-white/85"
                   >
-                    <span className="mt-0.5 inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-white/15 bg-white/10 backdrop-blur-sm">
-                      <Icon className="h-3.5 w-3.5 text-amber-300" />
-                    </span>
-                    <span className="leading-relaxed">{text}</span>
+                    {text}
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-white/70">
-              <span className="flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-amber-300" />
-                Bảo mật thông tin
-              </span>
-              <span className="h-4 w-px bg-white/15" />
-              <span className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-amber-300" />
-                Gia sư xác thực
-              </span>
-              <span className="h-4 w-px bg-white/15" />
-              <span className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-amber-300" />
-                Hoàn tiền khi huỷ
-              </span>
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-white/70">
+              <span>Bảo mật thông tin</span>
+              <span className="h-3 w-px bg-white/15" />
+              <span>Gia sư xác thực</span>
+              <span className="h-3 w-px bg-white/15" />
+              <span>Hoàn tiền khi huỷ</span>
             </div>
           </div>
         </aside>

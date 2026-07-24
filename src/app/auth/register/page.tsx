@@ -13,9 +13,7 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  BookOpen,
   Users,
-  Wallet,
   CheckCircle2,
   GraduationCap,
 } from "lucide-react";
@@ -31,17 +29,14 @@ const REGISTER_HERO_IMAGE =
 
 const REGISTER_BENEFITS = [
   {
-    icon: Users,
     title: "Cộng đồng gia sư xác thực",
     text: "Tìm gia sư theo môn, khu vực và lịch trống thực tế.",
   },
   {
-    icon: Wallet,
     title: "Ví bảo đảm thanh toán",
     text: "Tiền chỉ chuyển khi buổi học hoàn thành — an tâm tuyệt đối.",
   },
   {
-    icon: BookOpen,
     title: "Theo dõi tiến độ rõ ràng",
     text: "Dashboard cập nhật buổi học, ghi chú và đánh giá sau từng buổi.",
   },
@@ -535,10 +530,6 @@ function RegisterForm() {
 
             <div className="space-y-7">
               <div className="space-y-3">
-                <span className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold uppercase tracking-wider text-white/90 backdrop-blur-md">
-                  <span className="h-1.5 w-1.5 rounded-full bg-amber-300" />
-                  Đăng ký miễn phí
-                </span>
                 <h2
                   className="text-3xl font-bold leading-tight text-white xl:text-4xl"
                   style={{ letterSpacing: "-0.02em" }}
@@ -552,43 +543,22 @@ function RegisterForm() {
               </div>
 
               <ul className="space-y-4">
-                {REGISTER_BENEFITS.map(({ icon: Icon, title, text }) => (
-                  <li key={title} className="flex items-start gap-3">
-                    <span className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/20 bg-white/12 backdrop-blur-md">
-                      <Icon className="h-4.5 w-4.5 text-amber-300" />
-                    </span>
-                    <div className="space-y-0.5">
-                      <div className="text-sm font-semibold text-white">
-                        {title}
-                      </div>
-                      <div className="text-xs leading-relaxed text-white/70 xl:text-sm">
-                        {text}
-                      </div>
+                {REGISTER_BENEFITS.map(({ title, text }) => (
+                  <li key={title} className="space-y-0.5">
+                    <div className="text-sm font-semibold text-white">
+                      {title}
+                    </div>
+                    <div className="text-xs leading-relaxed text-white/70 xl:text-sm">
+                      {text}
                     </div>
                   </li>
                 ))}
               </ul>
             </div>
 
-            <div className="flex items-center gap-3 text-xs text-white/70">
-              <div className="flex -space-x-2">
-                {["AN", "MA", "HL"].map((seed, i) => (
-                  <div
-                    key={seed}
-                    className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white/40 text-[10px] font-bold text-white shadow-sm"
-                    style={{
-                      background: `oklch(${0.5 + i * 0.05} 0.16 ${245 + i * 22})`,
-                    }}
-                  >
-                    {seed}
-                  </div>
-                ))}
-              </div>
-              <span>
-                <strong className="text-white">+120 gia sư mới</strong> đã đăng
-                ký tháng này
-              </span>
-            </div>
+            <p className="text-xs text-white/70">
+              Tạo tài khoản miễn phí — không mất phí đăng ký với cả phụ huynh và gia sư.
+            </p>
           </div>
         </aside>
       </div>

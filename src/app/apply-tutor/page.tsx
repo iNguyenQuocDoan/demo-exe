@@ -21,6 +21,10 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  CertificateViewer,
+  certificateFileName,
+} from "@/components/shared/CertificateViewer";
 import { useAuthStore } from "@/store/useAuthStore";
 import {
   getMyTutorProfile,
@@ -122,6 +126,8 @@ export default function ApplyTutorPage() {
   const [existingCerts, setExistingCerts] = useState<string[]>([]);
   const [newCertFiles, setNewCertFiles] = useState<File[]>([]);
   const certFileRef = useRef<HTMLInputElement>(null);
+  // Chỉ số chứng chỉ đang xem trong modal (null = đóng)
+  const [certIndex, setCertIndex] = useState<number | null>(null);
 
   // UI state
   const [saving, setSaving] = useState(false);
@@ -543,20 +549,19 @@ export default function ApplyTutorPage() {
               {existingCerts.length > 0 && (
                 <div className="space-y-2">
                   <p className="text-sm font-medium">Chứng chỉ hiện có:</p>
-                  {existingCerts.map((url) => (
+                  {existingCerts.map((url, i) => (
                     <div
                       key={url}
                       className="flex items-center gap-2 rounded-lg border border-border p-2.5 bg-muted/30"
                     >
                       <Award className="h-4 w-4 text-primary shrink-0" />
-                      <a
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex-1 text-sm text-primary hover:underline truncate"
+                      <button
+                        type="button"
+                        onClick={() => setCertIndex(i)}
+                        className="flex-1 truncate text-left text-sm text-primary hover:underline"
                       >
-                        {url.split("/").pop() ?? url}
-                      </a>
+                        {certificateFileName(url)}
+                      </button>
                       <button
                         type="button"
                         onClick={() => void handleDeleteCert(url)}
@@ -647,6 +652,13 @@ export default function ApplyTutorPage() {
 
         </div>
       </section>
+
+      <CertificateViewer
+        urls={existingCerts}
+        index={certIndex}
+        onIndexChange={setCertIndex}
+        onClose={() => setCertIndex(null)}
+      />
     </main>
   );
 }

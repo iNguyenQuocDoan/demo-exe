@@ -602,12 +602,6 @@
   .hero-title-keyword {
     animation-duration: 2.6s !important;
   }
-  .hero-stat-card {
-    animation-duration: 5.5s !important;
-  }
-  .hero-stat-card-delay {
-    animation-duration: 6.4s !important;
-  }
   .marquee-track {
     animation-duration: var(--marquee-duration, 45s) !important;
   }
@@ -708,27 +702,6 @@
 .hero-floating-card-slow {
   animation-duration: 6.8s;
   animation-delay: 1.35s;
-}
-
-/* ─── Hero stat card — white card popping over dark hero, anchored at image corners ── */
-.hero-stat-card {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.75rem 1rem;
-  border-radius: 14px;
-  background: #ffffff;
-  border: 1px solid oklch(0.92 0.01 250);
-  box-shadow:
-    0 1px 2px oklch(0 0 0 / 0.06),
-    0 12px 28px oklch(0.16 0.08 255 / 0.28),
-    0 24px 48px oklch(0.16 0.08 255 / 0.18);
-  animation: float 5.5s ease-in-out infinite;
-  will-change: transform;
-}
-
-.hero-stat-card-delay {
-  animation-delay: 0.9s;
-  animation-duration: 6.4s;
 }
 
 /* ─── Gradient text — subtle, readable, continuously flowing ─────────────── */

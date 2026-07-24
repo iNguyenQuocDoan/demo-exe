@@ -102,7 +102,6 @@ export default function AdminUsersPage() {
       <section className="pt-4 pb-8">
         <div className="site-container space-y-4">
           <PageHeaderCompact
-            badge="Admin"
             title="Quản lý người dùng"
             description="Thống kê role và tra cứu tài khoản trên hệ thống."
             actions={
