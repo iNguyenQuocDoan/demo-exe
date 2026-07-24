@@ -116,6 +116,21 @@ export function formatVietnamDayMonth(value?: string | Date | null): string {
   }).format(date);
 }
 
+/**
+ * Nâng URL ảnh http:// lên https://.
+ * BE trả avatarUrl/certificateUrl của Cloudinary ở dạng http, mà site chạy
+ * https → trình duyệt coi là mixed content. Cloudinary phục vụ cùng đường dẫn
+ * trên https nên chỉ cần đổi scheme. Chuỗi rỗng/khác http giữ nguyên.
+ */
+export function toHttpsUrl(url?: string | null): string | undefined {
+  if (!url) return undefined;
+  const trimmed = url.trim();
+  if (!trimmed) return undefined;
+  return trimmed.startsWith("http://")
+    ? `https://${trimmed.slice("http://".length)}`
+    : trimmed;
+}
+
 export function sleep(ms: number): Promise<void> {
   return new Promise((res) => setTimeout(res, ms));
 }

@@ -1,5 +1,6 @@
 import { realApiClient } from "@/lib/realApiClient";
 import { getSubjectMap } from "@/api/referenceApi";
+import { toHttpsUrl } from "@/lib/utils";
 import type {
   FreeSlot,
   Review,
@@ -67,7 +68,7 @@ function mapTutor(be: BeTutorDetail): TutorProfile {
     id: be.id,
     userId: be.userId || be.accountId || be.user?.id,
     fullName: be.fullName ?? "",
-    avatarUrl: be.avatarUrl || avatarFallback(be.id),
+    avatarUrl: toHttpsUrl(be.avatarUrl) || avatarFallback(be.id),
     bio: be.description ?? "",
     teachingMode: "OFFLINE",
     subjects: be.subjects ? Array.from(be.subjects) : [],

@@ -1,4 +1,5 @@
 import { realApiClient } from "@/lib/realApiClient";
+import { toHttpsUrl } from "@/lib/utils";
 import type { User } from "@/types";
 
 interface BeUpdateProfilePayload {
@@ -63,7 +64,7 @@ function mapBeUser(u: BeUserResponse): User {
     fullName: u.fullName,
     email: u.email,
     role: mapBeRole(u.role),
-    avatarUrl: u.avatarUrl ?? undefined,
+    avatarUrl: toHttpsUrl(u.avatarUrl),
     phone: u.phoneNumber,
     address: joinAddress(u),
     active: u.active ?? true,

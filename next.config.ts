@@ -24,10 +24,19 @@ const nextConfig: NextConfig = {
   },
   images: {
     remotePatterns: [
+      // BE upload ảnh (avatar, chứng chỉ) lên Cloudinary. KHÔNG khoá theo cloud
+      // name: BE từng đổi cloud (drvj0roi1 → dsg1yfmpw) và pathname cũ khoá cứng
+      // "/drvj0roi1/**" khiến next/image trả 400 INVALID_IMAGE_OPTIMIZE_REQUEST,
+      // ảnh đại diện thật hiện vỡ trong khi avatar dicebear vẫn chạy.
+      // Khai báo cả http vì BE trả URL http:// — FE chuẩn hoá sang https qua
+      // toHttpsUrl(), pattern http chỉ là lưới an toàn cho dữ liệu cũ.
       {
         protocol: "https",
         hostname: "res.cloudinary.com",
-        pathname: "/drvj0roi1/**",
+      },
+      {
+        protocol: "http",
+        hostname: "res.cloudinary.com",
       },
       {
         protocol: "https",
