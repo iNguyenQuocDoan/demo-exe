@@ -3,10 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import Image from "next/image";
 import {
-  BookOpen, Camera, DollarSign, GraduationCap, MapPin, Save, User, X,
+  BookOpen, Camera, DollarSign, GraduationCap, MapPin, Save, User,
 } from "lucide-react";
 import { getCities, getDistricts, getSubjects } from "@/api/referenceApi";
 import { getTutorById, updateTutorProfile } from "@/api/tutorApi";
+import { updateSelf } from "@/api/usersApi";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -23,8 +24,10 @@ function toggle<T>(arr: T[], item: T): T[] {
   return arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item];
 }
 
+const MAX_AVATAR_BYTES = 10 * 1024 * 1024;
+
 export default function TutorProfilePage() {
-  const { user, isLoading } = useAuthStore();
+  const { user, isLoading, login } = useAuthStore();
   const [profile, setProfile] = useState<TutorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -32,6 +35,7 @@ export default function TutorProfilePage() {
   const [error, setError] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarUploading, setAvatarUploading] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Form fields
@@ -108,32 +112,42 @@ export default function TutorProfilePage() {
     };
   }, [cityId]);
 
+  /**
+   * Đổi ảnh đại diện.
+   * BE chỉ nhận avatar qua PUT /users/profile (multipart: `data` + `avatar`) —
+   * PUT /tutors/tutor/profile chỉ nhận `data` + `certificate[]`, không có avatar.
+   * Gửi kèm fullName/phone hiện tại để BE không ghi đè các field đó thành rỗng.
+   */
   const handleAvatarUpload = async (file: File) => {
+    if (!user) return;
+    setAvatarError("");
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Chỉ nhận file ảnh (JPG, PNG).");
+      return;
+    }
+    if (file.size > MAX_AVATAR_BYTES) {
+      setAvatarError("Ảnh vượt quá 10MB. Chọn ảnh nhỏ hơn.");
+      return;
+    }
+
     setAvatarUploading(true);
     try {
-      const form = new FormData();
-      form.append("file", file);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "https://liflow-be.onrender.com/api";
-      const token = typeof window !== "undefined" ? localStorage.getItem("auth_token") : null;
-      const res = await fetch(`${apiUrl}/uploads/image?folder=avatars`, {
-        method: "POST",
-        headers: token ? { Authorization: `Bearer ${token}` } : {},
-        body: form,
+      const updated = await updateSelf(user.id, {
+        fullName: user.fullName,
+        phone: user.phone,
+        avatarFile: file,
       });
-      const data = await res.json() as { ok: boolean; url?: string; secure_url?: string };
-      if (data.ok) {
-        const url = data.url ?? data.secure_url ?? "";
-        setAvatarUrl(url);
-        // avatarUrl không thuộc UpdateTutorProfileRequest — không gọi updateTutorProfile
-      }
+      setAvatarUrl(updated.avatarUrl ?? "");
+      // Đồng bộ store để header/sidebar đổi ảnh ngay, không cần tải lại trang.
+      login(updated);
+    } catch (err: unknown) {
+      const msg = (err as { response?: { data?: { message?: string } } })
+        ?.response?.data?.message;
+      setAvatarError(msg ?? "Không tải được ảnh lên. Vui lòng thử lại.");
     } finally {
       setAvatarUploading(false);
     }
-  };
-
-  const handleRemoveAvatar = async () => {
-    setAvatarUrl("");
-    // avatarUrl không thuộc UpdateTutorProfileRequest — không cần gọi API
   };
 
   const handleSave = async () => {
@@ -242,28 +256,17 @@ export default function TutorProfilePage() {
                   <p className="text-sm text-muted-foreground">
                     Ảnh JPG, PNG tối đa 10MB. Hover vào ảnh để thay đổi.
                   </p>
-                  <div className="flex gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => fileInputRef.current?.click()}
-                      disabled={avatarUploading}
-                    >
-                      {avatarUploading ? "Đang tải..." : "Đổi ảnh"}
-                    </Button>
-                    {avatarUrl && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => void handleRemoveAvatar()}
-                        disabled={avatarUploading}
-                        className="text-destructive hover:text-destructive"
-                      >
-                        <X className="h-3.5 w-3.5 mr-1" />
-                        Xóa ảnh
-                      </Button>
-                    )}
-                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={avatarUploading}
+                  >
+                    {avatarUploading ? "Đang tải..." : "Đổi ảnh"}
+                  </Button>
+                  {avatarError && (
+                    <p className="text-sm text-destructive">{avatarError}</p>
+                  )}
                 </div>
               </div>
             </CardContent>

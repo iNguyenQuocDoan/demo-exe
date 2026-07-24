@@ -116,19 +116,11 @@ export async function updateSelf(
   );
   if (fields.avatarFile) form.append("avatar", fields.avatarFile);
 
-  const { data } = await realApiClient.put<{
-    code: number;
-    message: string;
-    success: boolean;
-    data: BeUserResponse;
-  }>("/users/profile", form);
-  const u = data.data;
-  return {
-    id: u.id,
-    fullName: u.fullName,
-    email: u.email,
-    role: mapBeRole(u.role),
-    phone: u.phoneNumber,
-    address: u.address,
-  };
+  const { data } = await realApiClient.put<BeApiResponse<BeUserResponse>>(
+    "/users/profile",
+    form,
+  );
+  // Dùng mapBeUser thay vì map tay: bản map tay cũ bỏ rơi avatarUrl, khiến ảnh
+  // đại diện bị xoá khỏi auth store mỗi lần lưu hồ sơ.
+  return mapBeUser(data.data);
 }
