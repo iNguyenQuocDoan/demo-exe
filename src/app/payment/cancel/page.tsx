@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { XCircle, RefreshCw, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AppIcon } from "@/components/ui/icon";
 import { useAuthStore } from "@/store/useAuthStore";
 
 export default function PaymentCancelPage() {
@@ -16,10 +17,8 @@ export default function PaymentCancelPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4 bg-(--bg-app)">
       <Card className="w-full max-w-md border border-border shadow-lg">
         <CardContent className="p-8 text-center space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-50 text-red-600">
-            <XCircle className="h-10 w-10 animate-pulse" />
-          </div>
-          
+          <AppIcon icon={XCircle} size="empty" tone="danger" className="mx-auto" />
+
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-foreground">Thanh toán đã bị hủy</h1>
             <p className="text-sm text-muted-foreground">

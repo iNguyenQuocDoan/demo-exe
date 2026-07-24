@@ -110,7 +110,7 @@ function ForgotPasswordForm() {
         <div className="surface-card p-6 sm:p-8">
           {step === "done" ? (
             <div className="space-y-5 text-center">
-              <div className="mx-auto inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-success/10">
+              <div className="mx-auto inline-flex h-10 w-10 items-center justify-center rounded-xl bg-success/10">
                 <CheckCircle2 className="h-7 w-7 text-success" />
               </div>
               <div className="space-y-1.5">

@@ -178,7 +178,7 @@ export default function TutorDashboard() {
 
             <div className="relative flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-1">
-                <p className="text-sm font-medium text-white/70">Xin chào 👋</p>
+                <p className="text-sm font-medium text-white/70">Xin chào</p>
                 <h1 className="text-2xl font-bold tracking-tight">{firstName}</h1>
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-sm text-white/80">
                   {avgRating && (

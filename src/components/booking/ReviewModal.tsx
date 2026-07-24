@@ -58,6 +58,8 @@ export function ReviewModal({ bookingId, tutorId, tutorName, open, onClose }: Pr
           <button
             type="button"
             onClick={onClose}
+            aria-label="Đóng"
+            title="Đóng"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />

@@ -22,6 +22,7 @@ import {
 import { PageAnimations } from "@/components/animations/PageAnimations";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { AppIcon } from "@/components/ui/icon";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getPendingTutors, type BeTutorDetail } from "@/api/tutorApi";
 import { getDepositRequests, getWithdrawRequests } from "@/api/walletApi";
@@ -287,7 +288,7 @@ export default function AdminDashboardPage() {
           <header className="pa-hero surface-card bg-gradient-to-br from-white via-white to-primary/5 p-5 sm:p-7">
             <div className="flex flex-wrap items-start justify-between gap-4">
               <div className="flex items-center gap-4">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary/80 shadow-lg shadow-primary/20">
+                <div className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 shadow-lg shadow-primary/20">
                   <Shield className="h-7 w-7 text-primary-foreground" />
                 </div>
                 <div>
@@ -476,8 +477,9 @@ export default function AdminDashboardPage() {
                       )}
                       <div className="flex-1 min-w-0">
                         <p className="truncate text-sm font-semibold text-foreground">{t.name}</p>
-                        <p className="text-xs text-muted-foreground">
-                          ⭐ {t.ratingAvg.toFixed(1)}
+                        <p className="flex items-center gap-1 text-xs text-muted-foreground">
+                          <AppIcon icon={Star} size="xs" className="fill-warning text-warning" />
+                          {t.ratingAvg.toFixed(1)}
                         </p>
                       </div>
                       <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-bold text-primary">

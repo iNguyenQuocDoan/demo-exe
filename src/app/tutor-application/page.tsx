@@ -41,7 +41,7 @@ const STATUS_META: Record<
     tone: "text-sky-600",
   },
   APPROVED: {
-    title: "Hồ sơ gia sư đã được duyệt ✓",
+    title: "Hồ sơ gia sư đã được duyệt",
     desc: "Chúc mừng! Hồ sơ của bạn đã được phê duyệt. Bạn có thể hoạt động với tư cách gia sư.",
     icon: CheckCircle2,
     tone: "text-emerald-600",

@@ -512,6 +512,8 @@ export default function MyDisputesPage() {
                     <button
                       type="button"
                       onClick={handleRemoveReplyFile}
+                      aria-label="Xoá ảnh bằng chứng"
+                      title="Xoá ảnh bằng chứng"
                       className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow-sm"
                     >
                       <X className="h-4 w-4" />

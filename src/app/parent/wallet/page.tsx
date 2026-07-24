@@ -9,6 +9,8 @@ import {
   createPayOSPaymentLink,
 } from "@/api/walletApi";
 import { Skeleton } from "@/components/ui/skeleton";
+import { IconButton } from "@/components/ui/icon";
+import { X } from "lucide-react";
 import { toast } from "sonner";
 import type { Transaction } from "@/types";
 
@@ -119,13 +121,12 @@ export default function ParentWalletPage() {
             {" "}
             Nạp tiền thành công! Số dư đã được cập nhật.
           </span>
-          <button
+          <IconButton
+            icon={X}
+            label="Đóng thông báo"
             onClick={() => setDepositSucceeded(false)}
-            className="text-green-700/70 hover:text-green-900 text-sm"
-            aria-label="Đóng"
-          >
-            ✕
-          </button>
+            className="text-success hover:text-success"
+          />
         </div>
       )}
 

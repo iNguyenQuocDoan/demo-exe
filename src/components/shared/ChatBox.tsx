@@ -168,6 +168,8 @@ export function ChatBox({ convId, currentUser, otherName, bookingContext }: Prop
             type="button"
             onClick={handleSend}
             disabled={!input.trim() || sending || !isConnected}
+            aria-label="Gửi tin nhắn"
+            title="Gửi tin nhắn"
             className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-[hsl(221_83%_53%)] text-white hover:bg-[hsl(221_83%_45%)] disabled:bg-[hsl(215_16%_90%)] disabled:text-[hsl(215_16%_60%)] cursor-pointer"
           >
             <Send className="h-4 w-4" />

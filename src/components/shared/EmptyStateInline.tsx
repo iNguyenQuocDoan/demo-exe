@@ -1,5 +1,6 @@
 import { type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { AppIcon } from "@/components/ui/icon";
 import { cn } from "@/lib/utils";
 
 /**
@@ -28,11 +29,7 @@ export function EmptyStateInline({
         className,
       )}
     >
-      {Icon && (
-        <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-muted">
-          <Icon className="h-5 w-5 text-muted-foreground" />
-        </div>
-      )}
+      {Icon && <AppIcon icon={Icon} size="empty" tone="muted" />}
       <div className="max-w-xs space-y-1">
         <p className="text-sm font-semibold text-foreground">{title}</p>
         {description && (

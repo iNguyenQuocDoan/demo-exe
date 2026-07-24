@@ -1,6 +1,7 @@
 import { cn } from "@/lib/utils";
 import { LucideIcon } from "lucide-react";
 import { Button } from "../ui/button";
+import { AppIcon } from "../ui/icon";
 
 interface EmptyStateProps {
   icon?: LucideIcon;
@@ -27,12 +28,8 @@ export function EmptyState({
         className,
       )}
     >
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-[linear-gradient(180deg,rgba(37,99,235,0.08),transparent)]" />
-      {Icon && (
-        <div className="relative mb-5 flex h-18 w-18 items-center justify-center rounded-2xl bg-primary/10 ring-1 ring-primary/15">
-          <Icon className="h-9 w-9 text-primary" />
-        </div>
-      )}
+      {/* Empty state: một icon đơn giản, không container pastel/gradient orb. */}
+      {Icon && <AppIcon icon={Icon} size="empty" tone="muted" className="relative mb-4" />}
       <h3 className="relative mb-2 text-xl font-bold text-foreground">{title}</h3>
       {description && (
         <p className="relative mb-5 max-w-md text-sm leading-relaxed text-muted-foreground">

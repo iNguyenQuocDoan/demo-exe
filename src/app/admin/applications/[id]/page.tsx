@@ -98,7 +98,7 @@ export default function AdminApplicationDetailPage() {
     const res = await approveTutor(id);
     setBusy(false);
     if (res.ok) {
-      setSuccessMsg("✓ Đã duyệt hồ sơ gia sư");
+      setSuccessMsg("Đã duyệt hồ sơ gia sư");
       setTimeout(() => router.push("/admin/applications"), 1500);
     } else {
       setActionError(res.error ?? "Không thể duyệt gia sư");

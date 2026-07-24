@@ -142,7 +142,7 @@ export default function AdminWithdrawalsPage() {
         {requests.length === 0 ? (
           <Card className="border border-border">
             <CardContent className="flex flex-col items-center justify-center py-16 text-center text-muted-foreground">
-              <Wallet className="h-14 w-14 mb-4 opacity-30 text-primary animate-bounce" />
+              <Wallet className="h-8 w-8 mb-4 opacity-30 text-primary animate-bounce" />
               <p className="text-base font-medium">Không có yêu cầu rút tiền nào đang chờ duyệt</p>
               <p className="text-xs text-muted-foreground/80 mt-1">Hệ thống sẽ tự động cập nhật khi có yêu cầu mới.</p>
             </CardContent>

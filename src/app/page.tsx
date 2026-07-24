@@ -14,7 +14,9 @@ import {
   Leaf,
   Search,
   Shield,
+  ShieldCheck,
   Star,
+  UserRoundCheck,
   Users,
   Wallet,
   Zap,
@@ -22,6 +24,7 @@ import {
 import type { LucideIcon } from "lucide-react";
 import { Section } from "@/components/layout/Section";
 import { Button } from "@/components/ui/button";
+import { AppIcon, StatusIcon } from "@/components/ui/icon";
 import { CardContent } from "@/components/ui/card";
 import {
   Accordion,
@@ -63,10 +66,10 @@ const FLOATING_SHAPES: { top: string; left: string; size: number; color: string 
 
 /* Giá trị cốt lõi (định tính — không phải số liệu live) */
 const HIGHLIGHTS = [
-  { title: "Gia sư đã xác minh", desc: "Hồ sơ, bằng cấp và kinh nghiệm được kiểm duyệt trước khi lên sàn.", icon: GraduationCap, color: "text-primary", bg: "bg-primary/10" },
-  { title: "Lịch trống thực tế", desc: "Xem đúng khung giờ gia sư còn rảnh và đặt buổi học phù hợp.", icon: Clock, color: "text-success", bg: "bg-success/10" },
-  { title: "Thanh toán bảo chứng", desc: "Tiền giữ trong ví, chỉ chuyển cho gia sư sau khi buổi học hoàn thành.", icon: Shield, color: "text-warning", bg: "bg-warning/10" },
-  { title: "Đánh giá minh bạch", desc: "Phản hồi từ phụ huynh gắn với buổi học thật, không chỉnh sửa.", icon: Star, color: "text-accent", bg: "bg-accent/10" },
+  { title: "Gia sư đã xác minh", desc: "Hồ sơ, bằng cấp và kinh nghiệm được kiểm duyệt trước khi lên sàn.", icon: GraduationCap },
+  { title: "Lịch trống thực tế", desc: "Xem đúng khung giờ gia sư còn rảnh và đặt buổi học phù hợp.", icon: Clock },
+  { title: "Thanh toán bảo chứng", desc: "Tiền giữ trong ví, chỉ chuyển cho gia sư sau khi buổi học hoàn thành.", icon: Shield },
+  { title: "Đánh giá minh bạch", desc: "Phản hồi từ phụ huynh gắn với buổi học thật, không chỉnh sửa.", icon: Star },
 ];
 
 const HOW_IT_WORKS = [
@@ -75,8 +78,6 @@ const HOW_IT_WORKS = [
     title: "Tìm gia sư phù hợp",
     desc: "Lọc theo quận, môn học, mức phí và hình thức dạy online/offline.",
     icon: Search,
-    color: "text-primary",
-    bg: "bg-primary/8",
     border: "border-primary/15",
     image: "https://images.unsplash.com/photo-1573164574572-cb89e39749b4?w=800&q=80&auto=format&fit=crop",
   },
@@ -85,8 +86,6 @@ const HOW_IT_WORKS = [
     title: "Xem lịch trống",
     desc: "Chọn slot còn trống theo tuần để khớp thời gian của gia đình bạn.",
     icon: Clock,
-    color: "text-amber-500",
-    bg: "bg-amber-500/8",
     border: "border-amber-400/20",
     image: "https://images.unsplash.com/photo-1606761568499-6d2451b23c66?w=800&q=80&auto=format&fit=crop",
   },
@@ -95,29 +94,27 @@ const HOW_IT_WORKS = [
     title: "Đặt buổi học nhanh",
     desc: "Đặt buổi học trả phí và bắt đầu ngay với lịch định kỳ linh hoạt.",
     icon: CheckCircle2,
-    color: "text-emerald-500",
-    bg: "bg-emerald-500/8",
     border: "border-emerald-400/20",
     image: "https://images.unsplash.com/photo-1577896851231-70ef18881754?w=800&q=80&auto=format&fit=crop",
   },
 ];
 
-const SUBJECTS: { id: string; label: string; icon: LucideIcon; color: string; bg: string; image: string }[] = [
-  { id: "math", label: "Toán học", icon: Calculator, color: "text-primary", bg: "bg-primary/8",
+const SUBJECTS: { id: string; label: string; icon: LucideIcon; image: string }[] = [
+  { id: "math", label: "Toán học", icon: Calculator,
     image: "https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&q=80&auto=format&fit=crop" },
-  { id: "english", label: "Tiếng Anh", icon: Languages, color: "text-sky-500", bg: "bg-sky-500/8",
+  { id: "english", label: "Tiếng Anh", icon: Languages,
     image: "https://images.unsplash.com/photo-1546410531-bb4caa6b424d?w=600&q=80&auto=format&fit=crop" },
-  { id: "physics", label: "Vật lý", icon: Zap, color: "text-amber-500", bg: "bg-amber-500/8",
+  { id: "physics", label: "Vật lý", icon: Zap,
     image: "https://images.unsplash.com/photo-1636466497217-26a8cbeaf0aa?w=600&q=80&auto=format&fit=crop" },
-  { id: "chem", label: "Hóa học", icon: FlaskConical, color: "text-purple-500", bg: "bg-purple-500/8",
+  { id: "chem", label: "Hóa học", icon: FlaskConical,
     image: "https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?w=600&q=80&auto=format&fit=crop" },
-  { id: "bio", label: "Sinh học", icon: Leaf, color: "text-emerald-500", bg: "bg-emerald-500/8",
+  { id: "bio", label: "Sinh học", icon: Leaf,
     image: "https://images.unsplash.com/photo-1530026405186-ed1f139313f8?w=600&q=80&auto=format&fit=crop" },
-  { id: "lit", label: "Ngữ văn", icon: BookMarked, color: "text-rose-500", bg: "bg-rose-500/8",
+  { id: "lit", label: "Ngữ văn", icon: BookMarked,
     image: "https://images.unsplash.com/photo-1532012197267-da84d127e765?w=600&q=80&auto=format&fit=crop" },
-  { id: "hist", label: "Lịch sử", icon: Landmark, color: "text-orange-500", bg: "bg-orange-500/8",
+  { id: "hist", label: "Lịch sử", icon: Landmark,
     image: "https://images.unsplash.com/photo-1461360228754-6e81c478b882?w=600&q=80&auto=format&fit=crop" },
-  { id: "it", label: "Lập trình", icon: Code2, color: "text-indigo-500", bg: "bg-indigo-500/8",
+  { id: "it", label: "Lập trình", icon: Code2,
     image: "https://images.unsplash.com/photo-1517694712202-14dd9538aa97?w=600&q=80&auto=format&fit=crop" },
 ];
 
@@ -126,8 +123,6 @@ const PLATFORM_FEATURES = [
     title: "Ví bảo đảm thanh toán",
     desc: "Tiền giữ trong ví LIFLOW, chỉ chuyển cho gia sư sau buổi học hoàn thành. Huỷ lịch được hoàn tiền tự động.",
     icon: Shield,
-    bg: "bg-primary/8",
-    iconColor: "text-primary",
     border: "border-primary/12",
     image: "https://images.unsplash.com/photo-1556742502-ec7c0e9f34b1?w=800&q=80&auto=format&fit=crop",
   },
@@ -135,8 +130,6 @@ const PLATFORM_FEATURES = [
     title: "Lịch trống thời gian thực",
     desc: "Xem chính xác khi nào gia sư rảnh. Chọn slot, xác nhận chi phí và bắt đầu trong vài phút.",
     icon: Clock,
-    bg: "bg-amber-500/8",
-    iconColor: "text-amber-500",
     border: "border-amber-400/15",
     image: "https://images.unsplash.com/photo-1506784983877-45594efa4cbe?w=800&q=80&auto=format&fit=crop",
   },
@@ -144,8 +137,6 @@ const PLATFORM_FEATURES = [
     title: "Gia sư kiểm duyệt nghiêm ngặt",
     desc: "Mọi gia sư đều qua quy trình xét hồ sơ, xác minh bằng cấp và đánh giá thực tế trước khi được chấp thuận.",
     icon: GraduationCap,
-    bg: "bg-emerald-500/8",
-    iconColor: "text-emerald-500",
     border: "border-emerald-400/15",
     image: "https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=800&q=80&auto=format&fit=crop",
   },
@@ -336,17 +327,17 @@ export default function HomePage() {
         />
         <div className="site-container relative max-w-[1280px] py-7 lg:py-8" style={{ zIndex: 1 }}>
           <StaggerGroup className="grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4">
-            {HIGHLIGHTS.map(({ title, desc, icon: Icon, color, bg }) => (
+            {HIGHLIGHTS.map(({ title, desc, icon: Icon }) => (
               <RevealItem key={title}>
                 <TiltedCard
                   maxTilt={6}
                   scale={1.03}
                   className="group h-full rounded-2xl border border-border/70 bg-card/90 p-4 text-left shadow-sm shadow-slate-950/3 hover:border-primary/30 hover:shadow-lg hover:bg-card cursor-default"
                 >
-                  <div className={`mb-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${bg} transition-all duration-300 group-hover:scale-110 group-hover:rotate-6`}>
-                    <Icon className={`${color} transition-transform duration-300`} style={{ width: "1.125rem", height: "1.125rem" }} />
+                  <div className="flex items-center gap-2 text-sm font-bold leading-tight text-foreground">
+                    <AppIcon icon={Icon} size="md" tone="brand" />
+                    {title}
                   </div>
-                  <div className="text-sm font-bold leading-tight text-foreground">{title}</div>
                   <p className="mt-1.5 text-xs leading-relaxed text-muted-foreground transition-colors duration-300 group-hover:text-foreground">{desc}</p>
                 </TiltedCard>
               </RevealItem>
@@ -372,7 +363,7 @@ export default function HomePage() {
           className="grid grid-cols-1 md:grid-cols-3 gap-5 lg:gap-6"
           amount={0.05}
         >
-          {HOW_IT_WORKS.map(({ step, title, desc, icon: Icon, color, bg, border, image }) => (
+          {HOW_IT_WORKS.map(({ step, title, desc, icon: Icon, border, image }) => (
             <RevealItem key={step}>
               <div
                 className={`h-full rounded-2xl border bg-card text-card-foreground shadow-sm ${border} overflow-hidden`}
@@ -391,17 +382,15 @@ export default function HomePage() {
                       background: "linear-gradient(to top, oklch(0.18 0.02 250 / 0.65) 0%, transparent 50%)",
                     }}
                   />
-                  <div className="absolute bottom-3 left-3 flex items-center gap-2">
-                    <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${bg} border ${border} backdrop-blur-md bg-white/90`}>
-                      <Icon className={`h-4 w-4 ${color}`} />
-                    </div>
-                    <span className="rounded-md bg-black/40 backdrop-blur-md px-2 py-1 text-[10px] font-bold tracking-widest uppercase text-white/90">
-                      Bước {step}
-                    </span>
-                  </div>
+                  <span className="absolute bottom-3 left-3 rounded-md bg-black/40 backdrop-blur-md px-2 py-1 text-[10px] font-bold tracking-widest uppercase text-white/90">
+                    Bước {step}
+                  </span>
                 </div>
                 <CardContent className="p-5 pt-4">
-                  <h3 className="text-base font-bold text-foreground mb-1.5">{title}</h3>
+                  <h3 className="flex items-center gap-2 text-base font-bold text-foreground mb-1.5">
+                    <AppIcon icon={Icon} size="md" tone="brand" />
+                    {title}
+                  </h3>
                   <p className="text-sm leading-relaxed text-muted-foreground">{desc}</p>
                 </CardContent>
               </div>
@@ -501,13 +490,12 @@ export default function HomePage() {
                     className="absolute inset-0"
                     style={{ background: "linear-gradient(to bottom, oklch(0.18 0.02 250 / 0.25) 0%, oklch(0.18 0.02 250 / 0.55) 100%)" }}
                   />
-                  {/* Floating icon top-left */}
-                  <div className={`absolute top-3 left-3 inline-flex h-10 w-10 items-center justify-center rounded-xl ${feature.bg} backdrop-blur-md bg-white/95 border ${feature.border} shadow-sm transition-transform duration-300 group-hover:scale-110 group-hover:rotate-6`}>
-                    <feature.icon className={`${feature.iconColor}`} style={{ width: "1.125rem", height: "1.125rem" }} />
-                  </div>
                 </div>
                 <CardContent className="p-5 space-y-1.5">
-                  <h3 className="text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-300">{feature.title}</h3>
+                  <h3 className="flex items-center gap-2 text-sm font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                    <AppIcon icon={feature.icon} size="md" tone="brand" />
+                    {feature.title}
+                  </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{feature.desc}</p>
                 </CardContent>
               </SpotlightCard>
@@ -542,16 +530,10 @@ export default function HomePage() {
                 />
               </div>
 
-              {/* Floating decorative shapes */}
-              <div className="absolute top-4 right-4 h-2 w-2 rounded-full bg-primary/40 animate-pulse hidden md:block" />
-              <div className="absolute bottom-12 right-1/3 h-1.5 w-1.5 rounded-full bg-amber-400/50 animate-pulse hidden md:block" style={{ animationDelay: "0.8s" }} />
-
               {/* Content */}
               <div className="relative space-y-3 max-w-[26rem]">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10">
-                  <Shield className="h-7 w-7 text-primary" />
-                </div>
-                <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                <p className="flex items-start gap-2.5 text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                  <AppIcon icon={ShieldCheck} size="xl" tone="brand" className="mt-1" />
                   Thanh toán chỉ chuyển khi buổi học hoàn thành
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-[40ch]">
@@ -559,8 +541,8 @@ export default function HomePage() {
                   hoàn tiền tự động — bạn không phải lo mất phí.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-medium text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Ví giữ tiền</span>
-                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" /> Hoàn tiền khi huỷ</span>
+                  <StatusIcon icon={CheckCircle2} tone="success" label="Ví giữ tiền" />
+                  <StatusIcon icon={CheckCircle2} tone="success" label="Hoàn tiền khi huỷ" />
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-1.5 btn-shimmer mt-3" asChild>
                   <Link href="/tutors">Tìm gia sư ngay <ArrowRight className="h-3.5 w-3.5" /></Link>
@@ -570,35 +552,18 @@ export default function HomePage() {
 
             {/* ── Tutor-vetting card ── */}
             <RevealItem className="lg:col-span-5 relative rounded-2xl border border-amber-400/25 bg-linear-to-br from-amber-400/10 via-amber-400/4 to-transparent p-8 min-h-56 card-lift overflow-hidden group">
-              {/* Decorative cluster — abstract amber glow + verified badge motif */}
-              <div className="absolute -top-10 -right-10 w-48 h-48 hidden md:block pointer-events-none">
-                <div className="absolute inset-0 rounded-full bg-amber-400/18 blur-3xl" />
-                <div className="absolute inset-6 rounded-full bg-amber-300/14 blur-2xl" />
-                <div className="absolute top-12 right-12 inline-flex h-14 w-14 items-center justify-center rounded-2xl border border-amber-400/30 bg-white/85 shadow-lg shadow-amber-500/15 backdrop-blur-md transition-transform duration-500 ease-out group-hover:rotate-6 group-hover:scale-105">
-                  <GraduationCap className="h-7 w-7 text-amber-500" strokeWidth={2.25} />
-                </div>
-                <span className="absolute top-9 right-7 h-1.5 w-1.5 rounded-full bg-amber-400/70 animate-pulse" />
-                <span className="absolute top-20 right-28 h-1 w-1 rounded-full bg-amber-300/80 animate-pulse" style={{ animationDelay: "0.6s" }} />
-              </div>
-
-              {/* Bottom decoration — abstract circles */}
-              <div className="absolute -bottom-8 -left-4 w-32 h-32 rounded-full bg-amber-400/8 blur-2xl pointer-events-none" />
-              <div className="absolute top-1/3 left-1/2 h-1.5 w-1.5 rounded-full bg-amber-400/60 animate-pulse" style={{ animationDelay: "0.4s" }} />
-
               {/* Content */}
               <div className="relative space-y-3">
-                <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-400/15">
-                  <GraduationCap className="h-7 w-7 text-amber-500" />
-                </div>
-                <p className="text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                <p className="flex items-start gap-2.5 text-2xl lg:text-3xl font-bold tracking-tight text-foreground leading-tight">
+                  <AppIcon icon={UserRoundCheck} size="xl" tone="brand" className="mt-1" />
                   Gia sư qua kiểm duyệt kỹ lưỡng
                 </p>
                 <p className="text-sm text-muted-foreground leading-relaxed max-w-[34ch]">
                   Mỗi hồ sơ được xét duyệt bằng cấp và kinh nghiệm trước khi nhận học viên.
                 </p>
                 <div className="flex flex-wrap items-center gap-3 pt-1 text-xs font-medium text-muted-foreground">
-                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-amber-500" /> Xác minh hồ sơ</span>
-                  <span className="inline-flex items-center gap-1.5"><CheckCircle2 className="h-3.5 w-3.5 text-amber-500" /> Đánh giá thực tế</span>
+                  <StatusIcon icon={CheckCircle2} tone="success" label="Xác minh hồ sơ" />
+                  <StatusIcon icon={CheckCircle2} tone="success" label="Đánh giá thực tế" />
                 </div>
                 <Button variant="outline" size="sm" className="w-fit gap-1.5 btn-shimmer mt-3" asChild>
                   <Link href="/apply-tutor">Trở thành gia sư <ArrowRight className="h-3.5 w-3.5" /></Link>
@@ -638,10 +603,8 @@ export default function HomePage() {
                   scale={1.025}
                   className="relative h-full rounded-2xl border border-border bg-card p-6 group hover:shadow-xl hover:border-primary/20"
                 >
-                  <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 transition-transform duration-300 group-hover:scale-110">
-                    <Icon className="h-6 w-6 text-primary" />
-                  </div>
-                  <h3 className="text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                  <h3 className="flex items-center gap-2 text-base font-bold text-foreground group-hover:text-primary transition-colors duration-300">
+                    <AppIcon icon={Icon} size="md" tone="brand" />
                     {title}
                   </h3>
                   <p className="mt-2 text-sm text-muted-foreground leading-relaxed">

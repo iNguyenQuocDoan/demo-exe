@@ -126,7 +126,7 @@ export default function DisputeDetailPage() {
   if (error || !report) {
     return (
       <main className="min-h-dvh bg-(--bg-app) flex flex-col items-center justify-center p-6 gap-4">
-        <AlertTriangle className="h-12 w-12 text-destructive" />
+        <AlertTriangle className="h-8 w-8 text-destructive" />
         <p className="text-muted-foreground font-semibold text-center">
           {error || "Không tìm thấy thông tin khiếu nại."}
         </p>

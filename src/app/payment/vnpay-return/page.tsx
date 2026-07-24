@@ -63,7 +63,7 @@ export default function VnpayReturnPage() {
         <CardContent className="p-8 text-center space-y-4">
           {status === "processing" && (
             <>
-              <Loader2 className="h-14 w-14 mx-auto text-primary animate-spin" />
+              <Loader2 className="h-8 w-8 mx-auto text-primary animate-spin" />
               <h1 className="text-xl font-bold">Đang xác nhận thanh toán…</h1>
               <p className="text-muted-foreground text-sm">
                 Vui lòng không đóng trang trong giây lát.
@@ -73,7 +73,7 @@ export default function VnpayReturnPage() {
 
           {status === "success" && (
             <>
-              <CheckCircle2 className="h-14 w-14 mx-auto text-green-600" />
+              <CheckCircle2 className="h-8 w-8 mx-auto text-green-600" />
               <h1 className="text-xl font-bold">Nạp tiền thành công!</h1>
               {amount != null && (
                 <p className="text-2xl font-bold text-green-600">
@@ -92,7 +92,7 @@ export default function VnpayReturnPage() {
 
           {status === "failed" && (
             <>
-              <XCircle className="h-14 w-14 mx-auto text-destructive" />
+              <XCircle className="h-8 w-8 mx-auto text-destructive" />
               <h1 className="text-xl font-bold">Thanh toán không thành công</h1>
               <p className="text-muted-foreground text-sm">
                 Giao dịch đã bị hủy hoặc thất bại. Bạn chưa bị trừ tiền.

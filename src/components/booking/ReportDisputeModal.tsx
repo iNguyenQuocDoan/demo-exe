@@ -102,6 +102,8 @@ export function ReportDisputeModal({ bookingId, open, onClose, onSuccess }: Prop
           <button
             type="button"
             onClick={handleClose}
+            aria-label="Đóng"
+            title="Đóng"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <X className="h-4 w-4" />
@@ -150,6 +152,8 @@ export function ReportDisputeModal({ bookingId, open, onClose, onSuccess }: Prop
                 <button
                   type="button"
                   onClick={handleRemoveFile}
+                  aria-label="Xoá ảnh bằng chứng"
+                  title="Xoá ảnh bằng chứng"
                   className="absolute top-2 right-2 flex h-8 w-8 items-center justify-center rounded-full bg-black/60 text-white hover:bg-black/80 transition-colors shadow-sm"
                 >
                   <X className="h-4 w-4" />

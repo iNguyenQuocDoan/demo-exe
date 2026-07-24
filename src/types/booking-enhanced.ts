@@ -205,11 +205,13 @@ export const BOOKING_STATUS_LABELS = {
   InSession: { vi: "Đang học", en: "In Session" },
 } as const;
 
+// Chỉ nhãn text. Icon lấy từ lucide-react tại nơi render (MessageSquare, Phone,
+// Mail...) — không nhúng emoji vào data để tránh trộn emoji với icon hệ thống.
 export const CONTACT_METHOD_LABELS = {
-  IN_APP_CHAT: { vi: "Chat trong ứng dụng", en: "In-app Chat", icon: "💬" },
-  PHONE: { vi: "Điện thoại", en: "Phone", icon: "📞" },
-  ZALO: { vi: "Zalo", en: "Zalo", icon: "💙" },
-  EMAIL: { vi: "Email", en: "Email", icon: "✉️" },
+  IN_APP_CHAT: { vi: "Chat trong ứng dụng", en: "In-app Chat" },
+  PHONE: { vi: "Điện thoại", en: "Phone" },
+  ZALO: { vi: "Zalo", en: "Zalo" },
+  EMAIL: { vi: "Email", en: "Email" },
 } as const;
 
 export const LEARNING_GOAL_LABELS = {

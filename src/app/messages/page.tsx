@@ -50,7 +50,7 @@ function MessagesContent() {
   if (!currentUser) {
     return (
       <div className="flex h-screen w-full flex-col items-center justify-center bg-[var(--bg-app)] px-4 text-center">
-        <AlertCircle className="mb-4 h-12 w-12 text-destructive animate-bounce" />
+        <AlertCircle className="mb-4 h-8 w-8 text-destructive" />
         <h1 className="text-xl font-bold text-foreground">Bạn chưa đăng nhập</h1>
         <p className="mt-2 text-sm text-muted-foreground max-w-sm">
           Vui lòng đăng nhập tài khoản để bắt đầu thảo luận và trò chuyện realtime.

@@ -284,7 +284,7 @@ export function ParentWallet({ userId, balance, frozenBalance = 0, transactions 
         <CardContent>
           {transactions.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              <Wallet className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <Wallet className="h-8 w-8 mx-auto mb-4 opacity-50" />
               <p>Chưa có giao dịch nào</p>
             </div>
           ) : (

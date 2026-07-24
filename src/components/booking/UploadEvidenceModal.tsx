@@ -143,6 +143,8 @@ export function UploadEvidenceModal({ bookingId, type, open, onClose, onSuccess 
             type="button"
             onClick={handleClose}
             disabled={submitting}
+            aria-label="Đóng"
+            title="Đóng"
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-muted hover:text-foreground transition-colors disabled:opacity-50"
           >
             <X className="h-4 w-4" />

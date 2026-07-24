@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Home, Wallet } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { AppIcon } from "@/components/ui/icon";
 import { useAuthStore } from "@/store/useAuthStore";
 import { getWallet, getTransactions } from "@/api/walletApi";
 
@@ -28,9 +29,7 @@ export default function PaymentSuccessPage() {
     <div className="min-h-[70vh] flex items-center justify-center px-4 bg-(--bg-app)">
       <Card className="w-full max-w-md border border-border shadow-lg">
         <CardContent className="p-8 text-center space-y-6">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-50 text-green-600">
-            <CheckCircle2 className="h-10 w-10 animate-bounce" />
-          </div>
+          <AppIcon icon={CheckCircle2} size="empty" tone="success" className="mx-auto" />
           
           <div className="space-y-2">
             <h1 className="text-2xl font-bold text-foreground">Thanh toán thành công</h1>

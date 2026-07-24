@@ -521,7 +521,7 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
         {/* ── Success ──────────────────────────────────────────────── */}
         {step === "success" && (
           <div className="flex flex-col items-center space-y-4 py-6 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-success/15">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-success/15">
               <CheckCircle2 className="h-9 w-9 text-success" />
             </div>
             <div>
@@ -541,7 +541,7 @@ export function BookingModal({ tutor, preSelectedSlot, onClose }: Props) {
         {/* ── Error ────────────────────────────────────────────────── */}
         {step === "error" && (
           <div className="flex flex-col items-center space-y-4 py-6 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-destructive/10">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10">
               <AlertCircle className="h-9 w-9 text-destructive" />
             </div>
             <div>
