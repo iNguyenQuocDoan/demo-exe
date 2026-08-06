@@ -228,8 +228,11 @@ async function bookingAction(
     await realApiClient.post(`/bookings/${id}/${action}`);
     return { ok: true };
   } catch (err: unknown) {
+    const res = (err as { response?: { status?: number; data?: { message?: string } } })
+      ?.response;
     const msg =
-      (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+      res?.data?.message ??
+      (res?.status === 403 ? "Bạn không có quyền thực hiện thao tác này." : undefined) ??
       "Thao tác thất bại";
     return { ok: false, error: msg };
   }
@@ -324,11 +327,18 @@ export const tutorCompleteBooking = async (id: string, file: File): Promise<{ ok
   }
 };
 
+// Huỷ buổi học — BE tách endpoint theo vai trò (docs/API_STATUS_INVENTORY.md §2.1):
+//   PARENT → POST /bookings/{id}/cancel
+//   TUTOR  → POST /bookings/{id}/reject
+// Cả hai đều đưa booking về CANCELLED + hoàn tiền phụ huynh. Gọi endpoint của vai trò
+// kia → 403 Forbidden: gia sư bấm "Hủy buổi học" từng luôn hỏng vì FE gọi /cancel cho
+// mọi vai trò, lỗi bị nuốt thành alert "Thao tác thất bại". Route theo role tại đây để
+// mọi call site (calendar, dashboard) đúng theo mặc định.
 export const cancelBooking = (
   id: string,
   _cancelBy?: string,
   _reason?: string,
-) => bookingAction(id, "cancel");
+) => bookingAction(id, myBeRole() === "TUTOR" ? "reject" : "cancel");
 
 // BE: POST /api/bookings/slots (TUTOR) — body SlotRequest:
 //   { startTime: "HH:mm:ss", endTime: "HH:mm:ss", startDate: "yyyy-MM-dd", numberOfWeeks }
